@@ -96,8 +96,8 @@
         <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" alt="YADEA Logo" class="h-8 sm:h-10">
         <div class="nav__scroll grow">
           <a href="#" class="nav__link" data-target="tap-chi">TẠP CHÍ YADEA</a>
-          <a href="#" class="nav__link active" data-target="trang-chu">TRANG CHỦ</a>
-          <a href="#" class="nav__link" data-target="ban-hang">BÁN HÀNG</a>
+          <a href="#" class="nav__link" data-target="trang-chu">TRANG CHỦ</a>
+          <a href="#" class="nav__link active" data-target="ban-hang">BÁN HÀNG</a>
           <a href="#" class="nav__link" data-target="hinh-anh">HÌNH ẢNH</a>
           <a href="#" class="nav__link" data-target="hoat-dong">HOẠT ĐỘNG</a>
           <a href="#" class="nav__link" data-target="dao-tao">ĐÀO TẠO</a>
@@ -110,7 +110,7 @@
       <div id="content-area">
 
         <!-- Trang chủ -->
-        <div id="trang-chu-content" class="content-tab initial-active-tab">
+        <div id="trang-chu-content" class="content-tab">
           <div id="dashboard-content">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
               <!-- Cột trái -->
@@ -324,14 +324,10 @@
         </div>
 
         <!-- Bán hàng -->
-        <div id="ban-hang-content" class="content-tab">
-          <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg" role="alert">
-            <p class="font-bold">Dữ liệu Bán Hàng</p>
-            <p>Dữ liệu Sell-In/Sell-Out được quản lý qua Google Sheets và hiển thị trong khung dưới đây.</p>
-          </div>
-          <iframe class="w-full h-[70vh] md:h-[600px] mt-4 border rounded-lg" src="https://script.google.com/macros/s/AKfycbyUuZDvJoll8ONYOV11uc-aPUePGanqboqSFLByAlII-BpUEqy-_Z8HS-tj-AX7MyCe/exec?m=1" title="Dữ liệu bán hàng"></iframe>
+        <div id="ban-hang-content" class="content-tab initial-active-tab">
+          <iframe class="w-full h-[70vh] md:h-[600px] mt-4 border rounded-lg" src="https://script.google.com/macros/s/AKfycbxQQ_Cv9iYd1ICgqHLkIdOUx4HlHWrpeNiJewE8uPz6un-awMXOsQGiOqwu-7GpzMw1/exec?m=1" title="Dữ liệu bán hàng"></iframe>
           <div class="mt-2 text-right">
-            <a class="inline-flex items-center gap-2 text-sm text-blue-700 underline" target="_blank" rel="noopener" href="https://script.google.com/macros/s/AKfycbyUuZDvJoll8ONYOV11uc-aPUePGanqboqSFLByAlII-BpUEqy-_Z8HS-tj-AX7MyCe/exec?m=1">
+            <a class="inline-flex items-center gap-2 text-sm text-blue-700 underline" target="_blank" rel="noopener" href="https://script.google.com/macros/s/AKfycbxQQ_Cv9iYd1ICgqHLkIdOUx4HlHWrpeNiJewE8uPz6un-awMXOsQGiOqwu-7GpzMw1/exec?m=1">
               Mở toàn màn hình <i class="fas fa-external-link-alt text-xs"></i>
             </a>
           </div>
@@ -339,10 +335,6 @@
 
         <!-- Hình ảnh -->
         <div id="hinh-anh-content" class="content-tab">
-          <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg" role="alert">
-            <p class="font-bold">Thư viện Hình Ảnh</p>
-            <p>Thư viện hình ảnh được quản lý qua Google Sheets và hiển thị ở đây bằng Google Apps Script.</p>
-          </div>
           <iframe class="w-full h-[70vh] md:h-[600px] mt-4 border rounded-lg" src="https://script.google.com/macros/s/AKfycbxaWxAQJj7kMUFxJEfvpTD8MoxUkp93ewt2_QRSP5trdMQXbtqJHjq2OTnc84MxXWJ9GA/exec?m=1" title="Thư viện hình ảnh"></iframe>
           <div class="mt-2 text-right">
             <a class="inline-flex items-center gap-2 text-sm text-blue-700 underline" target="_blank" rel="noopener" href="https://script.google.com/macros/s/AKfycbxaWxAQJj7kMUFxJEfvpTD8MoxUkp93ewt2_QRSP5trdMQXbtqJHjq2OTnc84MxXWJ9GA/exec?m=1">
@@ -353,10 +345,6 @@
 
         <!-- Hoạt động -->
         <div id="hoat-dong-content" class="content-tab">
-          <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg" role="alert">
-            <p class="font-bold">Danh sách Hoạt Động</p>
-            <p>Danh sách các hoạt động được lấy từ Google Sheets và hiển thị ở đây bằng Google Apps Script.</p>
-          </div>
           <iframe class="w-full h-[70vh] md:h-[600px] mt-4 border rounded-lg" src="about:blank" title="Danh sách hoạt động"></iframe>
         </div>
 
@@ -454,7 +442,8 @@
       loginPage.classList.add('hidden');
       dashboardPage.classList.remove('hidden');
       dashboardPage.classList.add('flex');
-      document.getElementById('trang-chu-content').classList.add('initial-active-tab');
+      // Make the "Bán hàng" tab active on login for testing
+      document.getElementById('ban-hang-content').classList.add('initial-active-tab'); 
       window.scrollTo({top:0,behavior:'smooth'});
     });
 
@@ -475,3 +464,4 @@
   </script>
 </body>
 </html>
+

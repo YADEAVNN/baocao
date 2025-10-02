@@ -5,52 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#F97316" />
   <title>YADEA ERP Portal</title>
-
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
+  <!-- Thêm thư viện Chart.js và plugin Datalabels -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
     :root{color-scheme:light only}
     html{box-sizing:border-box;-webkit-text-size-adjust:100%}
     *,*:before,*:after{box-sizing:inherit}
     body{font-family:'Roboto',system-ui,Arial,sans-serif}
-
-    /* --- NAV mobile scroll pills --- */
     .nav { position: sticky; top: env(safe-area-inset-top,0); z-index: 40; background:#fff; border-bottom:1px solid #eee; }
     .nav__scroll { display:flex; gap:.5rem; overflow-x:auto; padding:.5rem .75rem; scrollbar-width:none }
     .nav__scroll::-webkit-scrollbar{ display:none }
     .nav__link { flex:0 0 auto; padding:.5rem .75rem; border-radius:999px; font-weight:700; font-size:clamp(12px,2.9vw,14px); white-space:nowrap; color:#374151; text-decoration:none }
     .nav__link.active { background:#fff3e9; color:#F97316; border:1px solid #ffd5b3 }
-
     .magazine-title{font-family:'Playfair Display',serif}
-
-    /* Tabs */
     .content-tab{display:none}
     .initial-active-tab{display:block!important}
-
-    /* Loading (giữ lại) */
     .loading-animation{border:4px solid #f3f3f3;border-top:4px solid #F97316;border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite}
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-
-    /* HERO 16:9 không tràn */
     .hero{aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#111}
     .hero > img,.hero > video,.hero > iframe{width:100%;height:100%;object-fit:cover;display:block}
-
-    /* Typography co giãn */
     h1{font-size:clamp(20px,5.2vw,28px);line-height:1.25}
     h2{font-size:clamp(18px,4.6vw,26px);line-height:1.3}
     h3{font-size:clamp(16px,4vw,20px)}
     p,li,span{font-size:clamp(14px,3.4vw,16px)}
-
-    /* Card mềm tay */
     .card{border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    .dashboard-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: #374151;
+        height: 100%;
+        cursor: pointer;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+    .dashboard-card i {
+        font-size: 2rem;
+        color: #F97316;
+    }
+    .dashboard-card span {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -59,13 +73,11 @@
   <div id="login-page" class="flex items-center justify-center min-h-[100svh] bg-gray-50">
     <div class="w-full max-w-4xl p-4 sm:p-8">
       <div class="bg-white rounded-2xl shadow-xl flex flex-col md:flex-row">
-        <!-- Trái -->
         <div class="w-full md:w-1/2 bg-white p-8 sm:p-12 flex flex-col justify-center items-center rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none">
           <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" alt="YADEA Logo" class="h-16 sm:h-20 mb-4">
           <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">YADEA ERP</h1>
           <p class="text-gray-500 mt-2">Electrify Your Life</p>
         </div>
-        <!-- Phải -->
         <div class="w-full md:w-1/2 p-8 sm:p-12">
           <h2 class="text-xl sm:text-2xl font-bold text-gray-700 mb-2">Welcome</h2>
           <p class="text-gray-500 mb-6 sm:mb-8">Please provide your details</p>
@@ -76,7 +88,7 @@
             </div>
             <div class="mb-6">
               <label for="password" class="block text-gray-600 text-sm font-medium mb-2">Password</label>
-              <input type="password" id="password" value="••••••••" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <input type="password" id="password" value="123456" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
             </div>
             <button type="submit" id="login-btn" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center">
               Sign In
@@ -89,16 +101,14 @@
 
   <!-- Trang Tổng Quan -->
   <div id="dashboard-page" class="hidden w-full min-h-[100svh] bg-white flex-col">
-
     <!-- NAV -->
     <header class="nav">
       <div class="max-w-[1200px] mx-auto px-3 sm:px-6 py-2 flex items-center gap-3">
         <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" alt="YADEA Logo" class="h-8 sm:h-10">
         <div class="nav__scroll grow">
-          <a href="#" class="nav__link" data-target="tap-chi">TẠP CHÍ YADEA</a>
+          <a href="#" class="nav__link active" data-target="tap-chi">TẠP CHÍ YADEA</a>
           <a href="#" class="nav__link" data-target="trang-chu">TRANG CHỦ</a>
-          <a href="#" class="nav__link active" data-target="ban-hang">BÁN HÀNG</a>
-          <a href="#" class="nav__link" data-target="hinh-anh">HÌNH ẢNH</a>
+          <a href="#" class="nav__link" data-target="van-hanh">VẬN HÀNH</a>
           <a href="#" class="nav__link" data-target="hoat-dong">HOẠT ĐỘNG</a>
           <a href="#" class="nav__link" data-target="dao-tao">ĐÀO TẠO</a>
         </div>
@@ -108,7 +118,68 @@
     <!-- Nội dung -->
     <main class="flex-grow max-w-[1200px] mx-auto px-3 sm:px-6 py-4 sm:py-8 overflow-y-auto bg-gray-50 w-full">
       <div id="content-area">
+        <!-- Tạp chí YADEA -->
+        <div id="tap-chi-content" class="content-tab initial-active-tab">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Cột trái - Bài viết nổi bật -->
+                <div class="lg:col-span-2">
+                    <div class="relative hero bg-gray-800 text-white flex flex-col justify-center items-center p-8">
+                        <div class="absolute inset-0 bg-black opacity-50 rounded-2xl"></div>
+                        <div class="relative z-10 text-center">
+                           <h1 class="magazine-title text-5xl md:text-7xl font-bold">YADEA Chronicle</h1>
+                        </div>
+                        <div class="absolute bottom-0 left-0 p-6 sm:p-8 z-10">
+                            <h2 class="text-xl sm:text-2xl font-bold">Vinh danh nhân sự xuất sắc: Nguyễn Văn A</h2>
+                            <p class="mt-2 text-gray-200">Với những nỗ lực không ngừng và thành tích vượt trội...</p>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Cột phải - Danh sách bài viết -->
+                <div class="space-y-4">
+                    <!-- Mục 1 -->
+                    <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                        <div class="w-24 h-24 bg-blue-500 rounded-lg flex flex-col justify-center items-center text-white mr-4">
+                            <span class="font-bold text-xl">Event</span>
+                            <span class="text-xs">SỰ KIỆN</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Team-building sôi nổi tại Vũng Tàu</p>
+                        </div>
+                    </a>
+                    <!-- Mục 2 -->
+                    <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                        <div class="w-24 h-24 bg-green-500 rounded-lg flex flex-col justify-center items-center text-white mr-4">
+                            <span class="font-bold text-xl">Sharing</span>
+                             <span class="text-xs">ĐÀO TẠO</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Buổi chia sẻ online: Kỹ năng chốt sale</p>
+                        </div>
+                    </a>
+                    <!-- Mục 3 -->
+                    <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                        <div class="w-24 h-24 bg-purple-500 rounded-lg flex flex-col justify-center items-center text-white mr-4">
+                            <span class="font-bold text-xl">Project</span>
+                             <span class="text-xs">CẬP NHẬT</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Khởi động dự án "YADEA Green Future"</p>
+                        </div>
+                    </a>
+                    <!-- Mục 4 -->
+                    <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                        <div class="w-24 h-24 bg-pink-500 rounded-lg flex flex-col justify-center items-center text-white mr-4">
+                            <span class="font-bold text-xl">Story</span>
+                             <span class="text-xs">CÂU CHUYỆN</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Hành trình của chị Lê Thị B</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
         <!-- Trang chủ -->
         <div id="trang-chu-content" class="content-tab">
           <div id="dashboard-content">
@@ -116,108 +187,59 @@
               <!-- Cột trái -->
               <div class="lg:col-span-2 space-y-4 sm:space-y-8">
                 <!-- Thông tin nhân viên -->
-                <div class="bg-white p-5 sm:p-8 rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-                  <div class="flex items-center gap-4 sm:gap-6">
-                    <img id="user-avatar" class="h-16 w-16 sm:h-24 sm:w-24 rounded-full object-cover" src="https://placehold.co/100x100/FFE4E6/333333?text=VHT" alt="Avatar">
-                    <div>
-                      <h2 id="user-full-name" class="text-2xl sm:text-3xl font-bold text-gray-800">Vũ Huy Thành</h2>
-                      <p id="user-position-store" class="text-gray-500 text-sm sm:text-base mt-1">Quản lý - Cửa hàng YADEA Thủ Dầu Một</p>
-                      <div class="flex items-center mt-2">
-                        <div id="user-star-rating" class="text-yellow-400 text-lg sm:text-xl">
-                          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Thông tin nhân viên</h3>
+                    <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                        <!-- Avatar -->
+                        <img id="user-avatar" class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0" src="https://placehold.co/128x128/CCCCCC/FFFFFF?text=..." alt="Avatar">
+                        <!-- Info Column -->
+                        <div class="flex-grow w-full">
+                            <h2 id="user-full-name" class="text-2xl sm:text-3xl font-bold text-gray-800">...</h2>
+                            <!-- Rating and Score -->
+                            <div class="flex items-center gap-4 my-2">
+                                <div id="user-star-rating" class="text-2xl flex items-center gap-1">
+                                    <!-- Stars will be generated by JS -->
+                                </div>
+                                <p class="text-lg font-bold text-gray-700">Tổng điểm: <span id="user-total-score" class="text-orange-500">...</span></p>
+                            </div>
+                            <!-- Progress Bar -->
+                            <div id="progress-container" class="my-3">
+                                <!-- Progress bar will be generated by JS -->
+                            </div>
+                            <!-- Details -->
+                            <div class="mt-4 text-sm text-gray-600 space-y-1.5">
+                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Mã nhân viên:</strong> <span id="user-employee-id">...</span></p>
+                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Ngày sinh:</strong> <span id="user-birth-date">...</span></p>
+                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Số điện thoại:</strong> <span id="user-phone">...</span></p>
+                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Email:</strong> <span id="user-email">...</span></p>
+                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Ngày vào làm:</strong> <span id="user-join-date">...</span></p>
+                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Ghi chú:</strong> <span id="user-notes">...</span></p>
+                            </div>
                         </div>
-                        <span id="user-total-score" class="ml-3 text-base sm:text-lg font-semibold text-gray-700">1,940.0</span>
-                      </div>
                     </div>
-                  </div>
-                  <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-gray-600">
-                    <p><strong class="font-medium text-gray-800">Mã nhân viên:</strong> <span id="user-employee-id">24051018</span></p>
-                    <p><strong class="font-medium text-gray-800">Ngày sinh:</strong> <span id="user-birth-date">27/10/1992</span></p>
-                    <p><strong class="font-medium text-gray-800">Số điện thoại:</strong> <span id="user-phone">0987747346</span></p>
-                    <p><strong class="font-medium text-gray-800">Ngày vào làm:</strong> <span id="user-join-date">05/10/2024</span></p>
-                    <p class="md:col-span-2"><strong class="font-medium text-gray-800">Email:</strong> <span id="user-email">vuhuythanh.td@gmail.com</span></p>
-                  </div>
-                  <div class="mt-4 sm:mt-6">
-                    <p class="text-sm font-medium text-gray-500">Tiến độ mục tiêu (68%)</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                      <div id="progress-bar" class="bg-orange-500 h-2.5 rounded-full" style="width:68%"></div>
-                    </div>
-                    <p id="progress-percentage" class="text-right text-sm font-medium text-gray-700 mt-1">68%</p>
-                  </div>
                 </div>
-
-                <!-- SI / SO -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between hover:shadow-2xl transition-shadow duration-300 border-l-4 border-blue-500">
-                    <div>
-                      <h3 class="font-semibold text-gray-500">Sell-In (SI)</h3>
-                      <p id="sell-in-value" class="text-2xl sm:text-3xl font-extrabold text-blue-800 mt-1">1,250 SP</p>
-                      <span id="sell-in-change" class="text-sm text-green-600"><i class="fas fa-caret-up"></i> +12.5% so với tháng trước</span>
+                <!-- Báo cáo SI / SO Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <!-- Biểu đồ Sell-In -->
+                    <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
+                        <h3 class="font-semibold text-gray-700">Báo cáo Sell-in (SI)</h3>
+                        <p class="text-xs text-gray-500 mb-3">4 tháng gần nhất</p>
+                        <div class="h-[250px]">
+                            <canvas id="siChart"></canvas>
+                        </div>
                     </div>
-                    <div class="p-3 bg-blue-100 rounded-full text-blue-500">
-                      <i class="fas fa-boxes text-xl sm:text-2xl"></i>
+                    <!-- Biểu đồ Sell-Out -->
+                    <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
+                        <h3 class="font-semibold text-gray-700">Báo cáo Sell-out (SO)</h3>
+                        <p class="text-xs text-gray-500 mb-3">4 tháng gần nhất</p>
+                        <div class="h-[250px]">
+                            <canvas id="soChart"></canvas>
+                        </div>
                     </div>
-                  </div>
-
-                  <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between hover:shadow-2xl transition-shadow duration-300 border-l-4 border-red-500">
-                    <div>
-                      <h3 class="font-semibold text-gray-500">Sell-Out (SO)</h3>
-                      <p id="sell-out-value" class="text-2xl sm:text-3xl font-extrabold text-red-800 mt-1">980 SP</p>
-                      <span id="sell-out-change" class="text-sm text-red-500"><i class="fas fa-caret-down"></i> -5.2% so với Qúy trước</span>
-                    </div>
-                    <div class="p-3 bg-red-100 rounded-full text-red-500">
-                      <i class="fas fa-shipping-fast text-xl sm:text-2xl"></i>
-                    </div>
-                  </div>
                 </div>
               </div>
-
               <!-- Cột phải -->
               <div class="space-y-4 sm:space-y-8">
-                <!-- Quiz -->
-                <div class="bg-white p-5 sm:p-8 rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-                  <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-question-circle mr-3 text-orange-500"></i>QUIZ KIẾN THỨC HÀNG NGÀY</h3>
-                  <form id="quiz-form" class="mt-5 sm:mt-6 space-y-5 sm:space-y-6">
-                    <div id="quiz-questions-area" class="space-y-5 sm:space-y-6">
-                      <!-- Q1 -->
-                      <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="font-semibold text-gray-800 mb-3" id="q1-text">1. (Mô phỏng) Đâu là dòng sản phẩm xe đạp điện mới nhất của YADEA?</p>
-                        <div class="space-y-2 text-sm" data-question-id="Q001">
-                          <label class="flex items-center space-x-2"><input type="radio" name="q1" value="A" class="form-radio text-orange-500"><span id="q1-opt-a">A. VoltGuard</span></label>
-                          <label class="flex items-center space-x-2"><input type="radio" name="q1" value="B" class="form-radio text-orange-500"><span id="q1-opt-b">B. Ocean</span></label>
-                          <label class="flex items-center space-x-2"><input type="radio" name="q1" value="C" class="form-radio text-orange-500"><span id="q1-opt-c">C. Gogo</span></label>
-                        </div>
-                      </div>
-                      <!-- Q2 -->
-                      <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="font-semibold text-gray-800 mb-3" id="q2-text">2. (Mô phỏng) Pin Graphene TTFAR được bảo hành trong bao lâu?</p>
-                        <div class="space-y-2 text-sm" data-question-id="Q002">
-                          <label class="flex items-center space-x-2"><input type="radio" name="q2" value="A" class="form-radio text-orange-500"><span id="q2-opt-a">A. 12 tháng</span></label>
-                          <label class="flex items-center space-x-2"><input type="radio" name="q2" value="B" class="form-radio text-orange-500"><span id="q2-opt-b">B. 18 tháng</span></label>
-                          <label class="flex items-center space-x-2"><input type="radio" name="q2" value="C" class="form-radio text-orange-500"><span id="q2-opt-c">C. 24 tháng</span></label>
-                          <label class="flex items-center space-x-2"><input type="radio" name="q2" value="D" class="form-radio text-orange-500"><span id="q2-opt-d">D. 30 tháng</span></label>
-                        </div>
-                      </div>
-                      <!-- Q3 -->
-                      <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="font-semibold text-gray-800 mb-3" id="q3-text">3. (Mô phỏng) Mục tiêu doanh số cá nhân của bạn trong quý này là bao nhiêu?</p>
-                        <div class="space-y-2 text-sm" data-question-id="Q003">
-                          <label class="flex items-center space-x-2"><input type="radio" name="q3" value="A" class="form-radio text-orange-500"><span id="q3-opt-a">A. 100 chiếc</span></label>
-                          <label class="flex items-center space-x-2"><input type="radio" name="q3" value="B" class="form-radio text-orange-500"><span id="q3-opt-b">B. 120 chiếc</span></label>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button type="submit" id="submit-quiz-btn" class="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition-colors duration-300 flex items-center justify-center">
-                      <i class="fas fa-check-circle mr-2"></i> Gửi Đáp Án
-                    </button>
-                    <div id="quiz-message" class="text-sm text-center font-semibold mt-3 hidden"></div>
-                  </form>
-                  <div id="quiz-completed-message" class="hidden mt-6 bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg text-center font-bold">
-                    <i class="fas fa-trophy mr-2"></i> Bạn đã hoàn thành Quiz hôm nay!
-                  </div>
-                </div>
-
                 <!-- Chi tiết điểm -->
                 <div class="bg-white p-5 sm:p-8 rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
                   <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-info-circle mr-3 text-orange-500"></i>CHI TIẾT DIỄN BIẾN NHÂN VIÊN</h3>
@@ -234,197 +256,112 @@
                   </div>
                 </div>
               </div>
-            </div> <!-- /grid -->
-          </div>
-        </div>
-
-        <!-- Tạp chí -->
-        <div id="tap-chi-content" class="content-tab">
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-            <!-- Trái -->
-            <div class="lg:col-span-2 relative group">
-              <div class="absolute top-0 -left-10 sm:-left-12 h-full items-center hidden sm:flex">
-                <span class="text-gray-300 font-bold uppercase tracking-widest [writing-mode:vertical-lr] rotate-180">Gương Mặt Của Tháng</span>
-              </div>
-
-              <div class="relative w-full hero shadow-2xl">
-                <img src="https://placehold.co/1200x800/333333/FFFFFF?text=YADEA+Chronicle" alt="Featured Article" class="absolute w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div class="absolute inset-0 hidden sm:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div class="w-20 h-20 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <i class="fas fa-play text-white text-3xl"></i>
-                  </div>
-                </div>
-                <div class="absolute bottom-0 left-0 p-4 sm:p-8 text-white">
-                  <h2 class="font-bold magazine-title">Vinh danh nhân sự xuất sắc: Nguyễn Văn A</h2>
-                  <p class="mt-2 text-gray-200 max-w-lg hidden sm:block">Với những nỗ lực không ngừng và thành tích vượt trội...</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Phải -->
-            <div class="space-y-4 sm:space-y-6 flex flex-col justify-between">
-              <!-- Tin 1 -->
-              <div class="flex items-center gap-3 sm:gap-4 group cursor-pointer">
-                <div class="w-28 h-20 sm:w-32 rounded-lg overflow-hidden flex-shrink-0 relative">
-                  <img src="https://placehold.co/300x200/3B82F6/FFFFFF?text=Event" alt="" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                  <div class="absolute inset-0 hidden sm:flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i class="fas fa-play text-white text-xl"></i>
-                  </div>
-                </div>
-                <div>
-                  <span class="text-[11px] sm:text-xs font-bold text-gray-500">SỰ KIỆN</span>
-                  <h3 class="font-semibold text-gray-800 mt-1 group-hover:text-orange-600">Team-building sôi nổi tại Vũng Tàu</h3>
-                </div>
-              </div>
-
-              <!-- Tin 2 -->
-              <div class="flex items-center gap-3 sm:gap-4 group cursor-pointer">
-                <div class="w-28 h-20 sm:w-32 rounded-lg overflow-hidden flex-shrink-0 relative">
-                  <img src="https://placehold.co/300x200/10B981/FFFFFF?text=Sharing" alt="" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                  <div class="absolute inset-0 hidden sm:flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i class="fas fa-play text-white text-xl"></i>
-                  </div>
-                </div>
-                <div>
-                  <span class="text-[11px] sm:text-xs font-bold text-gray-500">ĐÀO TẠO</span>
-                  <h3 class="font-semibold text-gray-800 mt-1 group-hover:text-orange-600">Buổi chia sẻ online: Kỹ năng chốt sale</h3>
-                </div>
-              </div>
-
-              <!-- Tin 3 -->
-              <div class="flex items-center gap-3 sm:gap-4 group cursor-pointer">
-                <div class="w-28 h-20 sm:w-32 rounded-lg overflow-hidden flex-shrink-0 relative">
-                  <img src="https://placehold.co/300x200/8B5CF6/FFFFFF?text=Project" alt="" class="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110" />
-                  <div class="absolute inset-0 hidden sm:flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i class="fas fa-play text-white text-xl"></i>
-                  </div>
-                </div>
-                <div>
-                  <span class="text-[11px] sm:text-xs font-bold text-gray-500">CẬP NHẬT</span>
-                  <h3 class="font-semibold text-gray-800 mt-1 group-hover:text-orange-600">Khởi động dự án "YADEA Green Future"</h3>
-                </div>
-              </div>
-
-              <!-- Tin 4 -->
-              <div class="flex items-center gap-3 sm:gap-4 group cursor-pointer">
-                <div class="w-28 h-20 sm:w-32 rounded-lg overflow-hidden flex-shrink-0 relative">
-                  <img src="https://placehold.co/300x200/EC4899/FFFFFF?text=Story" alt="" class="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110" />
-                  <div class="absolute inset-0 hidden sm:flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i class="fas fa-play text-white text-xl"></i>
-                  </div>
-                </div>
-                <div>
-                  <span class="text-[11px] sm:text-xs font-bold text-gray-500">CÂU CHUYỆN</span>
-                  <h3 class="font-semibold text-gray-800 mt-1 group-hover:text-orange-600">Hành trình của chị Lê Thị B</h3>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-
-        <!-- Bán hàng -->
-        <div id="ban-hang-content" class="content-tab initial-active-tab">
-          <iframe class="w-full h-[70vh] md:h-[600px] mt-4 border rounded-lg" src="https://script.google.com/macros/s/AKfycbxQQ_Cv9iYd1ICgqHLkIdOUx4HlHWrpeNiJewE8uPz6un-awMXOsQGiOqwu-7GpzMw1/exec?m=1" title="Dữ liệu bán hàng"></iframe>
-          <div class="mt-2 text-right">
-            <a class="inline-flex items-center gap-2 text-sm text-blue-700 underline" target="_blank" rel="noopener" href="https://script.google.com/macros/s/AKfycbxQQ_Cv9iYd1ICgqHLkIdOUx4HlHWrpeNiJewE8uPz6un-awMXOsQGiOqwu-7GpzMw1/exec?m=1">
-              Mở toàn màn hình <i class="fas fa-external-link-alt text-xs"></i>
-            </a>
-          </div>
+        <!-- Vận hành -->
+        <div id="van-hanh-content" class="content-tab">
+             <iframe class="w-full h-[80vh] border-0 rounded-lg" src="https://script.google.com/macros/s/AKfycbxrbdbD4ckty8mjGCiqIdjDoGSf420CQ3JQ9YWQ36K1pPnGCTrHGwnj0tQrJYXJkbRQ-w/exec"></iframe>
         </div>
-
-        <!-- Hình ảnh -->
-        <div id="hinh-anh-content" class="content-tab">
-          <iframe class="w-full h-[70vh] md:h-[600px] mt-4 border rounded-lg" src="https://script.google.com/macros/s/AKfycbxaWxAQJj7kMUFxJEfvpTD8MoxUkp93ewt2_QRSP5trdMQXbtqJHjq2OTnc84MxXWJ9GA/exec?m=1" title="Thư viện hình ảnh"></iframe>
-          <div class="mt-2 text-right">
-            <a class="inline-flex items-center gap-2 text-sm text-blue-700 underline" target="_blank" rel="noopener" href="https://script.google.com/macros/s/AKfycbxaWxAQJj7kMUFxJEfvpTD8MoxUkp93ewt2_QRSP5trdMQXbtqJHjq2OTnc84MxXWJ9GA/exec?m=1">
-              Mở toàn màn hình <i class="fas fa-external-link-alt text-xs"></i>
-            </a>
-          </div>
-        </div>
-
-        <!-- Hoạt động -->
-        <div id="hoat-dong-content" class="content-tab">
-          <iframe class="w-full h-[70vh] md:h-[600px] mt-4 border rounded-lg" src="about:blank" title="Danh sách hoạt động"></iframe>
-        </div>
-
         <!-- Đào tạo -->
         <div id="dao-tao-content" class="content-tab">
-          <div class="flex h-full bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden flex-col md:flex-row">
-            <!-- Sidebar -->
-            <div class="w-full md:w-56 bg-gray-800 text-white p-5 flex flex-row md:flex-col gap-2 md:gap-0 flex-shrink-0">
-              <h2 class="font-bold text-lg mb-2 md:mb-4 px-2 w-full">Danh mục</h2>
-              <a href="#" class="flex items-center space-x-3 p-2 rounded hover:bg-gray-700 transition-colors w-full"><i class="fas fa-book w-5 text-center"></i><span>Kiến thức sản phẩm</span></a>
-              <a href="#" class="flex items-center space-x-3 p-2 rounded hover:bg-gray-700 transition-colors w-full"><i class="fas fa-landmark w-5 text-center"></i><span>Văn hoá & Quy định</span></a>
-              <a href="#" class="flex items-center justify-between p-2 rounded hover:bg-gray-700 transition-colors w-full">
-                <div class="flex items-center space-x-3"><i class="fas fa-layer-group w-5 text-center"></i><span>Học theo chuyên đề</span></div>
-                <i class="fas fa-plus text-xs"></i>
-              </a>
-              <a href="#" class="flex items-center space-x-3 p-2 rounded hover:bg-gray-700 transition-colors w-full"><i class="fas fa-chart-line w-5 text-center"></i><span>Kỹ năng bán hàng</span></a>
-              <a href="#" class="flex items-center space-x-3 p-2 rounded hover:bg-gray-700 transition-colors w-full"><i class="fas fa-list-alt w-5 text-center"></i><span>Danh sách bài học</span></a>
-              <a href="#" class="flex items-center space-x-3 p-2 rounded hover:bg-gray-700 transition-colors w-full"><i class="fas fa-poll w-5 text-center"></i><span>Kết quả</span></a>
-            </div>
-
-            <!-- Nội dung -->
-            <div class="flex-1 p-5 sm:p-8 overflow-y-auto">
-              <p class="text-sm text-gray-500 mb-4">Training > <span class="font-semibold text-gray-700">Training Online</span></p>
-
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">ONLINE TRAINING</h1>
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                  <input type="text" placeholder="Nhập tên bài học..." class="flex-1 sm:w-72 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
-                  <button class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors">Tìm kiếm</button>
-                </div>
+          <div class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
+              <!-- Left Sidebar -->
+              <aside class="w-full md:w-1/4 lg:w-1/5 bg-gray-800 text-white rounded-lg p-6">
+                  <h3 class="font-bold text-lg mb-6">Danh mục</h3>
+                  <nav class="space-y-4">
+                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors">
+                          <i class="fas fa-book w-5 text-center"></i>
+                          <span>Kiến thức sản phẩm</span>
+                      </a>
+                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors">
+                          <i class="fas fa-landmark w-5 text-center"></i>
+                          <span>Văn hoá & Quy định</span>
+                      </a>
+                      <a href="#" class="flex items-center justify-between hover:bg-gray-700 p-2 rounded-md transition-colors">
+                          <div class="flex items-center gap-3">
+                            <i class="fas fa-graduation-cap w-5 text-center"></i>
+                            <span>Học theo chuyên đề</span>
+                          </div>
+                          <i class="fas fa-plus text-xs"></i>
+                      </a>
+                      <a href="#" class="flex items-center gap-3 bg-gray-700 p-2 rounded-md transition-colors">
+                          <i class="fas fa-lightbulb w-5 text-center"></i>
+                          <span>Kỹ năng bán hàng</span>
+                      </a>
+                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors">
+                          <i class="fas fa-list-alt w-5 text-center"></i>
+                          <span>Danh sách bài học</span>
+                      </a>
+                       <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors">
+                          <i class="fas fa-poll w-5 text-center"></i>
+                          <span>Kết quả</span>
+                      </a>
+                  </nav>
+              </aside>
+              <!-- Main Content -->
+              <div class="flex-grow">
+                  <!-- Header -->
+                  <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                      <div>
+                          <p class="text-sm text-gray-500">Training > Training Online</p>
+                          <h2 class="text-2xl font-bold text-gray-800">ONLINE TRAINING</h2>
+                      </div>
+                      <div class="flex items-center mt-4 md:mt-0">
+                          <input type="text" placeholder="Nhập tên bài học..." class="border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                          <button class="bg-orange-500 text-white px-4 py-2 rounded-r-md hover:bg-orange-600 font-semibold">Tìm kiếm</button>
+                      </div>
+                  </header>
+                  <!-- Featured Course -->
+                  <div class="relative w-full h-64 md:h-80 bg-gray-200 rounded-lg flex justify-center items-center mb-6">
+                      <h1 class="text-4xl font-bold text-gray-700">YADEA VoltGuard Series</h1>
+                      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                          <button class="w-3 h-3 bg-white rounded-full"></button>
+                          <button class="w-3 h-3 bg-gray-400 rounded-full"></button>
+                          <button class="w-3 h-3 bg-gray-400 rounded-full"></button>
+                      </div>
+                  </div>
+                  <!-- Course List -->
+                  <div>
+                      <h3 class="text-xl font-bold text-gray-800 mb-4">Tất cả bài học</h3>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                          <!-- Course Card 1 -->
+                          <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                              <div class="bg-red-100 text-red-700 font-bold text-2xl p-6 text-center">VoltGuard</div>
+                              <div class="p-4">
+                                  <p class="text-sm text-gray-600">Sản phẩm: YADEA VoltGuard</p>
+                                  <p class="text-sm text-gray-600">Thời lượng: 45 phút</p>
+                              </div>
+                          </div>
+                          <!-- Course Card 2 -->
+                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                              <div class="bg-gray-200 h-28 flex items-center justify-center">
+                                 <img src="https://placehold.co/100x40?text=Orla" alt="Orla Image" class="opacity-50">
+                              </div>
+                              <div class="p-4">
+                                  <p class="text-sm text-gray-600">Sản phẩm: YADEA Orla</p>
+                                  <p class="text-sm text-gray-600">Thời lượng: 30 phút</p>
+                              </div>
+                          </div>
+                          <!-- Course Card 3 -->
+                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                              <div class="bg-blue-100 text-blue-700 font-bold text-2xl p-6 text-center">Kỹ Năng</div>
+                              <div class="p-4">
+                                  <p class="text-sm text-gray-600">Kỹ năng mềm: Chăm sóc khách hàng</p>
+                                  <p class="text-sm text-gray-600">Thời lượng: 1 giờ</p>
+                              </div>
+                          </div>
+                           <!-- Course Card 4 -->
+                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                              <div class="bg-gray-100 text-gray-700 font-bold text-2xl p-6 text-center">Quy Trình</div>
+                              <div class="p-4">
+                                  <p class="text-sm text-gray-600">Quy trình: Xử lý khiếu nại</p>
+                                  <p class="text-sm text-gray-600">Thời lượng: 25 phút</p>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
               </div>
-
-              <!-- Banner -->
-              <div class="mt-6">
-                <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" alt="YADEA Logo" class="h-8 sm:h-10 mb-3 sm:mb-4">
-                <div class="relative w-full rounded-lg overflow-hidden shadow-lg hero">
-                  <img src="https://placehold.co/1000x450/F3F4F6/333333?text=YADEA+VoltGuard+Series" alt="Training Banner" class="w-full h-full object-cover">
-                  <div class="absolute bottom-3 left-1/2 -translate-x-1/2 hidden sm:flex space-x-2">
-                    <span class="block w-3 h-3 bg-white rounded-full ring-2 ring-offset-2 ring-offset-gray-800 ring-white"></span>
-                    <span class="block w-3 h-3 bg-white/60 rounded-full"></span>
-                    <span class="block w-3 h-3 bg-white/60 rounded-full"></span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Danh sách bài học -->
-              <div class="mt-8 sm:mt-12">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Tất cả bài học</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group cursor-pointer">
-                    <img src="https://placehold.co/400x250/FEF2F2/DC2626?text=VoltGuard" alt="" class="w-full h-32 object-cover">
-                    <div class="p-4">
-                      <h3 class="font-semibold text-gray-800 group-hover:text-orange-600">Sản phẩm: YADEA VoltGuard</h3>
-                      <p class="text-xs text-gray-500 mt-2">Thời lượng: 45 phút</p>
-                    </div>
-                  </div>
-                  <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group cursor-pointer">
-                    <img src="https://placehold.co/400x250/EFF6FF/3B82F6/FFFFFF?text=Orla" alt="" class="w-full h-32 object-cover">
-                    <div class="p-4">
-                      <h3 class="font-semibold text-gray-800 group-hover:text-orange-600">Sản phẩm: YADEA Orla</h3>
-                      <p class="text-xs text-gray-500 mt-2">Thời lượng: 30 phút</p>
-                    </div>
-                  </div>
-                  <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group cursor-pointer">
-                    <img src="https://placehold.co/400x250/F0F9FF/0EA5E9?text=Kỹ+Năng" alt="" class="w-full h-32 object-cover">
-                    <div class="p-4">
-                      <h3 class="font-semibold text-gray-800 group-hover:text-orange-600">Kỹ năng mềm: Chăm sóc khách hàng</h3>
-                      <p class="text-xs text-gray-500 mt-2">Thời lượng: 1 giờ</p>
-                    </div>
-                  </div>
-                  <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group cursor-pointer">
-                    <img src="https://placehold.co/400x250/F5F5F5/4B5563?text=Quy+Trình" alt="" class="w-full h-32 object-cover">
-                    <div class="p-4">
-                      <h3 class="font-semibold text-gray-800 group-hover:text-orange-600">Quy trình: Xử lý khiếu nại</h3>
-                      <p class="text-xs text-gray-500 mt-2">Thời lượng: 25 phút</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div> <!-- /content -->
           </div>
         </div>
 
@@ -432,36 +369,332 @@
     </main>
   </div>
 
-  <script>
+
+<script>
     const loginPage = document.getElementById('login-page');
     const dashboardPage = document.getElementById('dashboard-page');
     const loginForm = document.getElementById('login-form');
+    let siChartInstance = null;
+    let soChartInstance = null;
+    
+    // Đăng ký plugin Datalabels một lần toàn cục
+    Chart.register(ChartDataLabels);
 
     loginForm.addEventListener('submit', function(event) {
-      event.preventDefault();
-      loginPage.classList.add('hidden');
-      dashboardPage.classList.remove('hidden');
-      dashboardPage.classList.add('flex');
-      // Make the "Bán hàng" tab active on login for testing
-      document.getElementById('ban-hang-content').classList.add('initial-active-tab'); 
-      window.scrollTo({top:0,behavior:'smooth'});
-    });
+        event.preventDefault();
+        
+        // Dữ liệu người dùng mẫu vì đã bỏ qua đăng nhập
+        const mockUser = {
+            fullName: "Vũ Huy Thành",
+            position: "Nhân viên Bán hàng",
+            store: "YADEA SHOP HÀ NỘI",
+            employeeId: "NV001",
+            birthDate: "1995-08-15",
+            phone: "0912345678",
+            joinDate: "2023-01-20",
+            email: "thanh.vu@yadea.com.vn",
+            notes: "Nhân viên tiềm năng",
+            avatarUrl: "https://raw.githubusercontent.com/vuhuythanh/tichdiem/main/thanh.vu.png",
+            totalScore: 1940.0,
+            rating: 4.5
+        };
 
+        populateUserInfo(mockUser);
+        renderReportCharts();
+        
+        loginPage.classList.add('hidden');
+        dashboardPage.classList.remove('hidden');
+        dashboardPage.classList.add('flex');
+    });
+    
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return dateString;
+        }
+    }
+
+    function populateUserInfo(userData) {
+        if (!userData) return;
+        const setText = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value || 'N/A';
+        };
+        const avatarEl = document.getElementById('user-avatar');
+        if (avatarEl) {
+            avatarEl.src = userData.avatarUrl || 'https://placehold.co/100x100/CCCCCC/FFFFFF?text=No+Img';
+            avatarEl.onerror = () => { avatarEl.src = 'https://placehold.co/100x100/CCCCCC/FFFFFF?text=Error'; };
+        }
+        setText('user-full-name', userData.fullName);
+        setText('user-position-store', `${userData.position} - ${userData.store}`);
+        setText('user-employee-id', userData.employeeId);
+        setText('user-birth-date', formatDate(userData.birthDate));
+        setText('user-phone', userData.phone);
+        setText('user-join-date', formatDate(userData.joinDate));
+        setText('user-email', userData.email);
+        setText('user-notes', userData.notes || 'Không có');
+
+        // Populate Stars and Progress
+        const totalScore = parseFloat(userData.totalScore) || 1978.0;
+        const rating = (userData.rating && userData.rating > 0) ? parseFloat(userData.rating) : 3.5; // Default to 3.5 stars if not provided
+
+        const starContainer = document.getElementById('user-star-rating');
+        if (starContainer) {
+            starContainer.innerHTML = ''; // Clear old stars
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                if (i <= rating) {
+                    star.className = 'fas fa-star text-orange-400';
+                } else if (i - rating < 1) {
+                    star.className = 'fas fa-star-half-alt text-orange-400';
+                } else {
+                    star.className = 'far fa-star text-gray-300';
+                }
+                starContainer.appendChild(star);
+            }
+        }
+        
+        setText('user-total-score', totalScore.toLocaleString('vi-VN'));
+
+        const progressContainer = document.getElementById('progress-container');
+        if (progressContainer) {
+            // Mock data for progress bar based on image
+            const val1 = 978;
+            const val2 = 1022;
+            const total = val1 + val2;
+            const percent1 = (val1 / total) * 100;
+
+            progressContainer.innerHTML = `
+                <div class="w-full flex rounded-full h-5 bg-red-400 overflow-hidden border border-gray-200">
+                    <div class="bg-orange-500 flex justify-center items-center text-xs font-medium text-white" style="width: ${percent1}%">
+                        ${val1.toLocaleString('vi-VN')}
+                    </div>
+                    <div class="bg-rose-500 flex justify-center items-center text-xs font-medium text-white" style="flex-grow: 1;">
+                        ${val2.toLocaleString('vi-VN')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    function renderReportCharts() {
+        renderSiChart();
+        renderSoChart();
+    }
+
+    function createChart(canvasId, chartData, gradientColors) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+        gradient.addColorStop(0, gradientColors.start);
+        gradient.addColorStop(1, gradientColors.end);
+
+        const chartConfig = {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: chartData.label,
+                        data: chartData.data,
+                        backgroundColor: gradient,
+                        borderWidth: 0,
+                        borderRadius: 6,
+                        order: 1,
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'white',
+                            font: { weight: 'bold', size: 14 },
+                            formatter: (value) => value.toLocaleString('vi-VN'),
+                        }
+                    },
+                    {
+                        type: 'line',
+                        label: `${chartData.label} Trend`,
+                        data: chartData.data,
+                        borderColor: gradientColors.line,
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: gradientColors.line,
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        tension: 0.3,
+                        order: 0,
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 6,
+                            font: { weight: 'bold', size: 11 },
+                            formatter: (value, context) => {
+                                if (context.dataIndex === 0) return null;
+                                const prevValue = context.dataset.data[context.dataIndex - 1];
+                                if (!prevValue) return null;
+                                const change = ((value - prevValue) / prevValue) * 100;
+                                return (change >= 0 ? '▲' : '▼') + ` ${Math.abs(change).toFixed(1)}%`;
+                            },
+                            color: (context) => {
+                                 if (context.dataIndex === 0) return null;
+                                 const prevValue = context.dataset.data[context.dataIndex - 1];
+                                 if (!prevValue) return null;
+                                 return context.dataset.data[context.dataIndex] >= prevValue ? '#16A34A' : '#DC2626';
+                            }
+                        }
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        display: false,
+                        suggestedMax: Math.max(...chartData.data) * 1.25 // Thêm 25% khoảng trống ở trên
+                    },
+                    x: {
+                       grid: { display: false },
+                       ticks: { color: '#6b7280', font: { weight: '500' } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#111827',
+                        titleFont: { weight: 'bold' },
+                        bodyFont: { weight: '500' },
+                        padding: 10,
+                        cornerRadius: 6,
+                    },
+                    datalabels: { display: true }
+                }
+            }
+        };
+
+        return new Chart(ctx, chartConfig);
+    }
+
+    function renderSiChart() {
+        if (siChartInstance) siChartInstance.destroy();
+        
+        const labels = [];
+        const currentDate = new Date();
+        for (let i = 3; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(currentDate.getMonth() - i);
+            labels.push(`T${d.getMonth() + 1}`);
+        }
+
+        const siChartData = {
+            labels: labels,
+            label: 'Sell-In',
+            data: [1150, 1300, 1200, 1250]
+        };
+        
+        const siColors = {
+            start: 'rgba(249, 115, 22, 0.8)',
+            end: 'rgba(251, 146, 60, 0.5)',
+            line: '#c2410c'
+        };
+
+        siChartInstance = createChart('siChart', siChartData, siColors);
+    }
+
+    function renderSoChart() {
+        if (soChartInstance) soChartInstance.destroy();
+
+        const labels = [];
+        const currentDate = new Date();
+        for (let i = 3; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(currentDate.getMonth() - i);
+            labels.push(`T${d.getMonth() + 1}`);
+        }
+        
+        const soChartData = {
+            labels: labels,
+            label: 'Sell-Out',
+            data: [950, 1100, 900, 980]
+        };
+
+        const soColors = {
+            start: 'rgba(37, 99, 235, 0.8)', // Professional Blue
+            end: 'rgba(96, 165, 250, 0.5)',
+            line: '#1e40af' // Darker Blue
+        };
+
+        soChartInstance = createChart('soChart', soChartData, soColors);
+    }
+    
+    // --- Navigation tab switching logic ---
     const navLinks = document.querySelectorAll('.nav__link');
     const contentTabs = document.querySelectorAll('.content-tab');
-
     navLinks.forEach(link => {
-      link.addEventListener('click', function(e){
-        e.preventDefault();
-        navLinks.forEach(n => n.classList.remove('active'));
-        this.classList.add('active');
-        const targetId = this.getAttribute('data-target');
-        contentTabs.forEach(tab => { tab.style.display='none'; tab.classList.remove('initial-active-tab'); });
-        const targetTab = document.getElementById(targetId + '-content');
-        if(targetTab){ targetTab.style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); }
-      });
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            navLinks.forEach(n => n.classList.remove('active'));
+            this.classList.add('active');
+            const targetId = this.getAttribute('data-target');
+            contentTabs.forEach(tab => { 
+                tab.style.display = 'none'; 
+                tab.classList.remove('initial-active-tab'); 
+            });
+            const targetTab = document.getElementById(targetId + '-content');
+            if (targetTab) { 
+                targetTab.style.display = 'block'; 
+                window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            }
+        });
     });
-  </script>
+
+    // --- Dashboard Card to Iframe View Logic ---
+    document.querySelectorAll('.dashboard-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+            const title = this.querySelector('span').textContent;
+            if (!url) return;
+
+            const parentTab = this.closest('.content-tab');
+            if (!parentTab) return;
+
+            const dashboardView = parentTab.querySelector('.dashboard-view');
+            const iframeView = parentTab.querySelector('.iframe-view');
+            const viewTitle = iframeView.querySelector('.view-title');
+            const iframe = iframeView.querySelector('iframe');
+
+            viewTitle.textContent = title;
+            iframe.src = url;
+            
+            dashboardView.classList.add('hidden');
+            iframeView.classList.remove('hidden');
+        });
+    });
+
+    // --- Back to Dashboard Button Logic ---
+    document.querySelectorAll('.back-to-dashboard-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const parentTab = this.closest('.content-tab');
+            if (!parentTab) return;
+
+            const dashboardView = parentTab.querySelector('.dashboard-view');
+            const iframeView = parentTab.querySelector('.iframe-view');
+            const iframe = iframeView.querySelector('iframe');
+
+            iframe.src = 'about:blank'; // Clear src to stop loading
+            iframeView.classList.add('hidden');
+            dashboardView.classList.remove('hidden');
+        });
+    });
+
+</script>
 </body>
 </html>
 

@@ -71,9 +71,86 @@
     .todo-item input[type="checkbox"] { width: 1.25rem; height: 1.25rem; accent-color: #F97316; cursor: pointer; }
     .todo-item .delete-btn { margin-left: auto; background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 1.2rem; transition: color 0.2s; padding: 0.25rem 0.5rem; }
     .todo-item .delete-btn:hover { color: #ef4444; }
+    
+    /* Modal styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+    }
+    .modal-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    .modal-content {
+        background: white;
+        padding: 1rem;
+        border-radius: 12px;
+        position: relative;
+        width: 90%;
+        max-width: 900px;
+        transform: scale(0.9);
+        transition: transform 0.3s;
+    }
+    .modal-overlay.visible .modal-content {
+        transform: scale(1);
+    }
+    .modal-close {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        background: #F97316;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .modal-body {
+        width: 100%;
+        height: 80vh;
+    }
+    .modal-body iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    /* Article view styles */
+    #article-body p { margin-bottom: 1rem; line-height: 1.7; }
+    #article-body h3 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; }
+    #article-body ul { list-style-type: disc; list-style-position: inside; margin-left: 1rem; margin-bottom: 1rem; }
+    #article-body li { margin-bottom: 0.5rem; }
+    #article-body a { color: #F97316; text-decoration: underline; }
+    #article-body strong { font-weight: bold; }
   </style>
 </head>
 <body class="bg-gray-100">
+
+  <!-- Modal for content display -->
+  <div id="content-modal" class="modal-overlay">
+      <div class="modal-content">
+          <button id="modal-close-btn" class="modal-close">&times;</button>
+          <div class="modal-body">
+              <iframe id="modal-iframe" src="" allowfullscreen></iframe>
+          </div>
+      </div>
+  </div>
 
   <!-- Trang Đăng nhập -->
   <div id="login-page" class="flex items-center justify-center min-h-[100svh] bg-gray-50">
@@ -130,49 +207,29 @@
       <div id="content-area">
         <!-- Tạp chí YADEA -->
         <div id="tap-chi-content" class="content-tab initial-active-tab">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Cột trái - Bài viết nổi bật -->
-                <div class="lg:col-span-2">
-                    <div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8">
-                         <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop" alt="Team meeting" class="absolute inset-0">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div>
-                        <div class="relative z-10">
-                            <h2 class="text-2xl sm:text-3xl font-bold">Vinh danh nhân sự xuất sắc Quý 3</h2>
-                            <p class="mt-2 text-gray-200">Với những nỗ lực không ngừng và thành tích vượt trội...</p>
-                        </div>
+            <div id="magazine-list-view">
+                <div id="magazine-container" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Cột trái - Bài viết nổi bật -->
+                    <div id="featured-article-container" class="lg:col-span-2">
+                         <!-- Loading spinner -->
+                        <div class="flex justify-center items-center h-64"><div class="loading-animation"></div></div>
+                    </div>
+                    <!-- Cột phải - Danh sách bài viết -->
+                    <div id="article-list-container" class="space-y-4">
+                         <!-- Loading spinner -->
+                         <div class="flex justify-center items-center h-64"><div class="loading-animation"></div></div>
                     </div>
                 </div>
-
-                <!-- Cột phải - Danh sách bài viết -->
-                <div class="space-y-4">
-                    <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
-                            <i class="fas fa-calendar-star text-2xl"></i>
-                            <span class="text-xs font-bold mt-1">SỰ KIỆN</span>
-                        </div>
-                        <div><p class="font-semibold text-gray-800">Team-building sôi nổi tại Vũng Tàu</p></div>
-                    </a>
-                    <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-20 h-20 bg-green-100 text-green-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
-                             <i class="fas fa-chalkboard-teacher text-2xl"></i>
-                             <span class="text-xs font-bold mt-1">ĐÀO TẠO</span>
-                        </div>
-                        <div><p class="font-semibold text-gray-800">Buổi chia sẻ online: Kỹ năng chốt sale</p></div>
-                    </a>
-                    <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-20 h-20 bg-purple-100 text-purple-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
-                            <i class="fas fa-rocket text-2xl"></i>
-                             <span class="text-xs font-bold mt-1">CẬP NHẬT</span>
-                        </div>
-                        <div><p class="font-semibold text-gray-800">Khởi động dự án "YADEA Green Future"</p></div>
-                    </a>
-                    <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-20 h-20 bg-pink-100 text-pink-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
-                             <i class="fas fa-user-edit text-2xl"></i>
-                             <span class="text-xs font-bold mt-1">CÂU CHUYỆN</span>
-                        </div>
-                        <div><p class="font-semibold text-gray-800">Hành trình của chị Lê Thị B</p></div>
-                    </a>
+            </div>
+            <!-- Giao diện xem bài viết chi tiết -->
+            <div id="article-detail-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <button id="back-to-magazine-btn" class="text-gray-600 hover:text-orange-500 font-bold flex items-center mb-6">
+                    <i class="fas fa-arrow-left mr-2"></i> Trở về Tạp chí
+                </button>
+                <img id="article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="Article Image" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
+                <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
+                <div id="article-body" class="max-w-none text-gray-700">
+                    <!-- Nội dung bài viết sẽ được chèn vào đây bởi JS -->
                 </div>
             </div>
         </div>
@@ -308,6 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let siChartInstance = null;
     let soChartInstance = null;
     
+    // Modal elements
+    const contentModal = document.getElementById('content-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalIframe = document.getElementById('modal-iframe');
+
     Chart.register(ChartDataLabels);
 
     loginForm.addEventListener('submit', function(event) {
@@ -338,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             populateUserInfo(mockUser);
             renderReportCharts();
             renderTasks();
+            loadMagazineContent(); // Load magazine content after login
             
             loginPage.classList.add('hidden');
             dashboardPage.classList.remove('hidden');
@@ -494,8 +557,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = this.getAttribute('href');
             const title = this.querySelector('span').textContent;
             if (!url || url === '#') { 
-                // In a real app, you'd use a custom modal here
-                // For this prototype, we'll keep it simple
                 alert('Chức năng này đang được phát triển.'); 
                 return;
             }
@@ -524,6 +585,150 @@ document.addEventListener('DOMContentLoaded', () => {
             dashboardView.classList.remove('hidden');
         });
     });
+
+    // --- Magazine Content Logic ---
+    const magazineListView = document.getElementById('magazine-list-view');
+    const articleDetailView = document.getElementById('article-detail-view');
+    const backToMagazineBtn = document.getElementById('back-to-magazine-btn');
+
+    backToMagazineBtn.addEventListener('click', () => {
+        articleDetailView.classList.add('hidden');
+        magazineListView.style.display = 'block';
+    });
+
+    async function loadMagazineContent() {
+        const apiUrl = "https://script.google.com/macros/s/AKfycbxRV_BMTngqvMczfH5FWeLTb0cWJi923sdts9SUwHmmbZPQ8yU-1p_I_a0L_AWwy5Qr/exec";
+        const featuredContainer = document.getElementById('featured-article-container');
+        const listContainer = document.getElementById('article-list-container');
+
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`Lỗi mạng: ${response.statusText}`);
+            }
+            const data = await response.json();
+            const articles = data.articles;
+            
+            featuredContainer.innerHTML = '';
+            listContainer.innerHTML = '';
+
+            const featuredArticle = articles.find(a => a.isFeatured);
+            const otherArticles = articles.filter(a => !a.isFeatured);
+
+            if (featuredArticle) {
+                const el = createArticleElement(featuredArticle, true);
+                featuredContainer.appendChild(el);
+            } else {
+                 featuredContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nổi bật.</p>`;
+            }
+
+            if(otherArticles.length > 0) {
+                otherArticles.forEach(article => {
+                    const el = createArticleElement(article, false);
+                    listContainer.appendChild(el);
+                });
+            } else {
+                listContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nào khác.</p>`;
+            }
+
+        } catch (error) {
+            console.error("Không thể tải nội dung tạp chí:", error);
+            featuredContainer.innerHTML = `<p class="text-red-500 text-center">Không thể tải được bài viết nổi bật.</p>`;
+            listContainer.innerHTML = `<p class="text-red-500 text-center">Không thể tải được danh sách bài viết.</p>`;
+        }
+    }
+
+    function createArticleElement(article, isFeatured) {
+        const container = document.createElement('div');
+        container.className = 'magazine-article-item cursor-pointer';
+
+        if (isFeatured) {
+            container.innerHTML = `
+                <div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8">
+                    <img src="${article.imageUrl}" alt="${article.title}" class="absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div>
+                    <div class="relative z-10">
+                        <h2 class="text-2xl sm:text-3xl font-bold">${article.title}</h2>
+                        <p class="mt-2 text-gray-200">${article.description}</p>
+                    </div>
+                </div>`;
+        } else {
+            container.innerHTML = `
+                <div class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                    <div class="w-20 h-20 bg-gray-100 text-orange-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
+                        <i class="${article.categoryIcon || 'fas fa-newspaper'} text-2xl"></i>
+                        <span class="text-xs font-bold mt-1">${article.category}</span>
+                    </div>
+                    <div><p class="font-semibold text-gray-800">${article.title}</p></div>
+                </div>`;
+        }
+        
+        container.addEventListener('click', () => handleArticleClick(article));
+        return container;
+    }
+
+    function handleArticleClick(article) {
+        const type = article.contentType || 'article';
+        const url = article.contentUrl || '';
+
+        if (type === 'youtube' && url) {
+            const videoId = url.split('v=')[1]?.split('&')[0];
+            if (videoId) {
+                modalIframe.src = `https://www.youtube.com/embed/${videoId}`;
+                contentModal.classList.add('visible');
+            } else {
+                alert("Định dạng URL YouTube không hợp lệ.");
+            }
+            return;
+        }
+
+        if ((type === 'article' || type === 'pdf') && article.articleBody && article.articleBody.trim() !== '') {
+            showArticleView(article);
+        } else if (type === 'pdf' && url) { // Fallback for old PDFs
+            let embedUrl = '';
+            if (url.includes('drive.google.com')) {
+                embedUrl = url.replace('/view?usp=sharing', '/preview').replace('/view', '/preview');
+            } else {
+                embedUrl = url;
+            }
+            if (embedUrl) {
+                modalIframe.src = embedUrl;
+                contentModal.classList.add('visible');
+            } else {
+                alert("URL PDF không hợp lệ.");
+            }
+        } else {
+            alert("Nội dung bài viết này chưa được cập nhật.");
+        }
+    }
+
+    function showArticleView(article) {
+        const articleImage = document.getElementById('article-image');
+        const articleTitle = document.getElementById('article-title');
+        const articleBody = document.getElementById('article-body');
+
+        articleImage.src = article.imageUrl || 'https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA';
+        articleTitle.textContent = article.title || 'Không có tiêu đề';
+        articleBody.innerHTML = article.articleBody || '<p>Nội dung không có sẵn.</p>';
+
+        magazineListView.style.display = 'none';
+        articleDetailView.classList.remove('hidden');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    modalCloseBtn.addEventListener('click', () => {
+        contentModal.classList.remove('visible');
+        modalIframe.src = ''; // Stop video/content from loading
+    });
+    
+    contentModal.addEventListener('click', (e) => {
+        if(e.target === contentModal) {
+             contentModal.classList.remove('visible');
+             modalIframe.src = '';
+        }
+    });
+
 });
 </script>
 </body>

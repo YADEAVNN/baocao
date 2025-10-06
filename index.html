@@ -65,6 +65,12 @@
         font-weight: 600;
         font-size: 0.9rem;
     }
+    .todo-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; transition: background-color 0.2s; }
+    .todo-item:hover { background-color: #f3f4f6; }
+    .todo-item.completed span { text-decoration: line-through; color: #9ca3af; }
+    .todo-item input[type="checkbox"] { width: 1.25rem; height: 1.25rem; accent-color: #F97316; cursor: pointer; }
+    .todo-item .delete-btn { margin-left: auto; background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 1.2rem; transition: color 0.2s; padding: 0.25rem 0.5rem; }
+    .todo-item .delete-btn:hover { color: #ef4444; }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -90,8 +96,9 @@
               <label for="password" class="block text-gray-600 text-sm font-medium mb-2">Password</label>
               <input type="password" id="password" value="123456" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
             </div>
-            <button type="submit" id="login-btn" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center">
-              Sign In
+            <button type="submit" id="login-btn" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center h-[48px]">
+              <span class="login-text">Sign In</span>
+              <div class="loading-animation hidden w-6 h-6 border-2 border-white border-t-transparent"></div>
             </button>
           </form>
         </div>
@@ -112,6 +119,9 @@
           <a href="#" class="nav__link" data-target="hoat-dong">HOẠT ĐỘNG</a>
           <a href="#" class="nav__link" data-target="dao-tao">ĐÀO TẠO</a>
         </div>
+        <button id="logout-btn" title="Đăng xuất" class="ml-auto text-gray-500 hover:text-orange-500 transition-colors text-xl p-2 rounded-full flex-shrink-0">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
       </div>
     </header>
 
@@ -123,13 +133,11 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Cột trái - Bài viết nổi bật -->
                 <div class="lg:col-span-2">
-                    <div class="relative hero bg-gray-800 text-white flex flex-col justify-center items-center p-8">
-                        <div class="absolute inset-0 bg-black opacity-50 rounded-2xl"></div>
-                        <div class="relative z-10 text-center">
-                           <h1 class="magazine-title text-5xl md:text-7xl font-bold">YADEA Chronicle</h1>
-                        </div>
-                        <div class="absolute bottom-0 left-0 p-6 sm:p-8 z-10">
-                            <h2 class="text-xl sm:text-2xl font-bold">Vinh danh nhân sự xuất sắc: Nguyễn Văn A</h2>
+                    <div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8">
+                         <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop" alt="Team meeting" class="absolute inset-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div>
+                        <div class="relative z-10">
+                            <h2 class="text-2xl sm:text-3xl font-bold">Vinh danh nhân sự xuất sắc Quý 3</h2>
                             <p class="mt-2 text-gray-200">Với những nỗ lực không ngừng và thành tích vượt trội...</p>
                         </div>
                     </div>
@@ -137,45 +145,33 @@
 
                 <!-- Cột phải - Danh sách bài viết -->
                 <div class="space-y-4">
-                    <!-- Mục 1 -->
                     <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-24 h-24 bg-blue-500 rounded-lg flex flex-col justify-center items-center text-white mr-4">
-                            <span class="font-bold text-xl">Event</span>
-                            <span class="text-xs">SỰ KIỆN</span>
+                        <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
+                            <i class="fas fa-calendar-star text-2xl"></i>
+                            <span class="text-xs font-bold mt-1">SỰ KIỆN</span>
                         </div>
-                        <div>
-                            <p class="font-semibold text-gray-800">Team-building sôi nổi tại Vũng Tàu</p>
-                        </div>
+                        <div><p class="font-semibold text-gray-800">Team-building sôi nổi tại Vũng Tàu</p></div>
                     </a>
-                    <!-- Mục 2 -->
                     <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-24 h-24 bg-green-500 rounded-lg flex flex-col justify-center items-center text-white mr-4">
-                            <span class="font-bold text-xl">Sharing</span>
-                             <span class="text-xs">ĐÀO TẠO</span>
+                        <div class="w-20 h-20 bg-green-100 text-green-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
+                             <i class="fas fa-chalkboard-teacher text-2xl"></i>
+                             <span class="text-xs font-bold mt-1">ĐÀO TẠO</span>
                         </div>
-                        <div>
-                            <p class="font-semibold text-gray-800">Buổi chia sẻ online: Kỹ năng chốt sale</p>
-                        </div>
+                        <div><p class="font-semibold text-gray-800">Buổi chia sẻ online: Kỹ năng chốt sale</p></div>
                     </a>
-                    <!-- Mục 3 -->
                     <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-24 h-24 bg-purple-500 rounded-lg flex flex-col justify-center items-center text-white mr-4">
-                            <span class="font-bold text-xl">Project</span>
-                             <span class="text-xs">CẬP NHẬT</span>
+                        <div class="w-20 h-20 bg-purple-100 text-purple-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
+                            <i class="fas fa-rocket text-2xl"></i>
+                             <span class="text-xs font-bold mt-1">CẬP NHẬT</span>
                         </div>
-                        <div>
-                            <p class="font-semibold text-gray-800">Khởi động dự án "YADEA Green Future"</p>
-                        </div>
+                        <div><p class="font-semibold text-gray-800">Khởi động dự án "YADEA Green Future"</p></div>
                     </a>
-                    <!-- Mục 4 -->
                     <a href="#" class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-24 h-24 bg-pink-500 rounded-lg flex flex-col justify-center items-center text-white mr-4">
-                            <span class="font-bold text-xl">Story</span>
-                             <span class="text-xs">CÂU CHUYỆN</span>
+                        <div class="w-20 h-20 bg-pink-100 text-pink-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
+                             <i class="fas fa-user-edit text-2xl"></i>
+                             <span class="text-xs font-bold mt-1">CÂU CHUYỆN</span>
                         </div>
-                        <div>
-                            <p class="font-semibold text-gray-800">Hành trình của chị Lê Thị B</p>
-                        </div>
+                        <div><p class="font-semibold text-gray-800">Hành trình của chị Lê Thị B</p></div>
                     </a>
                 </div>
             </div>
@@ -190,23 +186,14 @@
                 <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">Thông tin nhân viên</h3>
                     <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-                        <!-- Avatar -->
                         <img id="user-avatar" class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0" src="https://placehold.co/128x128/CCCCCC/FFFFFF?text=..." alt="Avatar">
-                        <!-- Info Column -->
                         <div class="flex-grow w-full">
                             <h2 id="user-full-name" class="text-2xl sm:text-3xl font-bold text-gray-800">...</h2>
-                            <!-- Rating and Score -->
                             <div class="flex items-center gap-4 my-2">
-                                <div id="user-star-rating" class="text-2xl flex items-center gap-1">
-                                    <!-- Stars will be generated by JS -->
-                                </div>
+                                <div id="user-star-rating" class="text-2xl flex items-center gap-1"></div>
                                 <p class="text-lg font-bold text-gray-700">Tổng điểm: <span id="user-total-score" class="text-orange-500">...</span></p>
                             </div>
-                            <!-- Progress Bar -->
-                            <div id="progress-container" class="my-3">
-                                <!-- Progress bar will be generated by JS -->
-                            </div>
-                            <!-- Details -->
+                            <div id="progress-container" class="my-3"></div>
                             <div class="mt-4 text-sm text-gray-600 space-y-1.5">
                                 <p><strong class="font-medium text-gray-800 w-28 inline-block">Mã nhân viên:</strong> <span id="user-employee-id">...</span></p>
                                 <p><strong class="font-medium text-gray-800 w-28 inline-block">Ngày sinh:</strong> <span id="user-birth-date">...</span></p>
@@ -220,39 +207,21 @@
                 </div>
                 <!-- Báo cáo SI / SO Charts -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    <!-- Biểu đồ Sell-In -->
-                    <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
-                        <h3 class="font-semibold text-gray-700">Báo cáo Sell-in (SI)</h3>
-                        <p class="text-xs text-gray-500 mb-3">4 tháng gần nhất</p>
-                        <div class="h-[250px]">
-                            <canvas id="siChart"></canvas>
-                        </div>
-                    </div>
-                    <!-- Biểu đồ Sell-Out -->
-                    <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
-                        <h3 class="font-semibold text-gray-700">Báo cáo Sell-out (SO)</h3>
-                        <p class="text-xs text-gray-500 mb-3">4 tháng gần nhất</p>
-                        <div class="h-[250px]">
-                            <canvas id="soChart"></canvas>
-                        </div>
-                    </div>
+                    <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200"><h3 class="font-semibold text-gray-700">Báo cáo Sell-in (SI)</h3><p class="text-xs text-gray-500 mb-3">4 tháng gần nhất</p><div class="h-[250px]"><canvas id="siChart"></canvas></div></div>
+                    <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200"><h3 class="font-semibold text-gray-700">Báo cáo Sell-out (SO)</h3><p class="text-xs text-gray-500 mb-3">4 tháng gần nhất</p><div class="h-[250px]"><canvas id="soChart"></canvas></div></div>
                 </div>
               </div>
               <!-- Cột phải -->
               <div class="space-y-4 sm:space-y-8">
-                <!-- Chi tiết điểm -->
                 <div class="bg-white p-5 sm:p-8 rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-                  <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-info-circle mr-3 text-orange-500"></i>CHI TIẾT DIỄN BIẾN NHÂN VIÊN</h3>
+                  <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-info-circle mr-3 text-orange-500"></i>CHI TIẾT ĐIỂM</h3>
                   <div class="space-y-3 sm:space-y-4 mt-5 sm:mt-6">
                     <div class="flex justify-between items-center text-gray-600"><span>Điểm nhiệm vụ</span><span id="score-mission" class="font-bold text-gray-800">780.0</span></div>
                     <div class="flex justify-between items-center text-gray-600"><span>Điểm ruleta</span><span id="score-ruleta" class="font-bold text-gray-800">330.0</span></div>
                     <div class="flex justify-between items-center text-gray-600"><span>Điểm Sellout</span><span id="score-sellout" class="font-bold text-gray-800">1,027.0</span></div>
                     <div class="flex justify-between items-center text-gray-600"><span>Điểm Online</span><span id="score-online" class="font-bold text-gray-800">0.0</span></div>
                     <hr class="my-2 sm:my-4">
-                    <div class="flex justify-between items-center text-gray-600">
-                      <span class="font-semibold text-orange-500">Tổng điểm</span>
-                      <span id="score-total" class="font-extrabold text-lg sm:text-xl text-orange-500">1,940.0</span>
-                    </div>
+                    <div class="flex justify-between items-center text-gray-600"><span class="font-semibold text-orange-500">Tổng điểm</span><span id="score-total" class="font-extrabold text-lg sm:text-xl text-orange-500">1,940.0</span></div>
                   </div>
                 </div>
               </div>
@@ -261,150 +230,127 @@
         </div>
         <!-- Vận hành -->
         <div id="van-hanh-content" class="content-tab">
-             <iframe class="w-full h-[80vh] border-0 rounded-lg" src="https://script.google.com/macros/s/AKfycbxrbdbD4ckty8mjGCiqIdjDoGSf420CQ3JQ9YWQ36K1pPnGCTrHGwnj0tQrJYXJkbRQ-w/exec"></iframe>
+            <div class="dashboard-view">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Bảng điều khiển Vận hành</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+                    <a href="https://script.google.com/macros/s/AKfycbxhhZwVLiAj8fAuzV8AMNyDLHVhfftDJ8JJvSQl0CDkecFkFq61nUGZm7Lq4btMOk8-/exec" class="dashboard-card operational-card">
+                        <i class="fas fa-cogs"></i>
+                        <span>QUẢN LÝ VẬN HÀNH</span>
+                    </a>
+                </div>
+            </div>
+            <div class="iframe-view hidden">
+                <div class="flex items-center mb-4"><button class="back-to-dashboard-btn text-gray-600 hover:text-orange-500 font-bold flex items-center"><i class="fas fa-arrow-left mr-2"></i> Trở lại</button><h2 class="view-title text-xl font-bold text-gray-800 ml-4">...</h2></div>
+                <iframe class="w-full h-[75vh] border-0 rounded-lg shadow-inner bg-white"></iframe>
+            </div>
+        </div>
+        <!-- Hoạt động -->
+        <div id="hoat-dong-content" class="content-tab">
+           <h2 class="text-2xl font-bold text-gray-800 mb-6">Quản lý Công việc (To-Do List)</h2>
+           <div class="bg-white p-6 rounded-xl shadow-lg">
+               <form id="todo-form" class="flex items-center gap-4 mb-6">
+                   <input type="text" id="todo-input" placeholder="Thêm một công việc mới..." class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 flex-grow">
+                   <button type="submit" class="bg-orange-500 text-white font-bold py-3 px-5 rounded-lg hover:bg-orange-600 transition-colors">Thêm</button>
+               </form>
+               <ul id="todo-list" class="space-y-3"></ul>
+           </div>
         </div>
         <!-- Đào tạo -->
         <div id="dao-tao-content" class="content-tab">
           <div class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
-              <!-- Left Sidebar -->
               <aside class="w-full md:w-1/4 lg:w-1/5 bg-gray-800 text-white rounded-lg p-6">
                   <h3 class="font-bold text-lg mb-6">Danh mục</h3>
                   <nav class="space-y-4">
-                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors">
-                          <i class="fas fa-book w-5 text-center"></i>
-                          <span>Kiến thức sản phẩm</span>
-                      </a>
-                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors">
-                          <i class="fas fa-landmark w-5 text-center"></i>
-                          <span>Văn hoá & Quy định</span>
-                      </a>
-                      <a href="#" class="flex items-center justify-between hover:bg-gray-700 p-2 rounded-md transition-colors">
-                          <div class="flex items-center gap-3">
-                            <i class="fas fa-graduation-cap w-5 text-center"></i>
-                            <span>Học theo chuyên đề</span>
-                          </div>
-                          <i class="fas fa-plus text-xs"></i>
-                      </a>
-                      <a href="#" class="flex items-center gap-3 bg-gray-700 p-2 rounded-md transition-colors">
-                          <i class="fas fa-lightbulb w-5 text-center"></i>
-                          <span>Kỹ năng bán hàng</span>
-                      </a>
-                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors">
-                          <i class="fas fa-list-alt w-5 text-center"></i>
-                          <span>Danh sách bài học</span>
-                      </a>
-                       <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors">
-                          <i class="fas fa-poll w-5 text-center"></i>
-                          <span>Kết quả</span>
-                      </a>
+                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-book w-5 text-center"></i><span>Kiến thức sản phẩm</span></a>
+                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-landmark w-5 text-center"></i><span>Văn hoá & Quy định</span></a>
+                      <a href="#" class="flex items-center justify-between hover:bg-gray-700 p-2 rounded-md transition-colors"><div class="flex items-center gap-3"><i class="fas fa-graduation-cap w-5 text-center"></i><span>Học theo chuyên đề</span></div><i class="fas fa-plus text-xs"></i></a>
+                      <a href="#" class="flex items-center gap-3 bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-lightbulb w-5 text-center"></i><span>Kỹ năng bán hàng</span></a>
+                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-list-alt w-5 text-center"></i><span>Danh sách bài học</span></a>
+                       <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-poll w-5 text-center"></i><span>Kết quả</span></a>
                   </nav>
               </aside>
-              <!-- Main Content -->
               <div class="flex-grow">
-                  <!-- Header -->
                   <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                      <div>
-                          <p class="text-sm text-gray-500">Training > Training Online</p>
-                          <h2 class="text-2xl font-bold text-gray-800">ONLINE TRAINING</h2>
-                      </div>
-                      <div class="flex items-center mt-4 md:mt-0">
-                          <input type="text" placeholder="Nhập tên bài học..." class="border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                          <button class="bg-orange-500 text-white px-4 py-2 rounded-r-md hover:bg-orange-600 font-semibold">Tìm kiếm</button>
-                      </div>
+                      <div><p class="text-sm text-gray-500">Training > Training Online</p><h2 class="text-2xl font-bold text-gray-800">ONLINE TRAINING</h2></div>
+                      <div class="flex items-center mt-4 md:mt-0"><input type="text" placeholder="Nhập tên bài học..." class="border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"><button class="bg-orange-500 text-white px-4 py-2 rounded-r-md hover:bg-orange-600 font-semibold">Tìm kiếm</button></div>
                   </header>
-                  <!-- Featured Course -->
-                  <div class="relative w-full h-64 md:h-80 bg-gray-200 rounded-lg flex justify-center items-center mb-6">
-                      <h1 class="text-4xl font-bold text-gray-700">YADEA VoltGuard Series</h1>
-                      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                          <button class="w-3 h-3 bg-white rounded-full"></button>
-                          <button class="w-3 h-3 bg-gray-400 rounded-full"></button>
-                          <button class="w-3 h-3 bg-gray-400 rounded-full"></button>
-                      </div>
+                  <div class="relative w-full h-64 md:h-80 bg-cover bg-center rounded-lg flex justify-center items-center mb-6" style="background-image: url('https://images.unsplash.com/photo-1629904853716-f0bc54eea481?q=80&w=2070&auto=format&fit=crop')">
+                      <div class="absolute inset-0 bg-black/40 rounded-lg"></div>
+                      <div class="relative text-center text-white"><h1 class="text-4xl font-bold">YADEA VoltGuard Series</h1><p>Khóa học chuyên sâu về sản phẩm mới</p></div>
+                      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"><button class="w-3 h-3 bg-white rounded-full"></button><button class="w-3 h-3 bg-white/50 rounded-full"></button><button class="w-3 h-3 bg-white/50 rounded-full"></button></div>
                   </div>
-                  <!-- Course List -->
                   <div>
                       <h3 class="text-xl font-bold text-gray-800 mb-4">Tất cả bài học</h3>
                       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                          <!-- Course Card 1 -->
-                          <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                              <div class="bg-red-100 text-red-700 font-bold text-2xl p-6 text-center">VoltGuard</div>
-                              <div class="p-4">
-                                  <p class="text-sm text-gray-600">Sản phẩm: YADEA VoltGuard</p>
-                                  <p class="text-sm text-gray-600">Thời lượng: 45 phút</p>
-                              </div>
-                          </div>
-                          <!-- Course Card 2 -->
-                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                              <div class="bg-gray-200 h-28 flex items-center justify-center">
-                                 <img src="https://placehold.co/100x40?text=Orla" alt="Orla Image" class="opacity-50">
-                              </div>
-                              <div class="p-4">
-                                  <p class="text-sm text-gray-600">Sản phẩm: YADEA Orla</p>
-                                  <p class="text-sm text-gray-600">Thời lượng: 30 phút</p>
-                              </div>
-                          </div>
-                          <!-- Course Card 3 -->
-                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                              <div class="bg-blue-100 text-blue-700 font-bold text-2xl p-6 text-center">Kỹ Năng</div>
-                              <div class="p-4">
-                                  <p class="text-sm text-gray-600">Kỹ năng mềm: Chăm sóc khách hàng</p>
-                                  <p class="text-sm text-gray-600">Thời lượng: 1 giờ</p>
-                              </div>
-                          </div>
-                           <!-- Course Card 4 -->
-                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                              <div class="bg-gray-100 text-gray-700 font-bold text-2xl p-6 text-center">Quy Trình</div>
-                              <div class="p-4">
-                                  <p class="text-sm text-gray-600">Quy trình: Xử lý khiếu nại</p>
-                                  <p class="text-sm text-gray-600">Thời lượng: 25 phút</p>
-                              </div>
-                          </div>
+                          <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"><div class="bg-red-100 text-red-700 font-bold text-2xl p-6 text-center">VoltGuard</div><div class="p-4"><p class="text-sm text-gray-600">Sản phẩm: YADEA VoltGuard</p><p class="text-sm text-gray-600">Thời lượng: 45 phút</p></div></div>
+                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"><div class="bg-gray-200 h-28 flex items-center justify-center"><img src="https://placehold.co/100x40?text=Orla" alt="Orla Image" class="opacity-50"></div><div class="p-4"><p class="text-sm text-gray-600">Sản phẩm: YADEA Orla</p><p class="text-sm text-gray-600">Thời lượng: 30 phút</p></div></div>
+                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"><div class="bg-blue-100 text-blue-700 font-bold text-2xl p-6 text-center">Kỹ Năng</div><div class="p-4"><p class="text-sm text-gray-600">Kỹ năng mềm: Chăm sóc KH</p><p class="text-sm text-gray-600">Thời lượng: 1 giờ</p></div></div>
+                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"><div class="bg-gray-100 text-gray-700 font-bold text-2xl p-6 text-center">Quy Trình</div><div class="p-4"><p class="text-sm text-gray-600">Quy trình: Xử lý khiếu nại</p><p class="text-sm text-gray-600">Thời lượng: 25 phút</p></div></div>
                       </div>
                   </div>
               </div>
           </div>
         </div>
-
       </div>
     </main>
   </div>
 
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
     const loginPage = document.getElementById('login-page');
     const dashboardPage = document.getElementById('dashboard-page');
     const loginForm = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const loginText = loginBtn.querySelector('.login-text');
+    const loadingSpinner = loginBtn.querySelector('.loading-animation');
+    const logoutBtn = document.getElementById('logout-btn');
     let siChartInstance = null;
     let soChartInstance = null;
     
-    // Đăng ký plugin Datalabels một lần toàn cục
     Chart.register(ChartDataLabels);
 
     loginForm.addEventListener('submit', function(event) {
         event.preventDefault();
         
-        // Dữ liệu người dùng mẫu vì đã bỏ qua đăng nhập
-        const mockUser = {
-            fullName: "Vũ Huy Thành",
-            position: "Nhân viên Bán hàng",
-            store: "YADEA SHOP HÀ NỘI",
-            employeeId: "NV001",
-            birthDate: "1995-08-15",
-            phone: "0912345678",
-            joinDate: "2023-01-20",
-            email: "thanh.vu@yadea.com.vn",
-            notes: "Nhân viên tiềm năng",
-            avatarUrl: "https://raw.githubusercontent.com/vuhuythanh/tichdiem/main/thanh.vu.png",
-            totalScore: 1940.0,
-            rating: 4.5
-        };
+        loginText.classList.add('hidden');
+        loadingSpinner.classList.remove('hidden');
+        loginBtn.disabled = true;
 
-        populateUserInfo(mockUser);
-        renderReportCharts();
-        
-        loginPage.classList.add('hidden');
-        dashboardPage.classList.remove('hidden');
-        dashboardPage.classList.add('flex');
+        setTimeout(() => {
+            loginText.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+            loginBtn.disabled = false;
+            
+            const mockUser = {
+                fullName: "Vũ Huy Thành",
+                employeeId: "NV001",
+                birthDate: "1995-08-15",
+                phone: "0912345678",
+                joinDate: "2023-01-20",
+                email: "thanh.vu@yadea.com.vn",
+                notes: "Nhân viên tiềm năng",
+                avatarUrl: "https://raw.githubusercontent.com/vuhuythanh/tichdiem/main/thanh.vu.png",
+                totalScore: 1940.0,
+                rating: 4.5
+            };
+
+            populateUserInfo(mockUser);
+            renderReportCharts();
+            renderTasks();
+            
+            loginPage.classList.add('hidden');
+            dashboardPage.classList.remove('hidden');
+            dashboardPage.classList.add('flex');
+        }, 1500);
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        dashboardPage.classList.add('hidden');
+        dashboardPage.classList.remove('flex');
+        loginPage.classList.remove('hidden');
+        document.getElementById('username').value = 'thanh.vu';
+        document.getElementById('password').value = '123456';
     });
     
     function formatDate(dateString) {
@@ -433,7 +379,6 @@
             avatarEl.onerror = () => { avatarEl.src = 'https://placehold.co/100x100/CCCCCC/FFFFFF?text=Error'; };
         }
         setText('user-full-name', userData.fullName);
-        setText('user-position-store', `${userData.position} - ${userData.store}`);
         setText('user-employee-id', userData.employeeId);
         setText('user-birth-date', formatDate(userData.birthDate));
         setText('user-phone', userData.phone);
@@ -441,46 +386,25 @@
         setText('user-email', userData.email);
         setText('user-notes', userData.notes || 'Không có');
 
-        // Populate Stars and Progress
-        const totalScore = parseFloat(userData.totalScore) || 1978.0;
-        const rating = (userData.rating && userData.rating > 0) ? parseFloat(userData.rating) : 3.5; // Default to 3.5 stars if not provided
-
+        const totalScore = parseFloat(userData.totalScore) || 0;
+        const rating = (userData.rating && userData.rating > 0) ? parseFloat(userData.rating) : 0;
         const starContainer = document.getElementById('user-star-rating');
         if (starContainer) {
-            starContainer.innerHTML = ''; // Clear old stars
+            starContainer.innerHTML = '';
             for (let i = 1; i <= 5; i++) {
                 const star = document.createElement('i');
-                if (i <= rating) {
-                    star.className = 'fas fa-star text-orange-400';
-                } else if (i - rating < 1) {
-                    star.className = 'fas fa-star-half-alt text-orange-400';
-                } else {
-                    star.className = 'far fa-star text-gray-300';
-                }
+                if (i <= rating) star.className = 'fas fa-star text-orange-400';
+                else if (i - rating < 1) star.className = 'fas fa-star-half-alt text-orange-400';
+                else star.className = 'far fa-star text-gray-300';
                 starContainer.appendChild(star);
             }
         }
         
         setText('user-total-score', totalScore.toLocaleString('vi-VN'));
-
         const progressContainer = document.getElementById('progress-container');
         if (progressContainer) {
-            // Mock data for progress bar based on image
-            const val1 = 978;
-            const val2 = 1022;
-            const total = val1 + val2;
-            const percent1 = (val1 / total) * 100;
-
-            progressContainer.innerHTML = `
-                <div class="w-full flex rounded-full h-5 bg-red-400 overflow-hidden border border-gray-200">
-                    <div class="bg-orange-500 flex justify-center items-center text-xs font-medium text-white" style="width: ${percent1}%">
-                        ${val1.toLocaleString('vi-VN')}
-                    </div>
-                    <div class="bg-rose-500 flex justify-center items-center text-xs font-medium text-white" style="flex-grow: 1;">
-                        ${val2.toLocaleString('vi-VN')}
-                    </div>
-                </div>
-            `;
+            const val1 = 978; const val2 = 1022; const total = val1 + val2; const percent1 = (val1 / total) * 100;
+            progressContainer.innerHTML = `<div class="w-full flex rounded-full h-5 bg-red-400 overflow-hidden border border-gray-200"><div class="bg-orange-500 flex justify-center items-center text-xs font-medium text-white" style="width: ${percent1}%">${val1.toLocaleString('vi-VN')}</div><div class="bg-rose-500 flex justify-center items-center text-xs font-medium text-white" style="flex-grow: 1;">${val2.toLocaleString('vi-VN')}</div></div>`;
         }
     }
     
@@ -491,149 +415,35 @@
 
     function createChart(canvasId, chartData, gradientColors) {
         const ctx = document.getElementById(canvasId).getContext('2d');
-        
         const gradient = ctx.createLinearGradient(0, 0, 0, 250);
         gradient.addColorStop(0, gradientColors.start);
         gradient.addColorStop(1, gradientColors.end);
-
         const chartConfig = {
             type: 'bar',
-            data: {
-                labels: chartData.labels,
-                datasets: [
-                    {
-                        label: chartData.label,
-                        data: chartData.data,
-                        backgroundColor: gradient,
-                        borderWidth: 0,
-                        borderRadius: 6,
-                        order: 1,
-                        datalabels: {
-                            anchor: 'center',
-                            align: 'center',
-                            color: 'white',
-                            font: { weight: 'bold', size: 14 },
-                            formatter: (value) => value.toLocaleString('vi-VN'),
-                        }
-                    },
-                    {
-                        type: 'line',
-                        label: `${chartData.label} Trend`,
-                        data: chartData.data,
-                        borderColor: gradientColors.line,
-                        borderWidth: 2.5,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: gradientColors.line,
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        tension: 0.3,
-                        order: 0,
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 6,
-                            font: { weight: 'bold', size: 11 },
-                            formatter: (value, context) => {
-                                if (context.dataIndex === 0) return null;
-                                const prevValue = context.dataset.data[context.dataIndex - 1];
-                                if (!prevValue) return null;
-                                const change = ((value - prevValue) / prevValue) * 100;
-                                return (change >= 0 ? '▲' : '▼') + ` ${Math.abs(change).toFixed(1)}%`;
-                            },
-                            color: (context) => {
-                                 if (context.dataIndex === 0) return null;
-                                 const prevValue = context.dataset.data[context.dataIndex - 1];
-                                 if (!prevValue) return null;
-                                 return context.dataset.data[context.dataIndex] >= prevValue ? '#16A34A' : '#DC2626';
-                            }
-                        }
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { 
-                        display: false,
-                        suggestedMax: Math.max(...chartData.data) * 1.25 // Thêm 25% khoảng trống ở trên
-                    },
-                    x: {
-                       grid: { display: false },
-                       ticks: { color: '#6b7280', font: { weight: '500' } }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        enabled: true,
-                        backgroundColor: '#111827',
-                        titleFont: { weight: 'bold' },
-                        bodyFont: { weight: '500' },
-                        padding: 10,
-                        cornerRadius: 6,
-                    },
-                    datalabels: { display: true }
-                }
-            }
+            data: { labels: chartData.labels, datasets: [{ label: chartData.label, data: chartData.data, backgroundColor: gradient, borderWidth: 0, borderRadius: 6, order: 1, datalabels: { anchor: 'center', align: 'center', color: 'white', font: { weight: 'bold', size: 14 }, formatter: (value) => value.toLocaleString('vi-VN') } }, { type: 'line', label: `${chartData.label} Trend`, data: chartData.data, borderColor: gradientColors.line, borderWidth: 2.5, pointBackgroundColor: '#fff', pointBorderColor: gradientColors.line, pointBorderWidth: 2, pointRadius: 4, tension: 0.3, order: 0, datalabels: { anchor: 'end', align: 'top', offset: 6, font: { weight: 'bold', size: 11 }, formatter: (value, context) => { if (context.dataIndex === 0) return null; const prevValue = context.dataset.data[context.dataIndex - 1]; if (!prevValue) return null; const change = ((value - prevValue) / prevValue) * 100; return (change >= 0 ? '▲' : '▼') + ` ${Math.abs(change).toFixed(1)}%`; }, color: (context) => { if (context.dataIndex === 0) return null; const prevValue = context.dataset.data[context.dataIndex - 1]; if (!prevValue) return null; return context.dataset.data[context.dataIndex] >= prevValue ? '#16A34A' : '#DC2626'; } } }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false, suggestedMax: Math.max(...chartData.data) * 1.25 }, x: { grid: { display: false }, ticks: { color: '#6b7280', font: { weight: '500' } } } }, plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: '#111827', titleFont: { weight: 'bold' }, bodyFont: { weight: '500' }, padding: 10, cornerRadius: 6 }, datalabels: { display: true } } }
         };
-
         return new Chart(ctx, chartConfig);
     }
 
     function renderSiChart() {
         if (siChartInstance) siChartInstance.destroy();
-        
-        const labels = [];
-        const currentDate = new Date();
-        for (let i = 3; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(currentDate.getMonth() - i);
-            labels.push(`T${d.getMonth() + 1}`);
-        }
-
-        const siChartData = {
-            labels: labels,
-            label: 'Sell-In',
-            data: [1150, 1300, 1200, 1250]
-        };
-        
-        const siColors = {
-            start: 'rgba(249, 115, 22, 0.8)',
-            end: 'rgba(251, 146, 60, 0.5)',
-            line: '#c2410c'
-        };
-
+        const labels = []; const currentDate = new Date();
+        for (let i = 3; i >= 0; i--) { const d = new Date(); d.setMonth(currentDate.getMonth() - i); labels.push(`T${d.getMonth() + 1}`); }
+        const siChartData = { labels: labels, label: 'Sell-In', data: [1150, 1300, 1200, 1250] };
+        const siColors = { start: 'rgba(249, 115, 22, 0.8)', end: 'rgba(251, 146, 60, 0.5)', line: '#c2410c' };
         siChartInstance = createChart('siChart', siChartData, siColors);
     }
 
     function renderSoChart() {
         if (soChartInstance) soChartInstance.destroy();
-
-        const labels = [];
-        const currentDate = new Date();
-        for (let i = 3; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(currentDate.getMonth() - i);
-            labels.push(`T${d.getMonth() + 1}`);
-        }
-        
-        const soChartData = {
-            labels: labels,
-            label: 'Sell-Out',
-            data: [950, 1100, 900, 980]
-        };
-
-        const soColors = {
-            start: 'rgba(37, 99, 235, 0.8)', // Professional Blue
-            end: 'rgba(96, 165, 250, 0.5)',
-            line: '#1e40af' // Darker Blue
-        };
-
+        const labels = []; const currentDate = new Date();
+        for (let i = 3; i >= 0; i--) { const d = new Date(); d.setMonth(currentDate.getMonth() - i); labels.push(`T${d.getMonth() + 1}`); }
+        const soChartData = { labels: labels, label: 'Sell-Out', data: [950, 1100, 900, 980] };
+        const soColors = { start: 'rgba(37, 99, 235, 0.8)', end: 'rgba(96, 165, 250, 0.5)', line: '#1e40af' };
         soChartInstance = createChart('soChart', soChartData, soColors);
     }
     
-    // --- Navigation tab switching logic ---
     const navLinks = document.querySelectorAll('.nav__link');
     const contentTabs = document.querySelectorAll('.content-tab');
     navLinks.forEach(link => {
@@ -642,58 +452,79 @@
             navLinks.forEach(n => n.classList.remove('active'));
             this.classList.add('active');
             const targetId = this.getAttribute('data-target');
-            contentTabs.forEach(tab => { 
-                tab.style.display = 'none'; 
-                tab.classList.remove('initial-active-tab'); 
-            });
+            contentTabs.forEach(tab => { tab.style.display = 'none'; tab.classList.remove('initial-active-tab'); });
             const targetTab = document.getElementById(targetId + '-content');
-            if (targetTab) { 
-                targetTab.style.display = 'block'; 
-                window.scrollTo({ top: 0, behavior: 'smooth' }); 
-            }
+            if (targetTab) { targetTab.style.display = 'block'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
         });
     });
 
-    // --- Dashboard Card to Iframe View Logic ---
-    document.querySelectorAll('.dashboard-card').forEach(card => {
+    // --- To-Do List Logic ---
+    const todoForm = document.getElementById('todo-form');
+    const todoInput = document.getElementById('todo-input');
+    const todoList = document.getElementById('todo-list');
+    let tasks = [ { text: 'Hoàn thành báo cáo doanh số tháng 9', completed: true }, { text: 'Gọi điện cho khách hàng A', completed: false }, { text: 'Chuẩn bị slide cho buổi họp team', completed: false }, ];
+    function renderTasks() {
+        todoList.innerHTML = '';
+        if (tasks.length === 0) {
+            todoList.innerHTML = `<li class="text-center text-gray-500 py-4">Chưa có công việc nào.</li>`;
+            return;
+        }
+        tasks.forEach((task, index) => {
+            const li = document.createElement('li');
+            li.className = `todo-item ${task.completed ? 'completed' : ''}`;
+            li.innerHTML = `<input type="checkbox" data-index="${index}" ${task.completed ? 'checked' : ''}><span class="flex-grow">${task.text}</span><button class="delete-btn" title="Xóa" data-index="${index}">&times;</button>`;
+            todoList.appendChild(li);
+        });
+    }
+    todoForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const text = todoInput.value.trim();
+        if (text !== '') { tasks.unshift({ text: text, completed: false }); todoInput.value = ''; renderTasks(); }
+    });
+    todoList.addEventListener('click', function(e) {
+        const index = e.target.dataset.index;
+        if (e.target.type === 'checkbox') { tasks[index].completed = !tasks[index].completed; renderTasks(); }
+        if (e.target.classList.contains('delete-btn')) { tasks.splice(index, 1); renderTasks(); }
+    });
+
+    // --- Operational Card to Iframe View Logic ---
+    document.querySelectorAll('.operational-card').forEach(card => {
         card.addEventListener('click', function(e) {
             e.preventDefault();
             const url = this.getAttribute('href');
             const title = this.querySelector('span').textContent;
-            if (!url) return;
-
+            if (!url || url === '#') { 
+                // In a real app, you'd use a custom modal here
+                // For this prototype, we'll keep it simple
+                alert('Chức năng này đang được phát triển.'); 
+                return;
+            }
             const parentTab = this.closest('.content-tab');
             if (!parentTab) return;
-
             const dashboardView = parentTab.querySelector('.dashboard-view');
             const iframeView = parentTab.querySelector('.iframe-view');
             const viewTitle = iframeView.querySelector('.view-title');
             const iframe = iframeView.querySelector('iframe');
-
             viewTitle.textContent = title;
             iframe.src = url;
-            
             dashboardView.classList.add('hidden');
             iframeView.classList.remove('hidden');
         });
     });
 
-    // --- Back to Dashboard Button Logic ---
     document.querySelectorAll('.back-to-dashboard-btn').forEach(button => {
         button.addEventListener('click', function() {
             const parentTab = this.closest('.content-tab');
             if (!parentTab) return;
-
             const dashboardView = parentTab.querySelector('.dashboard-view');
             const iframeView = parentTab.querySelector('.iframe-view');
             const iframe = iframeView.querySelector('iframe');
-
-            iframe.src = 'about:blank'; // Clear src to stop loading
+            iframe.src = 'about:blank';
             iframeView.classList.add('hidden');
             dashboardView.classList.remove('hidden');
         });
     });
-
+});
 </script>
 </body>
 </html>

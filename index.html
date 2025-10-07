@@ -139,6 +139,7 @@
     .article-body-content a { color: #F97316; text-decoration: underline; }
     .article-body-content strong { font-weight: bold; }
     .article-body-content img { width: 100%; border-radius: 8px; margin: 1rem 0; }
+    .category-link.active { background-color: #4b5563; }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -328,39 +329,69 @@
         </div>
         <!-- Đào tạo -->
         <div id="dao-tao-content" class="content-tab">
-           <div class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
+           <div id="training-list-view" class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
               <aside class="w-full md:w-1/4 lg:w-1/5 bg-gray-800 text-white rounded-lg p-6">
                   <h3 class="font-bold text-lg mb-6">Danh mục</h3>
-                  <nav class="space-y-4">
-                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-book w-5 text-center"></i><span>Kiến thức sản phẩm</span></a>
-                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-landmark w-5 text-center"></i><span>Văn hoá & Quy định</span></a>
-                      <a href="#" class="flex items-center justify-between hover:bg-gray-700 p-2 rounded-md transition-colors"><div class="flex items-center gap-3"><i class="fas fa-graduation-cap w-5 text-center"></i><span>Học theo chuyên đề</span></div><i class="fas fa-plus text-xs"></i></a>
-                      <a href="#" class="flex items-center gap-3 bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-lightbulb w-5 text-center"></i><span>Kỹ năng bán hàng</span></a>
-                      <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-list-alt w-5 text-center"></i><span>Danh sách bài học</span></a>
-                       <a href="#" class="flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors"><i class="fas fa-poll w-5 text-center"></i><span>Kết quả</span></a>
+                  <nav id="training-category-nav" class="space-y-4">
+                      <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Kiến thức sản phẩm"><i class="fas fa-book w-5 text-center"></i><span>Kiến thức sản phẩm</span></a>
+                      <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Văn hoá & Quy định"><i class="fas fa-landmark w-5 text-center"></i><span>Văn hoá & Quy định</span></a>
+                      <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Kỹ năng bán hàng"><i class="fas fa-lightbulb w-5 text-center"></i><span>Kỹ năng bán hàng</span></a>
+                      <a href="#" class="category-link flex items-center gap-3 active p-2 rounded-md transition-colors" data-category="all"><i class="fas fa-list-alt w-5 text-center"></i><span>Tất cả bài học</span></a>
                   </nav>
               </aside>
               <div class="flex-grow">
                   <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                       <div><p class="text-sm text-gray-500">Training > Training Online</p><h2 class="text-2xl font-bold text-gray-800">ONLINE TRAINING</h2></div>
-                      <div class="flex items-center mt-4 md:mt-0"><input type="text" placeholder="Nhập tên bài học..." class="border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"><button class="bg-orange-500 text-white px-4 py-2 rounded-r-md hover:bg-orange-600 font-semibold">Tìm kiếm</button></div>
+                      <div class="flex items-center mt-4 md:mt-0"><input type="text" id="training-search-input" placeholder="Nhập tên bài học..." class="border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"><button id="training-search-btn" class="bg-orange-500 text-white px-4 py-2 rounded-r-md hover:bg-orange-600 font-semibold">Tìm kiếm</button></div>
                   </header>
-                  <div class="relative w-full h-64 md:h-80 bg-cover bg-center rounded-lg flex justify-center items-center mb-6" style="background-image: url('https://images.unsplash.com/photo-1629904853716-f0bc54eea481?q=80&w=2070&auto=format&fit=crop')">
-                      <div class="absolute inset-0 bg-black/40 rounded-lg"></div>
-                      <div class="relative text-center text-white"><h1 class="text-4xl font-bold">YADEA VoltGuard Series</h1><p>Khóa học chuyên sâu về sản phẩm mới</p></div>
-                      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"><button class="w-3 h-3 bg-white rounded-full"></button><button class="w-3 h-3 bg-white/50 rounded-full"></button><button class="w-3 h-3 bg-white/50 rounded-full"></button></div>
+                  
+                  <!-- Slider Section -->
+                  <div id="training-slider-container" class="relative w-full h-64 md:h-80 rounded-lg overflow-hidden mb-6 shadow-lg">
+                      <div id="training-slider-inner" class="flex h-full transition-transform duration-500 ease-in-out">
+                          <!-- Slides will be injected here by JS -->
+                      </div>
+                      <button id="slider-prev" class="absolute top-1/2 left-3 -translate-y-1/2 bg-white/50 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md z-10 flex items-center justify-center">
+                          <i class="fas fa-chevron-left"></i>
+                      </button>
+                      <button id="slider-next" class="absolute top-1/2 right-3 -translate-y-1/2 bg-white/50 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md z-10 flex items-center justify-center">
+                          <i class="fas fa-chevron-right"></i>
+                      </button>
+                      <div id="slider-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                          <!-- Dots will be injected here by JS -->
+                      </div>
                   </div>
+
                   <div>
                       <h3 class="text-xl font-bold text-gray-800 mb-4">Tất cả bài học</h3>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                          <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"><div class="bg-red-100 text-red-700 font-bold text-2xl p-6 text-center">VoltGuard</div><div class="p-4"><p class="text-sm text-gray-600">Sản phẩm: YADEA VoltGuard</p><p class="text-sm text-gray-600">Thời lượng: 45 phút</p></div></div>
-                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"><div class="bg-gray-200 h-28 flex items-center justify-center"><img src="https://placehold.co/100x40?text=Orla" alt="Orla Image" class="opacity-50"></div><div class="p-4"><p class="text-sm text-gray-600">Sản phẩm: YADEA Orla</p><p class="text-sm text-gray-600">Thời lượng: 30 phút</p></div></div>
-                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"><div class="bg-blue-100 text-blue-700 font-bold text-2xl p-6 text-center">Kỹ Năng</div><div class="p-4"><p class="text-sm text-gray-600">Kỹ năng mềm: Chăm sóc KH</p><p class="text-sm text-gray-600">Thời lượng: 1 giờ</p></div></div>
-                           <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"><div class="bg-gray-100 text-gray-700 font-bold text-2xl p-6 text-center">Quy Trình</div><div class="p-4"><p class="text-sm text-gray-600">Quy trình: Xử lý khiếu nại</p><p class="text-sm text-gray-600">Thời lượng: 25 phút</p></div></div>
+                      <div id="course-list-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                           <!-- Loading spinner -->
+                          <div class="col-span-full flex justify-center items-center h-48"><div class="loading-animation"></div></div>
                       </div>
                   </div>
               </div>
-          </div>
+            </div>
+
+            <!-- Giao diện xem PDF đào tạo -->
+             <div id="training-pdf-view" class="hidden bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
+                <button class="back-to-training-list text-gray-600 hover:text-orange-500 font-bold flex items-center mb-4">
+                    <i class="fas fa-arrow-left mr-2"></i> Trở về danh sách
+                </button>
+                <h1 id="pdf-title" class="text-2xl font-bold text-gray-800 mb-4"></h1>
+                <div class="w-full h-[75vh] border border-gray-200 rounded-lg overflow-hidden">
+                    <iframe id="pdf-iframe" class="w-full h-full" src=""></iframe>
+                </div>
+            </div>
+
+             <!-- Giao diện xem bài viết đào tạo -->
+             <div id="training-article-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <button class="back-to-training-list text-gray-600 hover:text-orange-500 font-bold flex items-center mb-6">
+                    <i class="fas fa-arrow-left mr-2"></i> Trở về danh sách
+                </button>
+                <img id="training-article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="Article Image" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
+                <h1 id="training-article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
+                <div id="training-article-body" class="max-w-none text-gray-700 article-body-content">
+                </div>
+            </div>
         </div>
       </div>
     </main>
@@ -408,6 +439,7 @@
     let siChartInstance = null;
     let soChartInstance = null;
     let currentArticleId = null;
+    let allCourses = []; // Cache for training courses
     
     // Modal elements
     const contentModal = document.getElementById('content-modal');
@@ -448,6 +480,7 @@
             renderReportCharts();
             renderTasks();
             loadMagazineContent();
+            loadTrainingContent();
             
             loginPage.classList.add('hidden');
             dashboardPage.classList.remove('hidden');
@@ -790,6 +823,242 @@
              modalIframe.src = '';
         }
     });
+    
+    // --- Training Content ---
+    const trainingListView = document.getElementById('training-list-view');
+    const trainingPdfView = document.getElementById('training-pdf-view');
+    const trainingArticleView = document.getElementById('training-article-view');
+
+    document.querySelectorAll('.back-to-training-list').forEach(btn => {
+        btn.addEventListener('click', () => {
+            trainingPdfView.classList.add('hidden');
+            trainingArticleView.classList.add('hidden');
+            trainingListView.style.display = 'flex';
+            document.getElementById('pdf-iframe').src = '';
+        });
+    });
+
+
+    async function loadTrainingContent() {
+        const apiUrl = "https://script.google.com/macros/s/AKfycbxvvoxGw4IPyNCQ6LMEEyCTtgsa1-M-UcMvCesTPaJHLZbgIbcODBlzQw85DkOGhKGI/exec";
+        try {
+            const response = await fetch(apiUrl);
+            if(!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
+            const data = await response.json();
+            allCourses = data.courses || [];
+            displayCourses(allCourses);
+            populateTrainingSlider(allCourses);
+        } catch(error) {
+            console.error("Không thể tải nội dung đào tạo:", error);
+            const container = document.getElementById('course-list-grid');
+            container.innerHTML = `<p class="col-span-full text-center text-red-500">Lỗi tải danh sách khóa học.</p>`;
+        }
+    }
+
+    function displayCourses(courses) {
+        const container = document.getElementById('course-list-grid');
+        container.innerHTML = '';
+        if (courses && courses.length > 0) {
+            courses.forEach(course => container.appendChild(createCourseCardElement(course)));
+        } else {
+            container.innerHTML = `<p class="col-span-full text-center text-gray-500">Không tìm thấy khóa học nào.</p>`;
+        }
+    }
+
+    function createCourseCardElement(course) {
+        const card = document.createElement('div');
+        card.className = 'border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white';
+        
+        let thumbnailHtml = '';
+        if (course.thumbnailUrl && course.thumbnailUrl.startsWith('http')) {
+             thumbnailHtml = `<img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-36 object-cover">`;
+        } else {
+            const bgColor = course.category === 'Kỹ năng bán hàng' ? 'bg-blue-100 text-blue-700' : (course.category === 'Văn hoá & Quy định' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700');
+            const titleText = (course.title || 'YADEA').split(' ')[0];
+            thumbnailHtml = `<div class="h-36 flex items-center justify-center font-bold text-2xl p-6 text-center ${bgColor}">${titleText}</div>`;
+        }
+
+        card.innerHTML = `
+            ${thumbnailHtml}
+            <div class="p-4">
+                <p class="font-semibold text-gray-800 text-sm">${course.title}</p>
+                <p class="text-sm text-gray-600 mt-1">Thời lượng: ${course.duration || 'N/A'}</p>
+            </div>`;
+        card.addEventListener('click', () => handleCourseClick(course));
+        return card;
+    }
+
+     function handleCourseClick(course) {
+        const type = course.contentType || 'article';
+        const url = course.contentUrl || '';
+        const body = course.articleBody || '';
+
+        if (type === 'youtube' && url) {
+            const videoId = url.split('v=')[1]?.split('&')[0];
+            if (videoId) {
+                modalIframe.src = `https://www.youtube.com/embed/${videoId}`;
+                contentModal.classList.add('visible');
+            } else { alert("URL YouTube không hợp lệ."); }
+            return;
+        }
+        
+        if (type === 'pdf' && url) {
+            showPdfView(course.title, url);
+            return;
+        }
+
+        if (body.trim() !== '') {
+            showTrainingArticleView(course);
+            return;
+        }
+        
+        alert("Nội dung khóa học này chưa được cập nhật.");
+    }
+
+    function showPdfView(title, url) {
+        let embedUrl = url;
+        if (url.includes('drive.google.com')) {
+            embedUrl = url.replace('/view?usp=sharing', '/preview').replace('/view', '/preview');
+        }
+        document.getElementById('pdf-title').textContent = title;
+        document.getElementById('pdf-iframe').src = embedUrl;
+        trainingListView.style.display = 'none';
+        trainingPdfView.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showTrainingArticleView(course) {
+        document.getElementById('training-article-image').src = course.thumbnailUrl || 'https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA';
+        document.getElementById('training-article-title').textContent = course.title || 'Không có tiêu đề';
+        document.getElementById('training-article-body').innerHTML = course.articleBody || '<p>Nội dung không có sẵn.</p>';
+        trainingListView.style.display = 'none';
+        trainingArticleView.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- Training Filter and Search ---
+    const categoryNav = document.getElementById('training-category-nav');
+    categoryNav.addEventListener('click', (e) => {
+        e.preventDefault();
+        const link = e.target.closest('.category-link');
+        if (link) {
+            document.querySelectorAll('#training-category-nav .category-link').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            const category = link.dataset.category;
+            let filteredCourses = [];
+            if (category === 'all') {
+                filteredCourses = allCourses;
+            } else {
+                filteredCourses = allCourses.filter(course => course.category === category);
+            }
+            displayCourses(filteredCourses);
+        }
+    });
+
+    const searchInput = document.getElementById('training-search-input');
+    const searchBtn = document.getElementById('training-search-btn');
+
+    const performSearch = () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filteredCourses = allCourses.filter(course => 
+            (course.title || '').toLowerCase().includes(searchTerm)
+        );
+        displayCourses(filteredCourses);
+    };
+
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+
+    // --- Training Slider ---
+    const sliderContainer = document.getElementById('training-slider-container');
+    const sliderInner = document.getElementById('training-slider-inner');
+    const sliderPrevBtn = document.getElementById('slider-prev');
+    const sliderNextBtn = document.getElementById('slider-next');
+    const sliderDotsContainer = document.getElementById('slider-dots');
+    let currentSlide = 0;
+    let sliderCourses = [];
+    let slideInterval;
+
+    function populateTrainingSlider(courses) {
+        sliderCourses = courses.filter(c => c.thumbnailUrl && c.thumbnailUrl.startsWith('http'));
+        sliderInner.innerHTML = '';
+        sliderDotsContainer.innerHTML = '';
+
+        if (sliderCourses.length === 0) {
+            sliderContainer.style.display = 'none';
+            return;
+        }
+
+        sliderCourses.forEach((course, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'w-full h-full flex-shrink-0 bg-cover bg-center relative cursor-pointer';
+            slide.style.backgroundImage = `url(${course.thumbnailUrl})`;
+            slide.innerHTML = `
+                <div class="absolute inset-0 bg-black/40"></div>
+                <div class="relative h-full flex flex-col justify-end p-8 text-white">
+                    <h2 class="text-2xl font-bold">${course.title}</h2>
+                    <p class="text-sm">${course.description}</p>
+                </div>
+            `;
+            slide.addEventListener('click', () => handleCourseClick(course));
+            sliderInner.appendChild(slide);
+
+            const dot = document.createElement('button');
+            dot.className = 'w-3 h-3 rounded-full bg-white/50 transition-colors';
+            dot.addEventListener('click', () => {
+                showSlide(index);
+                resetSlideInterval();
+            });
+            sliderDotsContainer.appendChild(dot);
+        });
+        showSlide(0);
+        startSlideInterval();
+    }
+
+    function showSlide(index) {
+        sliderInner.style.transform = `translateX(-${index * 100}%)`;
+        document.querySelectorAll('#slider-dots button').forEach((dot, i) => {
+            dot.classList.toggle('bg-white', i === index);
+            dot.classList.toggle('bg-white/50', i !== index);
+        });
+        currentSlide = index;
+    }
+
+    function nextSlide() {
+        const newIndex = (currentSlide + 1) % sliderCourses.length;
+        showSlide(newIndex);
+    }
+
+    function prevSlide() {
+        const newIndex = (currentSlide - 1 + sliderCourses.length) % sliderCourses.length;
+        showSlide(newIndex);
+    }
+    
+    function startSlideInterval() {
+        slideInterval = setInterval(nextSlide, 5000);
+    }
+
+    function resetSlideInterval() {
+        clearInterval(slideInterval);
+        startSlideInterval();
+    }
+
+    sliderNextBtn.addEventListener('click', () => {
+        nextSlide();
+        resetSlideInterval();
+    });
+    sliderPrevBtn.addEventListener('click', () => {
+        prevSlide();
+        resetSlideInterval();
+    });
+    sliderContainer.addEventListener('mouseenter', () => clearInterval(slideInterval));
+    sliderContainer.addEventListener('mouseleave', startSlideInterval);
+
 
     });
 </script>

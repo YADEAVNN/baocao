@@ -132,12 +132,13 @@
         border: none;
     }
     /* Article view styles */
-    #article-body p { margin-bottom: 1rem; line-height: 1.7; }
-    #article-body h3 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; }
-    #article-body ul { list-style-type: disc; list-style-position: inside; margin-left: 1rem; margin-bottom: 1rem; }
-    #article-body li { margin-bottom: 0.5rem; }
-    #article-body a { color: #F97316; text-decoration: underline; }
-    #article-body strong { font-weight: bold; }
+    .article-body-content p { margin-bottom: 1rem; line-height: 1.7; }
+    .article-body-content h3 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; }
+    .article-body-content ul { list-style-type: disc; list-style-position: inside; margin-left: 1rem; margin-bottom: 1rem; }
+    .article-body-content li { margin-bottom: 0.5rem; }
+    .article-body-content a { color: #F97316; text-decoration: underline; }
+    .article-body-content strong { font-weight: bold; }
+    .article-body-content img { width: 100%; border-radius: 8px; margin: 1rem 0; }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -228,9 +229,22 @@
                 </button>
                 <img id="article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="Article Image" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
                 <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
-                <div id="article-body" class="max-w-none text-gray-700">
-                    <!-- Nội dung bài viết sẽ được chèn vào đây bởi JS -->
+                <div id="article-body" class="max-w-none text-gray-700 article-body-content">
                 </div>
+
+                <!-- Comment Section -->
+                <hr class="my-8 border-gray-200">
+                <div id="comment-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Bình luận (<span id="comment-count">0</span>)</h2>
+                    <div id="comment-list" class="space-y-4 mb-6">
+                        <!-- Comments will be loaded here -->
+                    </div>
+                    <form id="comment-form" class="mt-2">
+                        <textarea id="comment-input" class="w-full p-3 bg-gray-100 border-gray-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" rows="3" placeholder="Viết bình luận của bạn..." required></textarea>
+                        <button type="submit" class="mt-3 bg-orange-500 text-white font-bold py-2 px-5 rounded-lg hover:bg-orange-600 transition-colors">Gửi bình luận</button>
+                    </form>
+                </div>
+
             </div>
         </div>
         <!-- Trang chủ -->
@@ -314,7 +328,7 @@
         </div>
         <!-- Đào tạo -->
         <div id="dao-tao-content" class="content-tab">
-          <div class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
+           <div class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
               <aside class="w-full md:w-1/4 lg:w-1/5 bg-gray-800 text-white rounded-lg p-6">
                   <h3 class="font-bold text-lg mb-6">Danh mục</h3>
                   <nav class="space-y-4">
@@ -352,9 +366,38 @@
     </main>
   </div>
 
+<script type="module">
+    // Firebase Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    // --- Firebase Initialization ---
+    // These global variables are provided by the environment.
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'yadea-erp-portal';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "...", authDomain: "...", projectId: "..." };
+    
+    let db, auth, userId, userDisplayName;
+    let unsubscribeComments = null; // To detach listener
+
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        signInAnonymously(auth).then((userCredential) => {
+            userId = userCredential.user.uid;
+            // userDisplayName will be set upon login.
+        }).catch((error) => {
+            console.error("Lỗi đăng nhập ẩn danh:", error);
+        });
+
+    } catch (e) {
+        console.error("Lỗi khởi tạo Firebase:", e);
+    }
+    
+    // --- Existing DOMContentLoaded Logic ---
+    document.addEventListener('DOMContentLoaded', () => {
     const loginPage = document.getElementById('login-page');
     const dashboardPage = document.getElementById('dashboard-page');
     const loginForm = document.getElementById('login-form');
@@ -364,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logout-btn');
     let siChartInstance = null;
     let soChartInstance = null;
+    let currentArticleId = null;
     
     // Modal elements
     const contentModal = document.getElementById('content-modal');
@@ -396,11 +440,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalScore: 1940.0,
                 rating: 4.5
             };
+            
+            // Set the display name for comments here
+            userDisplayName = mockUser.fullName;
 
             populateUserInfo(mockUser);
             renderReportCharts();
             renderTasks();
-            loadMagazineContent(); // Load magazine content after login
+            loadMagazineContent();
             
             loginPage.classList.add('hidden');
             dashboardPage.classList.remove('hidden');
@@ -590,10 +637,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const magazineListView = document.getElementById('magazine-list-view');
     const articleDetailView = document.getElementById('article-detail-view');
     const backToMagazineBtn = document.getElementById('back-to-magazine-btn');
+    const commentForm = document.getElementById('comment-form');
 
     backToMagazineBtn.addEventListener('click', () => {
         articleDetailView.classList.add('hidden');
         magazineListView.style.display = 'block';
+        currentArticleId = null;
+        if (unsubscribeComments) {
+            unsubscribeComments(); // Detach listener when leaving article
+        }
     });
 
     async function loadMagazineContent() {
@@ -603,66 +655,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(apiUrl);
-            if (!response.ok) {
-                throw new Error(`Lỗi mạng: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
             const data = await response.json();
             const articles = data.articles;
             
-            featuredContainer.innerHTML = '';
-            listContainer.innerHTML = '';
-
+            featuredContainer.innerHTML = ''; listContainer.innerHTML = '';
             const featuredArticle = articles.find(a => a.isFeatured);
             const otherArticles = articles.filter(a => !a.isFeatured);
 
-            if (featuredArticle) {
-                const el = createArticleElement(featuredArticle, true);
-                featuredContainer.appendChild(el);
-            } else {
-                 featuredContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nổi bật.</p>`;
-            }
-
-            if(otherArticles.length > 0) {
-                otherArticles.forEach(article => {
-                    const el = createArticleElement(article, false);
-                    listContainer.appendChild(el);
-                });
-            } else {
-                listContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nào khác.</p>`;
-            }
+            if (featuredArticle) featuredContainer.appendChild(createArticleElement(featuredArticle, true));
+            else featuredContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nổi bật.</p>`;
+            
+            if(otherArticles.length > 0) otherArticles.forEach(article => listContainer.appendChild(createArticleElement(article, false)));
+            else listContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nào khác.</p>`;
 
         } catch (error) {
             console.error("Không thể tải nội dung tạp chí:", error);
-            featuredContainer.innerHTML = `<p class="text-red-500 text-center">Không thể tải được bài viết nổi bật.</p>`;
-            listContainer.innerHTML = `<p class="text-red-500 text-center">Không thể tải được danh sách bài viết.</p>`;
+            featuredContainer.innerHTML = `<p class="text-red-500 text-center">Lỗi tải bài viết nổi bật.</p>`;
+            listContainer.innerHTML = `<p class="text-red-500 text-center">Lỗi tải danh sách bài viết.</p>`;
         }
     }
 
     function createArticleElement(article, isFeatured) {
         const container = document.createElement('div');
         container.className = 'magazine-article-item cursor-pointer';
-
         if (isFeatured) {
-            container.innerHTML = `
-                <div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8">
-                    <img src="${article.imageUrl}" alt="${article.title}" class="absolute inset-0 w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div>
-                    <div class="relative z-10">
-                        <h2 class="text-2xl sm:text-3xl font-bold">${article.title}</h2>
-                        <p class="mt-2 text-gray-200">${article.description}</p>
-                    </div>
-                </div>`;
+            container.innerHTML = `<div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8"><img src="${article.imageUrl}" alt="${article.title}" class="absolute inset-0 w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div><div class="relative z-10"><h2 class="text-2xl sm:text-3xl font-bold">${article.title}</h2><p class="mt-2 text-gray-200">${article.description}</p></div></div>`;
         } else {
-            container.innerHTML = `
-                <div class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                    <div class="w-20 h-20 bg-gray-100 text-orange-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0">
-                        <i class="${article.categoryIcon || 'fas fa-newspaper'} text-2xl"></i>
-                        <span class="text-xs font-bold mt-1">${article.category}</span>
-                    </div>
-                    <div><p class="font-semibold text-gray-800">${article.title}</p></div>
-                </div>`;
+            container.innerHTML = `<div class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow"><div class="w-20 h-20 bg-gray-100 text-orange-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0"><i class="${article.categoryIcon || 'fas fa-newspaper'} text-2xl"></i><span class="text-xs font-bold mt-1">${article.category}</span></div><div><p class="font-semibold text-gray-800">${article.title}</p></div></div>`;
         }
-        
         container.addEventListener('click', () => handleArticleClick(article));
         return container;
     }
@@ -670,56 +691,97 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleArticleClick(article) {
         const type = article.contentType || 'article';
         const url = article.contentUrl || '';
-
         if (type === 'youtube' && url) {
             const videoId = url.split('v=')[1]?.split('&')[0];
             if (videoId) {
                 modalIframe.src = `https://www.youtube.com/embed/${videoId}`;
                 contentModal.classList.add('visible');
-            } else {
-                alert("Định dạng URL YouTube không hợp lệ.");
-            }
+            } else { alert("URL YouTube không hợp lệ."); }
             return;
         }
-
         if ((type === 'article' || type === 'pdf') && article.articleBody && article.articleBody.trim() !== '') {
             showArticleView(article);
-        } else if (type === 'pdf' && url) { // Fallback for old PDFs
-            let embedUrl = '';
-            if (url.includes('drive.google.com')) {
-                embedUrl = url.replace('/view?usp=sharing', '/preview').replace('/view', '/preview');
-            } else {
-                embedUrl = url;
-            }
-            if (embedUrl) {
-                modalIframe.src = embedUrl;
-                contentModal.classList.add('visible');
-            } else {
-                alert("URL PDF không hợp lệ.");
-            }
-        } else {
-            alert("Nội dung bài viết này chưa được cập nhật.");
-        }
+        } else { alert("Nội dung bài viết này chưa được cập nhật."); }
     }
 
     function showArticleView(article) {
-        const articleImage = document.getElementById('article-image');
-        const articleTitle = document.getElementById('article-title');
-        const articleBody = document.getElementById('article-body');
-
-        articleImage.src = article.imageUrl || 'https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA';
-        articleTitle.textContent = article.title || 'Không có tiêu đề';
-        articleBody.innerHTML = article.articleBody || '<p>Nội dung không có sẵn.</p>';
-
+        currentArticleId = article.id;
+        document.getElementById('article-image').src = article.imageUrl || 'https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA';
+        document.getElementById('article-title').textContent = article.title || 'Không có tiêu đề';
+        document.getElementById('article-body').innerHTML = article.articleBody || '<p>Nội dung không có sẵn.</p>';
         magazineListView.style.display = 'none';
         articleDetailView.classList.remove('hidden');
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        loadComments(currentArticleId);
     }
     
+    // --- Comment Logic ---
+    async function loadComments(articleId) {
+        if (!db || !articleId) return;
+        const commentList = document.getElementById('comment-list');
+        const commentCount = document.getElementById('comment-count');
+        const commentsCol = collection(db, 'public', appId, 'articles', articleId, 'comments');
+
+        unsubscribeComments = onSnapshot(commentsCol, (snapshot) => {
+            commentList.innerHTML = '';
+            commentCount.textContent = snapshot.size;
+            if(snapshot.empty) {
+                commentList.innerHTML = '<p class="text-gray-500 text-center">Chưa có bình luận nào. Hãy là người đầu tiên!</p>';
+                return;
+            }
+            const comments = [];
+            snapshot.forEach(doc => comments.push(doc.data()));
+            // Sắp xếp bình luận theo thời gian
+            comments.sort((a, b) => a.timestamp?.toMillis() - b.timestamp?.toMillis());
+            
+            comments.forEach(comment => {
+                const commentEl = document.createElement('div');
+                commentEl.className = 'flex items-start gap-3 p-3 bg-gray-50 rounded-lg';
+                const date = comment.timestamp ? comment.timestamp.toDate().toLocaleString('vi-VN') : '';
+                commentEl.innerHTML = `
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold">
+                        ${comment.authorName.charAt(0)}
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-800">${comment.authorName}</p>
+                        <p class="text-gray-600">${comment.text}</p>
+                        <p class="text-xs text-gray-400 mt-1">${date}</p>
+                    </div>
+                `;
+                commentList.appendChild(commentEl);
+            });
+        });
+    }
+
+    commentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!db || !currentArticleId || !userId) {
+            alert("Không thể gửi bình luận. Vui lòng thử lại.");
+            return;
+        }
+        const commentInput = document.getElementById('comment-input');
+        const text = commentInput.value.trim();
+        if (text) {
+            const commentsCol = collection(db, 'public', appId, 'articles', currentArticleId, 'comments');
+            try {
+                await addDoc(commentsCol, {
+                    text: text,
+                    authorId: userId,
+                    authorName: userDisplayName,
+                    timestamp: serverTimestamp()
+                });
+                commentInput.value = '';
+            } catch (error) {
+                console.error("Lỗi khi thêm bình luận:", error);
+                alert("Đã xảy ra lỗi khi gửi bình luận.");
+            }
+        }
+    });
+
+    // Modal close events
     modalCloseBtn.addEventListener('click', () => {
         contentModal.classList.remove('visible');
-        modalIframe.src = ''; // Stop video/content from loading
+        modalIframe.src = ''; 
     });
     
     contentModal.addEventListener('click', (e) => {
@@ -729,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-});
+    });
 </script>
 </body>
 </html>

@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <!-- Chart.js + Datalabels -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0" defer></script>
   <style>
     :root{color-scheme:light only}
     html{box-sizing:border-box;-webkit-text-size-adjust:100%}
@@ -97,7 +97,7 @@
     <div class="w-full max-w-4xl p-4 sm:p-8">
       <div class="bg-white rounded-2xl shadow-xl flex flex-col md:flex-row">
         <div class="w-full md:w-1/2 bg-white p-8 sm:p-12 flex flex-col justify-center items-center rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none">
-          <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" alt="YADEA Logo" class="h-16 sm:h-20 mb-4">
+          <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" alt="YADEA Logo" class="h-16 sm:h-20 mb-4 object-contain" loading="lazy" decoding="async">
           <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">YADEA ERP</h1>
           <p class="text-gray-500 mt-2">Electrify Your Life</p>
         </div>
@@ -132,7 +132,7 @@
     <!-- NAV -->
     <header class="nav">
       <div class="max-w-[1200px] mx-auto px-3 sm:px-6 py-2 flex items-center gap-3">
-        <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" alt="YADEA Logo" class="h-8 sm:h-10">
+        <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" alt="YADEA Logo" class="h-8 sm:h-10 object-contain" loading="lazy" decoding="async">
         <div class="nav__scroll grow">
           <a href="#" class="nav__link active" data-target="tap-chi">TẠP CHÍ YADEA</a>
           <a href="#" class="nav__link" data-target="trang-chu">TRANG CHỦ</a>
@@ -166,7 +166,7 @@
             <button id="back-to-magazine-btn" class="text-gray-600 hover:text-orange-500 font-bold flex items-center mb-6">
               <i class="fas fa-arrow-left mr-2"></i> Trở về Tạp chí
             </button>
-            <img id="article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
+            <img id="article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6" loading="lazy" decoding="async">
             <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
             <div id="article-body" class="max-w-none text-gray-700 article-body-content"></div>
             <hr class="my-8 border-gray-200">
@@ -191,7 +191,7 @@
                 <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
                   <h3 class="text-lg font-bold text-gray-800 mb-4">Thông tin nhân viên</h3>
                   <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-                    <img id="user-avatar" class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0" src="https://placehold.co/128x128/CCCCCC/FFFFFF?text=..." alt="Avatar">
+                    <img id="user-avatar" class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0" src="https://placehold.co/128x128/CCCCCC/FFFFFF?text=..." alt="Avatar" loading="lazy" decoding="async">
                     <div class="flex-grow w-full">
                       <h2 id="user-full-name" class="text-2xl sm:text-3xl font-bold text-gray-800">...</h2>
                       <div class="flex items-center gap-4 my-2">
@@ -326,7 +326,7 @@
           <!-- Bài viết đào tạo -->
           <div id="training-article-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
             <button class="back-to-training-list text-gray-600 hover:text-orange-500 font-bold flex items-center mb-6"><i class="fas fa-arrow-left mr-2"></i> Trở về danh sách</button>
-            <img id="training-article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
+            <img id="training-article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6" loading="lazy" decoding="async">
             <h1 id="training-article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
             <div id="training-article-body" class="max-w-none text-gray-700 article-body-content"></div>
           </div>
@@ -435,14 +435,15 @@
         }
 
         if (emailForReport) {
-          await fetchAndRenderReportData(emailForReport);
+          fetchAndRenderReportData(emailForReport);
         } else {
           renderReportCharts(); // không có email
         }
 
         renderTasks();
-        loadMagazineContent();
-        loadTrainingContent();
+        // Tải song song Magazine và Training content
+        Promise.all([loadMagazineContent(), loadTrainingContent()]);
+
 
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu người dùng:", error);
@@ -861,7 +862,7 @@
       const container = document.createElement('div');
       container.className = 'magazine-article-item cursor-pointer';
       if (isFeatured) {
-        container.innerHTML = `<div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8"><img src="${article.imageUrl}" alt="${article.title}" class="absolute inset-0 w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div><div class="relative z-10"><h2 class="text-2xl sm:text-3xl font-bold">${article.title}</h2><p class="mt-2 text-gray-200">${article.description}</p></div></div>`;
+        container.innerHTML = `<div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8"><img src="${article.imageUrl}" alt="${article.title}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div><div class="relative z-10"><h2 class="text-2xl sm:text-3xl font-bold">${article.title}</h2><p class="mt-2 text-gray-200">${article.description}</p></div></div>`;
       } else {
         container.innerHTML = `<div class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow"><div class="w-20 h-20 bg-gray-100 text-orange-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0"><i class="${article.categoryIcon || 'fas fa-newspaper'} text-2xl"></i><span class="text-xs font-bold mt-1">${article.category}</span></div><div><p class="font-semibold text-gray-800">${article.title}</p></div></div>`;
       }
@@ -1010,7 +1011,7 @@
       
       let thumbnailHtml = '';
       if (course.thumbnailUrl && course.thumbnailUrl.startsWith('http')) {
-        thumbnailHtml = `<img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-36 object-cover">`;
+        thumbnailHtml = `<img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-36 object-cover" loading="lazy" decoding="async">`;
       } else {
         const bgColor = course.category === 'Kỹ năng bán hàng' ? 'bg-blue-100 text-blue-700' : (course.category === 'Văn hoá & Quy định' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700');
         const titleText = (course.title || 'YADEA').split(' ')[0];
@@ -1124,7 +1125,7 @@
         slide.className = 'w-full h-full flex-shrink-0 bg-gray-800 relative cursor-pointer';
         
         slide.innerHTML = `
-          <img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-full object-cover absolute inset-0 z-0" onerror="this.style.display='none'">
+          <img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-full object-cover absolute inset-0 z-0" onerror="this.style.display='none'" loading="lazy" decoding="async">
           <div class="absolute inset-0 bg-black/40 z-10"></div>
           <div class="relative z-20 h-full flex flex-col justify-end p-8 text-white">
             <h2 class="text-2xl font-bold">${course.title}</h2>
@@ -1167,4 +1168,5 @@
 </script>
 </body>
 </html>
+
 

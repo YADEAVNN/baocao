@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <!-- Thêm thư viện Chart.js và plugin Datalabels -->
+  <!-- Chart.js + Datalabels -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
@@ -24,7 +24,6 @@
     .nav__scroll::-webkit-scrollbar{ display:none }
     .nav__link { flex:0 0 auto; padding:.5rem .75rem; border-radius:999px; font-weight:700; font-size:clamp(12px,2.9vw,14px); white-space:nowrap; color:#374151; text-decoration:none }
     .nav__link.active { background:#fff3e9; color:#F97316; border:1px solid #ffd5b3 }
-    .magazine-title{font-family:'Playfair Display',serif}
     .content-tab{display:none}
     .initial-active-tab{display:block!important}
     .loading-animation{border:4px solid #f3f3f3;border-top:4px solid #F97316;border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite}
@@ -35,126 +34,43 @@
     h2{font-size:clamp(18px,4.6vw,26px);line-height:1.3}
     h3{font-size:clamp(16px,4vw,20px)}
     p,li,span{font-size:clamp(14px,3.4vw,16px)}
-    .card{border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
-    .dashboard-card {
-        background-color: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        transition: transform 0.2s, box-shadow 0.2s;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        color: #374151;
-        height: 100%;
-        cursor: pointer;
-    }
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-    }
-    .dashboard-card i {
-        font-size: 2rem;
-        color: #F97316;
-    }
-    .dashboard-card span {
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    .todo-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; transition: background-color 0.2s; }
-    .todo-item:hover { background-color: #f3f4f6; }
-    .todo-item.completed span { text-decoration: line-through; color: #9ca3af; }
-    .todo-item input[type="checkbox"] { width: 1.25rem; height: 1.25rem; accent-color: #F97316; cursor: pointer; }
-    .todo-item .delete-btn { margin-left: auto; background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 1.2rem; transition: color 0.2s; padding: 0.25rem 0.5rem; }
-    .todo-item .delete-btn:hover { color: #ef4444; }
-    
-    /* Modal styles */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 100;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s, visibility 0.3s;
-    }
-    .modal-overlay.visible {
-        opacity: 1;
-        visibility: visible;
-    }
-    .modal-content {
-        background: white;
-        padding: 1rem;
-        border-radius: 12px;
-        position: relative;
-        width: 90%;
-        max-width: 900px;
-        transform: scale(0.9);
-        transition: transform 0.3s;
-    }
-    .modal-overlay.visible .modal-content {
-        transform: scale(1);
-    }
-    .modal-close {
-        position: absolute;
-        top: -15px;
-        right: -15px;
-        background: #F97316;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        font-size: 20px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .modal-body {
-        width: 100%;
-        height: 80vh;
-    }
-    .modal-body iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
-    /* Article view styles */
-    .article-body-content p { margin-bottom: 1rem; line-height: 1.7; }
-    .article-body-content h3 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; }
-    .article-body-content ul { list-style-type: disc; list-style-position: inside; margin-left: 1rem; margin-bottom: 1rem; }
-    .article-body-content li { margin-bottom: 0.5rem; }
-    .article-body-content a { color: #F97316; text-decoration: underline; }
-    .article-body-content strong { font-weight: bold; }
-    .article-body-content img { width: 100%; border-radius: 8px; margin: 1rem 0; }
-    .category-link.active { background-color: #4b5563; }
+    .dashboard-card {background:#fff;border-radius:12px;padding:1.5rem;text-align:center;transition:.2s;box-shadow:0 4px 6px rgba(0,0,0,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;text-decoration:none;color:#374151;height:100%;cursor:pointer}
+    .dashboard-card:hover {transform:translateY(-5px);box-shadow:0 10px 15px rgba(0,0,0,.1)}
+    .dashboard-card i {font-size:2rem;color:#F97316}
+    .dashboard-card span {font-weight:600;font-size:.9rem}
+    .todo-item { display:flex; align-items:center; gap:1rem; padding:.75rem 1rem; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb }
+    .todo-item.completed span { text-decoration:line-through; color:#9ca3af }
+    .todo-item input[type="checkbox"] { width:1.25rem; height:1.25rem; accent-color:#F97316; cursor:pointer }
+    .todo-item .delete-btn { margin-left:auto; background:none; border:none; color:#9ca3af; cursor:pointer; font-size:1.2rem; padding:.25rem .5rem }
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; visibility:hidden; transition:opacity .3s, visibility .3s }
+    .modal-overlay.visible { opacity:1; visibility:visible }
+    .modal-content { background:#fff; padding:1rem; border-radius:12px; position:relative; width:90%; max-width:900px; transform:scale(.9); transition:transform .3s }
+    .modal-overlay.visible .modal-content { transform:scale(1) }
+    .modal-close { position:absolute; top:-15px; right:-15px; background:#F97316; color:#fff; border:none; border-radius:50%; width:36px; height:36px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,.2) }
+    .modal-body { width:100%; height:80vh }
+    .modal-body iframe { width:100%; height:100%; border:none }
+    /* Article body */
+    .article-body-content p { margin-bottom:1rem; line-height:1.7 }
+    .article-body-content h3 { font-size:1.5rem; font-weight:bold; margin-top:2rem; margin-bottom:1rem }
+    .article-body-content ul { list-style:disc; list-style-position:inside; margin-left:1rem; margin-bottom:1rem }
+    .article-body-content li { margin-bottom:.5rem }
+    .article-body-content a { color:#F97316; text-decoration:underline }
+    .article-body-content img { width:100%; border-radius:8px; margin:1rem 0 }
+    .category-link.active { background-color:#4b5563 }
   </style>
 </head>
 <body class="bg-gray-100">
 
-  <!-- Modal for content display -->
+  <!-- Modal -->
   <div id="content-modal" class="modal-overlay">
-      <div class="modal-content">
-          <button id="modal-close-btn" class="modal-close">&times;</button>
-          <div class="modal-body">
-              <iframe id="modal-iframe" src="" allowfullscreen></iframe>
-          </div>
-      </div>
+    <div class="modal-content">
+      <button id="modal-close-btn" class="modal-close">&times;</button>
+      <div class="modal-body"><iframe id="modal-iframe" src="" allowfullscreen></iframe></div>
+    </div>
   </div>
 
-  <!-- Trang Đăng nhập -->
+  <!-- Login -->
   <div id="login-page" class="flex items-center justify-center min-h-[100svh] bg-gray-50">
     <div class="w-full max-w-4xl p-4 sm:p-8">
       <div class="bg-white rounded-2xl shadow-xl flex flex-col md:flex-row">
@@ -168,8 +84,8 @@
           <p class="text-gray-500 mb-6 sm:mb-8">Please provide your details</p>
           <form id="login-form">
             <div class="mb-4">
-              <label for="username" class="block text-gray-600 text-sm font-medium mb-2">Username</label>
-              <input type="text" id="username" value="thanh.vu" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <label for="username" class="block text-gray-600 text-sm font-medium mb-2">Email</label>
+              <input type="email" id="username" value="vuhuythanhtd@gmail.com" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
             </div>
             <div class="mb-6">
               <label for="password" class="block text-gray-600 text-sm font-medium mb-2">Password</label>
@@ -179,13 +95,14 @@
               <span class="login-text">Sign In</span>
               <div class="loading-animation hidden w-6 h-6 border-2 border-white border-t-transparent"></div>
             </button>
+            <p id="login-error" class="text-red-500 text-sm mt-3 text-center"></p>
           </form>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Trang Tổng Quan -->
+  <!-- App -->
   <div id="dashboard-page" class="hidden w-full min-h-[100svh] bg-white flex-col">
     <!-- NAV -->
     <header class="nav">
@@ -199,782 +116,913 @@
           <a href="#" class="nav__link" data-target="dao-tao">ĐÀO TẠO</a>
         </div>
         <button id="logout-btn" title="Đăng xuất" class="ml-auto text-gray-500 hover:text-orange-500 transition-colors text-xl p-2 rounded-full flex-shrink-0">
-            <i class="fas fa-sign-out-alt"></i>
+          <i class="fas fa-sign-out-alt"></i>
         </button>
       </div>
     </header>
 
-    <!-- Nội dung -->
+    <!-- Content -->
     <main class="flex-grow max-w-[1200px] mx-auto px-3 sm:px-6 py-4 sm:py-8 overflow-y-auto bg-gray-50 w-full">
       <div id="content-area">
-        <!-- Tạp chí YADEA -->
+        <!-- Tạp chí -->
         <div id="tap-chi-content" class="content-tab initial-active-tab">
-            <div id="magazine-list-view">
-                <div id="magazine-container" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Cột trái - Bài viết nổi bật -->
-                    <div id="featured-article-container" class="lg:col-span-2">
-                         <!-- Loading spinner -->
-                        <div class="flex justify-center items-center h-64"><div class="loading-animation"></div></div>
-                    </div>
-                    <!-- Cột phải - Danh sách bài viết -->
-                    <div id="article-list-container" class="space-y-4">
-                         <!-- Loading spinner -->
-                         <div class="flex justify-center items-center h-64"><div class="loading-animation"></div></div>
-                    </div>
-                </div>
+          <div id="magazine-list-view">
+            <div id="magazine-container" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div id="featured-article-container" class="lg:col-span-2">
+                <div class="flex justify-center items-center h-64"><div class="loading-animation"></div></div>
+              </div>
+              <div id="article-list-container" class="space-y-4">
+                <div class="flex justify-center items-center h-64"><div class="loading-animation"></div></div>
+              </div>
             </div>
-            <!-- Giao diện xem bài viết chi tiết -->
-            <div id="article-detail-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
-                <button id="back-to-magazine-btn" class="text-gray-600 hover:text-orange-500 font-bold flex items-center mb-6">
-                    <i class="fas fa-arrow-left mr-2"></i> Trở về Tạp chí
-                </button>
-                <img id="article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="Article Image" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
-                <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
-                <div id="article-body" class="max-w-none text-gray-700 article-body-content">
-                </div>
-
-                <!-- Comment Section -->
-                <hr class="my-8 border-gray-200">
-                <div id="comment-section">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Bình luận (<span id="comment-count">0</span>)</h2>
-                    <div id="comment-list" class="space-y-4 mb-6">
-                        <!-- Comments will be loaded here -->
-                    </div>
-                    <form id="comment-form" class="mt-2">
-                        <textarea id="comment-input" class="w-full p-3 bg-gray-100 border-gray-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" rows="3" placeholder="Viết bình luận của bạn..." required></textarea>
-                        <button type="submit" class="mt-3 bg-orange-500 text-white font-bold py-2 px-5 rounded-lg hover:bg-orange-600 transition-colors">Gửi bình luận</button>
-                    </form>
-                </div>
-
+          </div>
+          <!-- Chi tiết bài -->
+          <div id="article-detail-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+            <button id="back-to-magazine-btn" class="text-gray-600 hover:text-orange-500 font-bold flex items-center mb-6">
+              <i class="fas fa-arrow-left mr-2"></i> Trở về Tạp chí
+            </button>
+            <img id="article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
+            <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
+            <div id="article-body" class="max-w-none text-gray-700 article-body-content"></div>
+            <hr class="my-8 border-gray-200">
+            <div id="comment-section">
+              <h2 class="text-2xl font-bold text-gray-800 mb-4">Bình luận (<span id="comment-count">0</span>)</h2>
+              <div id="comment-list" class="space-y-4 mb-6"></div>
+              <form id="comment-form" class="mt-2">
+                <textarea id="comment-input" class="w-full p-3 bg-gray-100 border-gray-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" rows="3" placeholder="Viết bình luận của bạn..." required></textarea>
+                <button type="submit" class="mt-3 bg-orange-500 text-white font-bold py-2 px-5 rounded-lg hover:bg-orange-600">Gửi bình luận</button>
+              </form>
             </div>
+          </div>
         </div>
+
         <!-- Trang chủ -->
         <div id="trang-chu-content" class="content-tab">
           <div id="dashboard-content">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-              <!-- Cột trái -->
+              <!-- Trái -->
               <div class="lg:col-span-2 space-y-4 sm:space-y-8">
                 <!-- Thông tin nhân viên -->
                 <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Thông tin nhân viên</h3>
-                    <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-                        <img id="user-avatar" class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0" src="https://placehold.co/128x128/CCCCCC/FFFFFF?text=..." alt="Avatar">
-                        <div class="flex-grow w-full">
-                            <h2 id="user-full-name" class="text-2xl sm:text-3xl font-bold text-gray-800">...</h2>
-                            <div class="flex items-center gap-4 my-2">
-                                <div id="user-star-rating" class="text-2xl flex items-center gap-1"></div>
-                                <p class="text-lg font-bold text-gray-700">Tổng điểm: <span id="user-total-score" class="text-orange-500">...</span></p>
-                            </div>
-                            <div id="progress-container" class="my-3"></div>
-                            <div class="mt-4 text-sm text-gray-600 space-y-1.5">
-                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Mã nhân viên:</strong> <span id="user-employee-id">...</span></p>
-                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Ngày sinh:</strong> <span id="user-birth-date">...</span></p>
-                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Số điện thoại:</strong> <span id="user-phone">...</span></p>
-                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Email:</strong> <span id="user-email">...</span></p>
-                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Ngày vào làm:</strong> <span id="user-join-date">...</span></p>
-                                <p><strong class="font-medium text-gray-800 w-28 inline-block">Ghi chú:</strong> <span id="user-notes">...</span></p>
-                            </div>
-                        </div>
+                  <h3 class="text-lg font-bold text-gray-800 mb-4">Thông tin nhân viên</h3>
+                  <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                    <img id="user-avatar" class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0" src="https://placehold.co/128x128/CCCCCC/FFFFFF?text=..." alt="Avatar">
+                    <div class="flex-grow w-full">
+                      <h2 id="user-full-name" class="text-2xl sm:text-3xl font-bold text-gray-800">...</h2>
+                      <div class="flex items-center gap-4 my-2">
+                        <div id="user-star-rating" class="text-2xl flex items-center gap-1"></div>
+                        <p class="text-lg font-bold text-gray-700">Tổng điểm: <span id="user-total-score" class="text-orange-500">...</span></p>
+                      </div>
+                      <div id="progress-container" class="my-3"></div>
+                      <div class="mt-4 text-sm text-gray-600 space-y-1.5">
+                        <p><strong class="font-medium text-gray-800 w-28 inline-block">Mã nhân viên:</strong> <span id="user-employee-id">...</span></p>
+                        <p><strong class="font-medium text-gray-800 w-28 inline-block">Ngày sinh:</strong> <span id="user-birth-date">...</span></p>
+                        <p><strong class="font-medium text-gray-800 w-28 inline-block">Số điện thoại:</strong> <span id="user-phone">...</span></p>
+                        <p><strong class="font-medium text-gray-800 w-28 inline-block">Email:</strong> <span id="user-email">...</span></p>
+                        <p><strong class="font-medium text-gray-800 w-28 inline-block">Ngày vào làm:</strong> <span id="user-join-date">...</span></p>
+                        <p><strong class="font-medium text-gray-800 w-28 inline-block">Ghi chú:</strong> <span id="user-notes">...</span></p>
+                      </div>
                     </div>
+                  </div>
                 </div>
-                <!-- Báo cáo SI / SO Charts -->
+                <!-- Biểu đồ SI/SO -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200"><h3 class="font-semibold text-gray-700">Báo cáo Sell-in (SI)</h3><p class="text-xs text-gray-500 mb-3">4 tháng gần nhất</p><div class="h-[250px]"><canvas id="siChart"></canvas></div></div>
-                    <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200"><h3 class="font-semibold text-gray-700">Báo cáo Sell-out (SO)</h3><p class="text-xs text-gray-500 mb-3">4 tháng gần nhất</p><div class="h-[250px]"><canvas id="soChart"></canvas></div></div>
+                  <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
+                    <div class="flex justify-between items-center mb-3">
+                      <h3 class="font-semibold text-gray-700">Báo cáo Sell-in (SI)</h3>
+                      <p class="text-sm text-gray-500">6 tháng gần nhất</p>
+                    </div>
+                    <div class="h-[250px] flex justify-center items-center"><canvas id="siChart"></canvas></div>
+                  </div>
+                  <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
+                    <div class="flex justify-between items-center mb-3">
+                      <h3 class="font-semibold text-gray-700">Báo cáo Sell-out (SO)</h3>
+                      <p class="text-sm text-gray-500">6 tháng gần nhất</p>
+                    </div>
+                    <div class="h-[250px] flex justify-center items-center"><canvas id="soChart"></canvas></div>
+                  </div>
+                </div>
+                <!-- Debug (ẩn) -->
+                <div id="debug-output" class="mt-4 p-4 bg-gray-800 text-white rounded-lg hidden">
+                  <h3 class="font-bold mb-2">Debug Output:</h3>
+                  <pre id="debug-pre" class="whitespace-pre-wrap break-all text-xs"></pre>
                 </div>
               </div>
-              <!-- Cột phải -->
+
+              <!-- Phải -->
               <div class="space-y-4 sm:space-y-8">
                 <div class="bg-white p-5 sm:p-8 rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
                   <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-info-circle mr-3 text-orange-500"></i>CHI TIẾT ĐIỂM</h3>
                   <div class="space-y-3 sm:space-y-4 mt-5 sm:mt-6">
-                    <div class="flex justify-between items-center text-gray-600"><span>Điểm nhiệm vụ</span><span id="score-mission" class="font-bold text-gray-800">780.0</span></div>
-                    <div class="flex justify-between items-center text-gray-600"><span>Điểm ruleta</span><span id="score-ruleta" class="font-bold text-gray-800">330.0</span></div>
-                    <div class="flex justify-between items-center text-gray-600"><span>Điểm Sellout</span><span id="score-sellout" class="font-bold text-gray-800">1,027.0</span></div>
+                    <div class="flex justify-between items-center text-gray-600"><span>Điểm Sellout</span><span id="score-sellout" class="font-bold text-gray-800">0</span></div>
                     <div class="flex justify-between items-center text-gray-600"><span>Điểm Online</span><span id="score-online" class="font-bold text-gray-800">0.0</span></div>
                     <hr class="my-2 sm:my-4">
-                    <div class="flex justify-between items-center text-gray-600"><span class="font-semibold text-orange-500">Tổng điểm</span><span id="score-total" class="font-extrabold text-lg sm:text-xl text-orange-500">1,940.0</span></div>
+                    <div class="flex justify-between items-center text-gray-600"><span class="font-semibold text-orange-500">Tổng điểm</span><span id="score-total" class="font-extrabold text-lg sm:text-xl text-orange-500">0</span></div>
                   </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Vận hành -->
+        <div id="van-hanh-content" class="content-tab">
+          <div class="dashboard-view">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Bảng điều khiển Vận hành</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+              <a href="https://script.google.com/macros/s/AKfycbxhhZwVLiAj8fAuzV8AMNyDLHVhfftDJ8JJvSQl0CDkecFkFq61nUGZm7Lq4btMOk8-/exec" class="dashboard-card operational-card">
+                <i class="fas fa-cogs"></i>
+                <span>QUẢN LÝ VẬN HÀNH</span>
+              </a>
+            </div>
+          </div>
+          <div class="iframe-view hidden">
+            <div class="flex items-center mb-4"><button class="back-to-dashboard-btn text-gray-600 hover:text-orange-500 font-bold flex items-center"><i class="fas fa-arrow-left mr-2"></i> Trở lại</button><h2 class="view-title text-xl font-bold text-gray-800 ml-4">...</h2></div>
+            <iframe class="w-full h-[75vh] border-0 rounded-lg shadow-inner bg-white"></iframe>
+          </div>
+        </div>
+
+        <!-- Hoạt động -->
+        <div id="hoat-dong-content" class="content-tab">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Quản lý Công việc (To-Do List)</h2>
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <form id="todo-form" class="flex items-center gap-4 mb-6">
+              <input type="text" id="todo-input" placeholder="Thêm một công việc mới..." class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 flex-grow">
+              <button type="submit" class="bg-orange-500 text-white font-bold py-3 px-5 rounded-lg hover:bg-orange-600">Thêm</button>
+            </form>
+            <ul id="todo-list" class="space-y-3"></ul>
+          </div>
+        </div>
+
+        <!-- Đào tạo -->
+        <div id="dao-tao-content" class="content-tab">
+          <div id="training-list-view" class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
+            <aside class="w-full md:w-1/4 lg:w-1/5 bg-gray-800 text-white rounded-lg p-6">
+              <h3 class="font-bold text-lg mb-6">Danh mục</h3>
+              <nav id="training-category-nav" class="space-y-4">
+                <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Kiến thức sản phẩm"><i class="fas fa-book w-5 text-center"></i><span>Kiến thức sản phẩm</span></a>
+                <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Văn hoá & Quy định"><i class="fas fa-landmark w-5 text-center"></i><span>Văn hoá & Quy định</span></a>
+                <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Kỹ năng bán hàng"><i class="fas fa-lightbulb w-5 text-center"></i><span>Kỹ năng bán hàng</span></a>
+                <a href="#" class="category-link flex items-center gap-3 active p-2 rounded-md transition-colors" data-category="all"><i class="fas fa-list-alt w-5 text-center"></i><span>Tất cả bài học</span></a>
+              </nav>
+            </aside>
+            <div class="flex-grow">
+              <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div><p class="text-sm text-gray-500">Training > Training Online</p><h2 class="text-2xl font-bold text-gray-800">ONLINE TRAINING</h2></div>
+                <div class="flex items-center mt-4 md:mt-0"><input type="text" id="training-search-input" placeholder="Nhập tên bài học..." class="border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"><button id="training-search-btn" class="bg-orange-500 text-white px-4 py-2 rounded-r-md hover:bg-orange-600 font-semibold">Tìm kiếm</button></div>
+              </header>
+              <!-- Slider -->
+              <div id="training-slider-container" class="relative w-full h-64 md:h-80 rounded-lg overflow-hidden mb-6 shadow-lg">
+                <div id="training-slider-inner" class="flex h-full transition-transform duration-500 ease-in-out"></div>
+                <button id="slider-prev" class="absolute top-1/2 left-3 -translate-y-1/2 bg-white/50 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md z-10 flex items-center justify-center"><i class="fas fa-chevron-left"></i></button>
+                <button id="slider-next" class="absolute top-1/2 right-3 -translate-y-1/2 bg-white/50 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md z-10 flex items-center justify-center"><i class="fas fa-chevron-right"></i></button>
+                <div id="slider-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10"></div>
+              </div>
+
+              <div>
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Tất cả bài học</h3>
+                <div id="course-list-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div class="col-span-full flex justify-center items-center h-48"><div class="loading-animation"></div></div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <!-- Vận hành -->
-        <div id="van-hanh-content" class="content-tab">
-            <div class="dashboard-view">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Bảng điều khiển Vận hành</h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-                    <a href="https://script.google.com/macros/s/AKfycbxhhZwVLiAj8fAuzV8AMNyDLHVhfftDJ8JJvSQl0CDkecFkFq61nUGZm7Lq4btMOk8-/exec" class="dashboard-card operational-card">
-                        <i class="fas fa-cogs"></i>
-                        <span>QUẢN LÝ VẬN HÀNH</span>
-                    </a>
-                </div>
-            </div>
-            <div class="iframe-view hidden">
-                <div class="flex items-center mb-4"><button class="back-to-dashboard-btn text-gray-600 hover:text-orange-500 font-bold flex items-center"><i class="fas fa-arrow-left mr-2"></i> Trở lại</button><h2 class="view-title text-xl font-bold text-gray-800 ml-4">...</h2></div>
-                <iframe class="w-full h-[75vh] border-0 rounded-lg shadow-inner bg-white"></iframe>
-            </div>
-        </div>
-        <!-- Hoạt động -->
-        <div id="hoat-dong-content" class="content-tab">
-           <h2 class="text-2xl font-bold text-gray-800 mb-6">Quản lý Công việc (To-Do List)</h2>
-           <div class="bg-white p-6 rounded-xl shadow-lg">
-               <form id="todo-form" class="flex items-center gap-4 mb-6">
-                   <input type="text" id="todo-input" placeholder="Thêm một công việc mới..." class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 flex-grow">
-                   <button type="submit" class="bg-orange-500 text-white font-bold py-3 px-5 rounded-lg hover:bg-orange-600 transition-colors">Thêm</button>
-               </form>
-               <ul id="todo-list" class="space-y-3"></ul>
-           </div>
-        </div>
-        <!-- Đào tạo -->
-        <div id="dao-tao-content" class="content-tab">
-           <div id="training-list-view" class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
-              <aside class="w-full md:w-1/4 lg:w-1/5 bg-gray-800 text-white rounded-lg p-6">
-                  <h3 class="font-bold text-lg mb-6">Danh mục</h3>
-                  <nav id="training-category-nav" class="space-y-4">
-                      <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Kiến thức sản phẩm"><i class="fas fa-book w-5 text-center"></i><span>Kiến thức sản phẩm</span></a>
-                      <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Văn hoá & Quy định"><i class="fas fa-landmark w-5 text-center"></i><span>Văn hoá & Quy định</span></a>
-                      <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Kỹ năng bán hàng"><i class="fas fa-lightbulb w-5 text-center"></i><span>Kỹ năng bán hàng</span></a>
-                      <a href="#" class="category-link flex items-center gap-3 active p-2 rounded-md transition-colors" data-category="all"><i class="fas fa-list-alt w-5 text-center"></i><span>Tất cả bài học</span></a>
-                  </nav>
-              </aside>
-              <div class="flex-grow">
-                  <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                      <div><p class="text-sm text-gray-500">Training > Training Online</p><h2 class="text-2xl font-bold text-gray-800">ONLINE TRAINING</h2></div>
-                      <div class="flex items-center mt-4 md:mt-0"><input type="text" id="training-search-input" placeholder="Nhập tên bài học..." class="border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"><button id="training-search-btn" class="bg-orange-500 text-white px-4 py-2 rounded-r-md hover:bg-orange-600 font-semibold">Tìm kiếm</button></div>
-                  </header>
-                  
-                  <!-- Slider Section -->
-                  <div id="training-slider-container" class="relative w-full h-64 md:h-80 rounded-lg overflow-hidden mb-6 shadow-lg">
-                      <div id="training-slider-inner" class="flex h-full transition-transform duration-500 ease-in-out">
-                          <!-- Slides will be injected here by JS -->
-                      </div>
-                      <button id="slider-prev" class="absolute top-1/2 left-3 -translate-y-1/2 bg-white/50 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md z-10 flex items-center justify-center">
-                          <i class="fas fa-chevron-left"></i>
-                      </button>
-                      <button id="slider-next" class="absolute top-1/2 right-3 -translate-y-1/2 bg-white/50 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md z-10 flex items-center justify-center">
-                          <i class="fas fa-chevron-right"></i>
-                      </button>
-                      <div id="slider-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                          <!-- Dots will be injected here by JS -->
-                      </div>
-                  </div>
 
-                  <div>
-                      <h3 class="text-xl font-bold text-gray-800 mb-4">Tất cả bài học</h3>
-                      <div id="course-list-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                           <!-- Loading spinner -->
-                          <div class="col-span-full flex justify-center items-center h-48"><div class="loading-animation"></div></div>
-                      </div>
-                  </div>
-              </div>
+          <!-- PDF -->
+          <div id="training-pdf-view" class="hidden bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
+            <button class="back-to-training-list text-gray-600 hover:text-orange-500 font-bold flex items-center mb-4"><i class="fas fa-arrow-left mr-2"></i> Trở về danh sách</button>
+            <h1 id="pdf-title" class="text-2xl font-bold text-gray-800 mb-4"></h1>
+            <div class="w-full h-[75vh] border border-gray-200 rounded-lg overflow-hidden">
+              <iframe id="pdf-iframe" class="w-full h-full" src=""></iframe>
             </div>
+          </div>
 
-            <!-- Giao diện xem PDF đào tạo -->
-             <div id="training-pdf-view" class="hidden bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
-                <button class="back-to-training-list text-gray-600 hover:text-orange-500 font-bold flex items-center mb-4">
-                    <i class="fas fa-arrow-left mr-2"></i> Trở về danh sách
-                </button>
-                <h1 id="pdf-title" class="text-2xl font-bold text-gray-800 mb-4"></h1>
-                <div class="w-full h-[75vh] border border-gray-200 rounded-lg overflow-hidden">
-                    <iframe id="pdf-iframe" class="w-full h-full" src=""></iframe>
-                </div>
-            </div>
-
-             <!-- Giao diện xem bài viết đào tạo -->
-             <div id="training-article-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
-                <button class="back-to-training-list text-gray-600 hover:text-orange-500 font-bold flex items-center mb-6">
-                    <i class="fas fa-arrow-left mr-2"></i> Trở về danh sách
-                </button>
-                <img id="training-article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="Article Image" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
-                <h1 id="training-article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
-                <div id="training-article-body" class="max-w-none text-gray-700 article-body-content">
-                </div>
-            </div>
+          <!-- Bài viết đào tạo -->
+          <div id="training-article-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+            <button class="back-to-training-list text-gray-600 hover:text-orange-500 font-bold flex items-center mb-6"><i class="fas fa-arrow-left mr-2"></i> Trở về danh sách</button>
+            <img id="training-article-image" src="https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA" alt="" class="w-full h-auto max-h-96 object-cover rounded-xl mb-6">
+            <h1 id="training-article-title" class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6"></h1>
+            <div id="training-article-body" class="max-w-none text-gray-700 article-body-content"></div>
+          </div>
         </div>
       </div>
     </main>
   </div>
 
 <script type="module">
-    // Firebase Imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  // Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // --- Firebase Initialization ---
-    // These global variables are provided by the environment.
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'yadea-erp-portal';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "...", authDomain: "...", projectId: "..." };
-    
-    let db, auth, userId, userDisplayName;
-    let unsubscribeComments = null; // To detach listener
+  // --- Firebase Initialization ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyA-rClv_B_E_CbrxxiFSLpaYpIAstDWHFc",
+    authDomain: "yadea-erp-portal.firebaseapp.com",
+    projectId: "yadea-erp-portal",
+    storageBucket: "yadea-erp-portal.firebasestorage.app",
+    messagingSenderId: "67116584669",
+    appId: "1:67116584669:web:585ab34b139c44556e5534",
+    measurementId: "G-R7WKYKRKCB"
+  };
+  
+  // URL Web App báo cáo của bạn
+  const REPORT_API_URL = "https://script.google.com/macros/s/AKfycbxnVVtnfvn5THOkjcW-UDlR8WXEkGl7gnqnQ8GN_TXzLSCtHw_FvLpFJUJ854CGbPn0/exec";
 
-    try {
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
+  let db, auth;
+  let currentUserId = null;
+  let currentUserData = null;
+  let unsubscribeComments = null;
 
-        signInAnonymously(auth).then((userCredential) => {
-            userId = userCredential.user.uid;
-            // userDisplayName will be set upon login.
-        }).catch((error) => {
-            console.error("Lỗi đăng nhập ẩn danh:", error);
-        });
-
-    } catch (e) {
-        console.error("Lỗi khởi tạo Firebase:", e);
-    }
-    
-    // --- Existing DOMContentLoaded Logic ---
-    document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+  } catch (e) {
+    console.error("Lỗi khởi tạo Firebase:", e);
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
     const loginPage = document.getElementById('login-page');
     const dashboardPage = document.getElementById('dashboard-page');
     const loginForm = document.getElementById('login-form');
     const loginBtn = document.getElementById('login-btn');
     const loginText = loginBtn.querySelector('.login-text');
     const loadingSpinner = loginBtn.querySelector('.loading-animation');
+    const loginError = document.getElementById('login-error');
     const logoutBtn = document.getElementById('logout-btn');
     let siChartInstance = null;
     let soChartInstance = null;
     let currentArticleId = null;
-    let allCourses = []; // Cache for training courses
+    let allCourses = [];
     
-    // Modal elements
+    // Modal
     const contentModal = document.getElementById('content-modal');
     const modalCloseBtn = document.getElementById('modal-close-btn');
     const modalIframe = document.getElementById('modal-iframe');
 
     Chart.register(ChartDataLabels);
 
-    loginForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        loginText.classList.add('hidden');
-        loadingSpinner.classList.remove('hidden');
-        loginBtn.disabled = true;
-
-        setTimeout(() => {
-            loginText.classList.remove('hidden');
-            loadingSpinner.classList.add('hidden');
-            loginBtn.disabled = false;
-            
-            const mockUser = {
-                fullName: "Vũ Huy Thành",
-                employeeId: "NV001",
-                birthDate: "1995-08-15",
-                phone: "0912345678",
-                joinDate: "2023-01-20",
-                email: "thanh.vu@yadea.com.vn",
-                notes: "Nhân viên tiềm năng",
-                avatarUrl: "https://raw.githubusercontent.com/vuhuythanh/tichdiem/main/thanh.vu.png",
-                totalScore: 1940.0,
-                rating: 4.5
-            };
-            
-            // Set the display name for comments here
-            userDisplayName = mockUser.fullName;
-
-            populateUserInfo(mockUser);
-            renderReportCharts();
-            renderTasks();
-            loadMagazineContent();
-            loadTrainingContent();
-            
-            loginPage.classList.add('hidden');
-            dashboardPage.classList.remove('hidden');
-            dashboardPage.classList.add('flex');
-        }, 1500);
-    });
-
-    logoutBtn.addEventListener('click', () => {
+    // Auth
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUserId = user.uid;
+        fetchAndDisplayUserData(currentUserId);
+        loginPage.classList.add('hidden');
+        dashboardPage.classList.remove('hidden');
+        dashboardPage.classList.add('flex');
+      } else {
+        currentUserId = null;
+        currentUserData = null;
         dashboardPage.classList.add('hidden');
         dashboardPage.classList.remove('flex');
         loginPage.classList.remove('hidden');
-        document.getElementById('username').value = 'thanh.vu';
-        document.getElementById('password').value = '123456';
+      }
     });
-    
-    function formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString;
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-        } catch (e) {
-            return dateString;
+
+    // Lấy dữ liệu user + gọi báo cáo
+    async function fetchAndDisplayUserData(uid) {
+      if (!db) return;
+      try {
+        const userDocRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(userDocRef);
+
+        const firebaseEmail = auth.currentUser?.email || '';
+        let emailForReport = '';
+
+        if (docSnap.exists()) {
+          currentUserData = docSnap.data();
+          emailForReport = (currentUserData.email || firebaseEmail || '').trim();
+          populateUserInfo({...currentUserData, email: emailForReport || currentUserData.email});
+        } else {
+          currentUserData = { fullName: firebaseEmail, email: firebaseEmail };
+          populateUserInfo(currentUserData);
+          emailForReport = firebaseEmail;
         }
+
+        if (emailForReport) {
+          await fetchAndRenderReportData(emailForReport);
+        } else {
+          renderReportCharts(); // không có email
+        }
+
+        renderTasks();
+        loadMagazineContent();
+        loadTrainingContent();
+
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+        renderReportCharts();
+      }
+    }
+
+    // Login
+    loginForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      loginError.textContent = '';
+      loginText.classList.add('hidden');
+      loadingSpinner.classList.remove('hidden');
+      loginBtn.disabled = true;
+
+      const email = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .catch((error) => {
+          const errorCode = error.code;
+          let errorMessage = "Đã xảy ra lỗi. Vui lòng thử lại.";
+          if (['auth/user-not-found','auth/wrong-password','auth/invalid-credential'].includes(errorCode)) errorMessage = "Email hoặc mật khẩu không chính xác.";
+          else if (errorCode === 'auth/invalid-email') errorMessage = "Định dạng email không hợp lệ.";
+          loginError.textContent = errorMessage;
+        })
+        .finally(() => {
+          loginText.classList.remove('hidden');
+          loadingSpinner.classList.add('hidden');
+          loginBtn.disabled = false;
+        });
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', () => signOut(auth).catch(console.error));
+    
+    // Helpers
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      try {
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return dateString;
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      } catch {
+        return dateString;
+      }
     }
 
     function populateUserInfo(userData) {
-        if (!userData) return;
-        const setText = (id, value) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = value || 'N/A';
-        };
-        const avatarEl = document.getElementById('user-avatar');
-        if (avatarEl) {
-            avatarEl.src = userData.avatarUrl || 'https://placehold.co/100x100/CCCCCC/FFFFFF?text=No+Img';
-            avatarEl.onerror = () => { avatarEl.src = 'https://placehold.co/100x100/CCCCCC/FFFFFF?text=Error'; };
-        }
-        setText('user-full-name', userData.fullName);
-        setText('user-employee-id', userData.employeeId);
-        setText('user-birth-date', formatDate(userData.birthDate));
-        setText('user-phone', userData.phone);
-        setText('user-join-date', formatDate(userData.joinDate));
-        setText('user-email', userData.email);
-        setText('user-notes', userData.notes || 'Không có');
+      if (!userData) return;
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value || 'N/A';
+      };
+      const avatarEl = document.getElementById('user-avatar');
+      if (avatarEl) {
+        avatarEl.src = userData.avatarUrl || 'https://placehold.co/128x128/CCCCCC/FFFFFF?text=No+Img';
+        avatarEl.onerror = () => { avatarEl.src = 'https://placehold.co/128x128/CCCCCC/FFFFFF?text=Error'; };
+      }
+      setText('user-full-name', userData.fullName);
+      setText('user-employee-id', userData.employeeId);
+      setText('user-birth-date', formatDate(userData.birthDate));
+      setText('user-phone', userData.phone);
+      setText('user-join-date', formatDate(userData.joinDate));
+      setText('user-email', userData.email);
+      setText('user-notes', userData.notes || 'Không có');
 
-        const totalScore = parseFloat(userData.totalScore) || 0;
-        const rating = (userData.rating && userData.rating > 0) ? parseFloat(userData.rating) : 0;
-        const starContainer = document.getElementById('user-star-rating');
-        if (starContainer) {
-            starContainer.innerHTML = '';
-            for (let i = 1; i <= 5; i++) {
-                const star = document.createElement('i');
-                if (i <= rating) star.className = 'fas fa-star text-orange-400';
-                else if (i - rating < 1) star.className = 'fas fa-star-half-alt text-orange-400';
-                else star.className = 'far fa-star text-gray-300';
-                starContainer.appendChild(star);
-            }
-        }
-        
-        setText('user-total-score', totalScore.toLocaleString('vi-VN'));
-        const progressContainer = document.getElementById('progress-container');
-        if (progressContainer) {
-            const val1 = 978; const val2 = 1022; const total = val1 + val2; const percent1 = (val1 / total) * 100;
-            progressContainer.innerHTML = `<div class="w-full flex rounded-full h-5 bg-red-400 overflow-hidden border border-gray-200"><div class="bg-orange-500 flex justify-center items-center text-xs font-medium text-white" style="width: ${percent1}%">${val1.toLocaleString('vi-VN')}</div><div class="bg-rose-500 flex justify-center items-center text-xs font-medium text-white" style="flex-grow: 1;">${val2.toLocaleString('vi-VN')}</div></div>`;
-        }
+      // Reset hiển thị sao/tiến độ ban đầu (đợi dữ liệu S.O để tính thật)
+      document.getElementById('user-star-rating').innerHTML = '';
+      document.getElementById('progress-container').innerHTML = '';
+      document.getElementById('user-total-score').textContent = '0';
+      const soEl = document.getElementById('score-sellout'); if (soEl) soEl.textContent = '0';
+      const totalSmall = document.getElementById('score-total'); if (totalSmall) totalSmall.textContent = '0';
     }
     
-    function renderReportCharts() {
-        renderSiChart();
-        renderSoChart();
+    // --- Report Chart Logic ---
+    async function fetchAndRenderReportData(email) {
+      const siCanvasWrap = document.getElementById('siChart')?.parentElement;
+      const soCanvasWrap = document.getElementById('soChart')?.parentElement;
+
+      if (!siCanvasWrap || !soCanvasWrap) {
+        console.warn("Không tìm thấy vùng chart SI/SO trên DOM.");
+        return;
+      }
+
+      siCanvasWrap.innerHTML = `<div class="loading-animation mx-auto"></div>`;
+      soCanvasWrap.innerHTML = `<div class="loading-animation mx-auto"></div>`;
+
+      if (!REPORT_API_URL || REPORT_API_URL.includes("DÁN_URL")) {
+        console.error("URL của API báo cáo chưa được cấu hình.");
+        siCanvasWrap.innerHTML = `<p class="text-red-500 text-center text-xs">Lỗi: API URL chưa được cấu hình.</p><canvas id="siChart"></canvas>`;
+        soCanvasWrap.innerHTML = `<p class="text-red-500 text-center text-xs">Lỗi: API URL chưa được cấu hình.</p><canvas id="soChart"></canvas>`;
+        renderReportCharts(); 
+        return;
+      }
+
+      try {
+        const response = await fetch(`${REPORT_API_URL}?email=${encodeURIComponent(email)}`);
+        const result = await response.json();
+
+        siCanvasWrap.innerHTML = `<canvas id="siChart"></canvas>`;
+        soCanvasWrap.innerHTML = `<canvas id="soChart"></canvas>`;
+
+        if (result.error) throw new Error(result.error);
+
+        renderReportCharts(result.sellIn, result.sellOut);
+
+        // >>> CẬP NHẬT SAO + TIẾN ĐỘ TỪ SELL-OUT <<<
+        updateScoreFromSO(result);
+
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu báo cáo:", error);
+        siCanvasWrap.innerHTML = `<p class="text-red-500 text-center text-xs">Không thể tải dữ liệu SI.</p><canvas id="siChart"></canvas>`;
+        soCanvasWrap.innerHTML = `<p class="text-red-500 text-center text-xs">Không thể tải dữ liệu SO.</p><canvas id="soChart"></canvas>`;
+        renderReportCharts();
+      }
+    }
+
+    function renderReportCharts(siData = null, soData = null) {
+      const siChartData = siData && siData.labels && siData.labels.length > 0 ? siData : { labels: ['T1','T2','T3','T4','T5','T6'], data: [0,0,0,0,0,0] };
+      const soChartData = soData && soData.labels && soData.labels.length > 0 ? soData : { labels: ['T1','T2','T3','T4','T5','T6'], data: [0,0,0,0,0,0] };
+      renderSiChart(siChartData);
+      renderSoChart(soChartData);
     }
 
     function createChart(canvasId, chartData, gradientColors) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-        gradient.addColorStop(0, gradientColors.start);
-        gradient.addColorStop(1, gradientColors.end);
-        const chartConfig = {
-            type: 'bar',
-            data: { labels: chartData.labels, datasets: [{ label: chartData.label, data: chartData.data, backgroundColor: gradient, borderWidth: 0, borderRadius: 6, order: 1, datalabels: { anchor: 'center', align: 'center', color: 'white', font: { weight: 'bold', size: 14 }, formatter: (value) => value.toLocaleString('vi-VN') } }, { type: 'line', label: `${chartData.label} Trend`, data: chartData.data, borderColor: gradientColors.line, borderWidth: 2.5, pointBackgroundColor: '#fff', pointBorderColor: gradientColors.line, pointBorderWidth: 2, pointRadius: 4, tension: 0.3, order: 0, datalabels: { anchor: 'end', align: 'top', offset: 6, font: { weight: 'bold', size: 11 }, formatter: (value, context) => { if (context.dataIndex === 0) return null; const prevValue = context.dataset.data[context.dataIndex - 1]; if (!prevValue) return null; const change = ((value - prevValue) / prevValue) * 100; return (change >= 0 ? '▲' : '▼') + ` ${Math.abs(change).toFixed(1)}%`; }, color: (context) => { if (context.dataIndex === 0) return null; const prevValue = context.dataset.data[context.dataIndex - 1]; if (!prevValue) return null; return context.dataset.data[context.dataIndex] >= prevValue ? '#16A34A' : '#DC2626'; } } }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false, suggestedMax: Math.max(...chartData.data) * 1.25 }, x: { grid: { display: false }, ticks: { color: '#6b7280', font: { weight: '500' } } } }, plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: '#111827', titleFont: { weight: 'bold' }, bodyFont: { weight: '500' }, padding: 10, cornerRadius: 6 }, datalabels: { display: true } } }
-        };
-        return new Chart(ctx, chartConfig);
+      const ctx = document.getElementById(canvasId).getContext('2d');
+
+      // Plugin hiển thị % thay đổi trên line
+      const percentageChangePlugin = {
+        id: 'percentageChangePlugin',
+        afterDatasetsDraw(chart) {
+          const { ctx, data } = chart;
+          const lineDatasetMeta = chart.getDatasetMeta(1);
+          ctx.save(); ctx.font = '600 12px Roboto';
+          for (let i = 1; i < lineDatasetMeta.data.length; i++) {
+            const prev = data.datasets[0].data[i-1];
+            const curr = data.datasets[0].data[i];
+            if (prev == null || prev === 0 || curr == null) continue;
+            const pct = ((curr - prev) / prev) * 100;
+            if (!isFinite(pct)) continue;
+            const isUp = pct >= 0;
+            const color = isUp ? '#16a34a' : '#dc2626';
+            const arrow = isUp ? '▲' : '▼';
+            const text = `${arrow} ${Math.abs(pct).toFixed(1)}%`;
+            const pt = lineDatasetMeta.data[i];
+            ctx.fillStyle = color; ctx.textAlign = 'center';
+            ctx.fillText(text, pt.x, pt.y - 15);
+          }
+          ctx.restore();
+        }
+      };
+
+      const gradient = ctx.createLinearGradient(0,0,0,250);
+      gradient.addColorStop(0, gradientColors.start);
+      gradient.addColorStop(1, gradientColors.end);
+
+      const cfg = {
+        type: 'bar',
+        data: { 
+          labels: chartData.labels, 
+          datasets: [
+            { label: 'Value', data: chartData.data, backgroundColor: gradient, borderWidth:0, borderRadius:6, order:1,
+              datalabels:{ anchor:'center', align:'center', color:'#fff', font:{weight:'bold', size:14}, formatter:v=>v>0?v.toLocaleString('vi-VN'):'' } },
+            { type:'line', label:'Trend', data: chartData.data, borderColor: gradientColors.line, borderWidth:2.5,
+              pointBackgroundColor:'#fff', pointBorderColor:gradientColors.line, pointBorderWidth:2, pointRadius:4, tension:.3, order:0, datalabels:{display:false}, clip:false }
+          ] 
+        },
+        options:{ 
+          responsive:true, maintainAspectRatio:false,
+          scales:{ y:{ display:false, suggestedMax: Math.max(...chartData.data)*1.35 || 100 }, x:{ grid:{display:false}, ticks:{ color:'#6b7280', font:{weight:'500'} } } },
+          plugins:{ legend:{display:false}, tooltip:{enabled:true, backgroundColor:'#111827', titleFont:{weight:'bold'}, bodyFont:{weight:'500'}, padding:10, cornerRadius:6}, datalabels:{display:true} }
+        },
+        plugins:[percentageChangePlugin]
+      };
+      const existing = Chart.getChart(canvasId); if (existing) existing.destroy();
+      return new Chart(ctx, cfg);
     }
 
-    function renderSiChart() {
-        if (siChartInstance) siChartInstance.destroy();
-        const labels = []; const currentDate = new Date();
-        for (let i = 3; i >= 0; i--) { const d = new Date(); d.setMonth(currentDate.getMonth() - i); labels.push(`T${d.getMonth() + 1}`); }
-        const siChartData = { labels: labels, label: 'Sell-In', data: [1150, 1300, 1200, 1250] };
-        const siColors = { start: 'rgba(249, 115, 22, 0.8)', end: 'rgba(251, 146, 60, 0.5)', line: '#c2410c' };
-        siChartInstance = createChart('siChart', siChartData, siColors);
+    function renderSiChart(siChartData) {
+      if (siChartInstance) siChartInstance.destroy();
+      const siColors = { start: 'rgba(249, 115, 22, 0.8)', end: 'rgba(251, 146, 60, 0.5)', line: '#c2410c' };
+      siChartInstance = createChart('siChart', siChartData, siColors);
     }
 
-    function renderSoChart() {
-        if (soChartInstance) soChartInstance.destroy();
-        const labels = []; const currentDate = new Date();
-        for (let i = 3; i >= 0; i--) { const d = new Date(); d.setMonth(currentDate.getMonth() - i); labels.push(`T${d.getMonth() + 1}`); }
-        const soChartData = { labels: labels, label: 'Sell-Out', data: [950, 1100, 900, 980] };
-        const soColors = { start: 'rgba(37, 99, 235, 0.8)', end: 'rgba(96, 165, 250, 0.5)', line: '#1e40af' };
-        soChartInstance = createChart('soChart', soChartData, soColors);
+    function renderSoChart(soChartData) {
+      if (soChartInstance) soChartInstance.destroy();
+      const soColors = { start: 'rgba(37, 99, 235, 0.8)', end: 'rgba(96, 165, 250, 0.5)', line: '#1e40af' };
+      soChartInstance = createChart('soChart', soChartData, soColors);
     }
-    
+
+    // ====== HÀM TÍNH ĐIỂM/SAO TỪ SELL-OUT ======
+    function updateScoreFromSO(apiResult){
+      const soArr = apiResult?.sellOut?.data || [];
+      const points = soArr.reduce((s,v)=>s+(Number(v)||0),0);
+
+      // Điểm Sellout (panel phải)
+      const elSellout = document.getElementById('score-sellout');
+      if (elSellout) elSellout.textContent = points.toLocaleString('vi-VN');
+
+      // Tổng điểm lớn (thông tin NV)
+      const totalEl = document.getElementById('user-total-score');
+      if (totalEl) totalEl.textContent = points.toLocaleString('vi-VN');
+
+      // Tổng điểm nhỏ (panel phải)
+      const scoreTotalSmall = document.getElementById('score-total');
+      if (scoreTotalSmall) scoreTotalSmall.textContent = points.toLocaleString('vi-VN');
+
+      // Cập nhật Sao + thanh tiến độ
+      updateStarsAndProgress(points);
+    }
+
+    // Quy tắc: 3000 điểm = 1 sao; 15000 điểm = 5 sao max
+    function updateStarsAndProgress(points){
+      const POINTS_PER_STAR = 3000;
+      const MAX_STARS = 5;
+
+      const stars = Math.max(0, Math.min(MAX_STARS, Math.floor(points / POINTS_PER_STAR)));
+      const inStep = (stars >= MAX_STARS) ? POINTS_PER_STAR : (points - stars * POINTS_PER_STAR);
+      const percent = (stars >= MAX_STARS) ? 100 : Math.round((inStep / POINTS_PER_STAR) * 100);
+      const remain = (stars >= MAX_STARS) ? 0 : (POINTS_PER_STAR - inStep);
+
+      // Vẽ sao
+      const starContainer = document.getElementById('user-star-rating');
+      if (starContainer){
+        starContainer.innerHTML='';
+        for(let i=1;i<=MAX_STARS;i++){
+          const ic=document.createElement('i');
+          ic.className = (i<=stars) ? 'fas fa-star text-orange-400' : 'far fa-star text-gray-300';
+          starContainer.appendChild(ic);
+        }
+      }
+
+      // Thanh tiến độ (bước hiện tại / 3000)
+      const progressContainer = document.getElementById('progress-container');
+      if (progressContainer){
+        progressContainer.innerHTML = `
+          <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden border border-gray-200">
+            <div class="bg-orange-500 h-full text-white text-xs flex items-center justify-center" style="width:${percent}%">
+              ${ (stars < MAX_STARS) ? `${inStep.toLocaleString('vi-VN')} / 3.000` : `${points.toLocaleString('vi-VN')}` }
+            </div>
+          </div>
+          <div class="mt-1 text-xs text-gray-600">
+            ${ (stars < MAX_STARS) ? `Còn ${remain.toLocaleString('vi-VN')} điểm để lên ⭐ ${stars+1}` : `Đã đạt ⭐⭐⭐⭐⭐ tối đa` }
+          </div>`;
+      }
+    }
+    // ====== HẾT PHẦN TÍNH SAO ======
+
+    // Nav tabs
     const navLinks = document.querySelectorAll('.nav__link');
     const contentTabs = document.querySelectorAll('.content-tab');
     navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            navLinks.forEach(n => n.classList.remove('active'));
-            this.classList.add('active');
-            const targetId = this.getAttribute('data-target');
-            contentTabs.forEach(tab => { tab.style.display = 'none'; tab.classList.remove('initial-active-tab'); });
-            const targetTab = document.getElementById(targetId + '-content');
-            if (targetTab) { targetTab.style.display = 'block'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        });
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        navLinks.forEach(n => n.classList.remove('active'));
+        this.classList.add('active');
+        const targetId = this.getAttribute('data-target');
+        contentTabs.forEach(tab => { tab.style.display = 'none'; tab.classList.remove('initial-active-tab'); });
+        const targetTab = document.getElementById(targetId + '-content');
+        if (targetTab) { targetTab.style.display = 'block'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      });
     });
 
-    // --- To-Do List Logic ---
+    // To-do
     const todoForm = document.getElementById('todo-form');
     const todoInput = document.getElementById('todo-input');
     const todoList = document.getElementById('todo-list');
-    let tasks = [ { text: 'Hoàn thành báo cáo doanh số tháng 9', completed: true }, { text: 'Gọi điện cho khách hàng A', completed: false }, { text: 'Chuẩn bị slide cho buổi họp team', completed: false }, ];
+    let tasks = [ { text: 'Hoàn thành báo cáo doanh số tháng 9', completed: true }, { text: 'Gọi điện cho khách hàng A', completed: false }, { text: 'Chuẩn bị slide cho buổi họp team', completed: false } ];
     function renderTasks() {
-        todoList.innerHTML = '';
-        if (tasks.length === 0) {
-            todoList.innerHTML = `<li class="text-center text-gray-500 py-4">Chưa có công việc nào.</li>`;
-            return;
-        }
-        tasks.forEach((task, index) => {
-            const li = document.createElement('li');
-            li.className = `todo-item ${task.completed ? 'completed' : ''}`;
-            li.innerHTML = `<input type="checkbox" data-index="${index}" ${task.completed ? 'checked' : ''}><span class="flex-grow">${task.text}</span><button class="delete-btn" title="Xóa" data-index="${index}">&times;</button>`;
-            todoList.appendChild(li);
-        });
+      todoList.innerHTML = '';
+      if (tasks.length === 0) { todoList.innerHTML = `<li class="text-center text-gray-500 py-4">Chưa có công việc nào.</li>`; return; }
+      tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.className = `todo-item ${task.completed ? 'completed' : ''}`;
+        li.innerHTML = `<input type="checkbox" data-index="${index}" ${task.completed ? 'checked' : ''}><span class="flex-grow">${task.text}</span><button class="delete-btn" title="Xóa" data-index="${index}">&times;</button>`;
+        todoList.appendChild(li);
+      });
     }
     todoForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const text = todoInput.value.trim();
-        if (text !== '') { tasks.unshift({ text: text, completed: false }); todoInput.value = ''; renderTasks(); }
+      e.preventDefault();
+      const text = todoInput.value.trim();
+      if (text !== '') { tasks.unshift({ text, completed: false }); todoInput.value = ''; renderTasks(); }
     });
     todoList.addEventListener('click', function(e) {
-        const index = e.target.dataset.index;
-        if (e.target.type === 'checkbox') { tasks[index].completed = !tasks[index].completed; renderTasks(); }
-        if (e.target.classList.contains('delete-btn')) { tasks.splice(index, 1); renderTasks(); }
+      const index = e.target.dataset.index;
+      if (e.target.type === 'checkbox') { tasks[index].completed = !tasks[index].completed; renderTasks(); }
+      if (e.target.classList.contains('delete-btn')) { tasks.splice(index, 1); renderTasks(); }
     });
 
-    // --- Operational Card to Iframe View Logic ---
+    // Vận hành -> iframe
     document.querySelectorAll('.operational-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-            e.preventDefault();
-            const url = this.getAttribute('href');
-            const title = this.querySelector('span').textContent;
-            if (!url || url === '#') { 
-                alert('Chức năng này đang được phát triển.'); 
-                return;
-            }
-            const parentTab = this.closest('.content-tab');
-            if (!parentTab) return;
-            const dashboardView = parentTab.querySelector('.dashboard-view');
-            const iframeView = parentTab.querySelector('.iframe-view');
-            const viewTitle = iframeView.querySelector('.view-title');
-            const iframe = iframeView.querySelector('iframe');
-            viewTitle.textContent = title;
-            iframe.src = url;
-            dashboardView.classList.add('hidden');
-            iframeView.classList.remove('hidden');
-        });
+      card.addEventListener('click', function(e) {
+        e.preventDefault();
+        const url = this.getAttribute('href');
+        const title = this.querySelector('span').textContent;
+        if (!url || url === '#') { console.warn('Chức năng đang phát triển.'); return; }
+        const parentTab = this.closest('.content-tab');
+        if (!parentTab) return;
+        const dashboardView = parentTab.querySelector('.dashboard-view');
+        const iframeView = parentTab.querySelector('.iframe-view');
+        const viewTitle = iframeView.querySelector('.view-title');
+        const iframe = iframeView.querySelector('iframe');
+        viewTitle.textContent = title;
+        iframe.src = url;
+        dashboardView.classList.add('hidden');
+        iframeView.classList.remove('hidden');
+      });
     });
-
     document.querySelectorAll('.back-to-dashboard-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const parentTab = this.closest('.content-tab');
-            if (!parentTab) return;
-            const dashboardView = parentTab.querySelector('.dashboard-view');
-            const iframeView = parentTab.querySelector('.iframe-view');
-            const iframe = iframeView.querySelector('iframe');
-            iframe.src = 'about:blank';
-            iframeView.classList.add('hidden');
-            dashboardView.classList.remove('hidden');
-        });
+      button.addEventListener('click', function() {
+        const parentTab = this.closest('.content-tab');
+        if (!parentTab) return;
+        const dashboardView = parentTab.querySelector('.dashboard-view');
+        const iframeView = parentTab.querySelector('.iframe-view');
+        const iframe = iframeView.querySelector('iframe');
+        iframe.src = 'about:blank';
+        iframeView.classList.add('hidden');
+        dashboardView.classList.remove('hidden');
+      });
     });
 
-    // --- Magazine Content Logic ---
+    // Magazine
     const magazineListView = document.getElementById('magazine-list-view');
     const articleDetailView = document.getElementById('article-detail-view');
     const backToMagazineBtn = document.getElementById('back-to-magazine-btn');
     const commentForm = document.getElementById('comment-form');
 
     backToMagazineBtn.addEventListener('click', () => {
-        articleDetailView.classList.add('hidden');
-        magazineListView.style.display = 'block';
-        currentArticleId = null;
-        if (unsubscribeComments) {
-            unsubscribeComments(); // Detach listener when leaving article
-        }
+      articleDetailView.classList.add('hidden');
+      magazineListView.style.display = 'block';
+      currentArticleId = null;
+      if (unsubscribeComments) unsubscribeComments();
     });
 
     async function loadMagazineContent() {
-        const apiUrl = "https://script.google.com/macros/s/AKfycbxRV_BMTngqvMczfH5FWeLTb0cWJi923sdts9SUwHmmbZPQ8yU-1p_I_a0L_AWwy5Qr/exec";
-        const featuredContainer = document.getElementById('featured-article-container');
-        const listContainer = document.getElementById('article-list-container');
+      const apiUrl = "https://script.google.com/macros/s/AKfycbxRV_BMTngqvMczfH5FWeLTb0cWJi923sdts9SUwHmmbZPQ8yU-1p_I_a0L_AWwy5Qr/exec";
+      const featuredContainer = document.getElementById('featured-article-container');
+      const listContainer = document.getElementById('article-list-container');
 
-        try {
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
-            const data = await response.json();
-            const articles = data.articles;
-            
-            featuredContainer.innerHTML = ''; listContainer.innerHTML = '';
-            const featuredArticle = articles.find(a => a.isFeatured);
-            const otherArticles = articles.filter(a => !a.isFeatured);
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
+        const data = await response.json();
+        const articles = data.articles;
+        
+        featuredContainer.innerHTML = ''; listContainer.innerHTML = '';
+        const featuredArticle = articles.find(a => a.isFeatured);
+        const otherArticles = articles.filter(a => !a.isFeatured);
 
-            if (featuredArticle) featuredContainer.appendChild(createArticleElement(featuredArticle, true));
-            else featuredContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nổi bật.</p>`;
-            
-            if(otherArticles.length > 0) otherArticles.forEach(article => listContainer.appendChild(createArticleElement(article, false)));
-            else listContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nào khác.</p>`;
+        if (featuredArticle) featuredContainer.appendChild(createArticleElement(featuredArticle, true));
+        else featuredContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nổi bật.</p>`;
+        
+        if(otherArticles.length > 0) otherArticles.forEach(article => listContainer.appendChild(createArticleElement(article, false)));
+        else listContainer.innerHTML = `<p class="text-gray-500 text-center">Không có bài viết nào khác.</p>`;
 
-        } catch (error) {
-            console.error("Không thể tải nội dung tạp chí:", error);
-            featuredContainer.innerHTML = `<p class="text-red-500 text-center">Lỗi tải bài viết nổi bật.</p>`;
-            listContainer.innerHTML = `<p class="text-red-500 text-center">Lỗi tải danh sách bài viết.</p>`;
-        }
+      } catch (error) {
+        console.error("Không thể tải nội dung tạp chí:", error);
+        featuredContainer.innerHTML = `<p class="text-red-500 text-center">Lỗi tải bài viết nổi bật.</p>`;
+        listContainer.innerHTML = `<p class="text-red-500 text-center">Lỗi tải danh sách bài viết.</p>`;
+      }
     }
 
     function createArticleElement(article, isFeatured) {
-        const container = document.createElement('div');
-        container.className = 'magazine-article-item cursor-pointer';
-        if (isFeatured) {
-            container.innerHTML = `<div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8"><img src="${article.imageUrl}" alt="${article.title}" class="absolute inset-0 w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div><div class="relative z-10"><h2 class="text-2xl sm:text-3xl font-bold">${article.title}</h2><p class="mt-2 text-gray-200">${article.description}</p></div></div>`;
-        } else {
-            container.innerHTML = `<div class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow"><div class="w-20 h-20 bg-gray-100 text-orange-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0"><i class="${article.categoryIcon || 'fas fa-newspaper'} text-2xl"></i><span class="text-xs font-bold mt-1">${article.category}</span></div><div><p class="font-semibold text-gray-800">${article.title}</p></div></div>`;
-        }
-        container.addEventListener('click', () => handleArticleClick(article));
-        return container;
+      const container = document.createElement('div');
+      container.className = 'magazine-article-item cursor-pointer';
+      if (isFeatured) {
+        container.innerHTML = `<div class="relative hero bg-gray-800 text-white flex flex-col justify-end p-8"><img src="${article.imageUrl}" alt="${article.title}" class="absolute inset-0 w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-2xl"></div><div class="relative z-10"><h2 class="text-2xl sm:text-3xl font-bold">${article.title}</h2><p class="mt-2 text-gray-200">${article.description}</p></div></div>`;
+      } else {
+        container.innerHTML = `<div class="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow"><div class="w-20 h-20 bg-gray-100 text-orange-600 rounded-lg flex flex-col justify-center items-center mr-4 flex-shrink-0"><i class="${article.categoryIcon || 'fas fa-newspaper'} text-2xl"></i><span class="text-xs font-bold mt-1">${article.category}</span></div><div><p class="font-semibold text-gray-800">${article.title}</p></div></div>`;
+      }
+      container.addEventListener('click', () => handleArticleClick(article));
+      return container;
     }
 
     function handleArticleClick(article) {
-        const type = article.contentType || 'article';
-        const url = article.contentUrl || '';
-        if (type === 'youtube' && url) {
-            const videoId = url.split('v=')[1]?.split('&')[0];
-            if (videoId) {
-                modalIframe.src = `https://www.youtube.com/embed/${videoId}`;
-                contentModal.classList.add('visible');
-            } else { alert("URL YouTube không hợp lệ."); }
-            return;
-        }
-        if ((type === 'article' || type === 'pdf') && article.articleBody && article.articleBody.trim() !== '') {
-            showArticleView(article);
-        } else { alert("Nội dung bài viết này chưa được cập nhật."); }
+      const type = article.contentType || 'article';
+      const url = article.contentUrl || '';
+      if (type === 'youtube' && url) {
+        const videoId = url.split('v=')[1]?.split('&')[0];
+        if (videoId) {
+          modalIframe.src = `https://www.youtube.com/embed/${videoId}`;
+          contentModal.classList.add('visible');
+        } else { console.error("URL YouTube không hợp lệ."); }
+        return;
+      }
+      if ((type === 'article' || type === 'pdf') && article.articleBody && article.articleBody.trim() !== '') {
+        showArticleView(article);
+      } else { console.warn("Nội dung bài viết này chưa được cập nhật."); }
     }
 
     function showArticleView(article) {
-        currentArticleId = article.id;
-        document.getElementById('article-image').src = article.imageUrl || 'https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA';
-        document.getElementById('article-title').textContent = article.title || 'Không có tiêu đề';
-        document.getElementById('article-body').innerHTML = article.articleBody || '<p>Nội dung không có sẵn.</p>';
-        magazineListView.style.display = 'none';
-        articleDetailView.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        loadComments(currentArticleId);
+      currentArticleId = article.id;
+      document.getElementById('article-image').src = article.imageUrl || 'https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA';
+      document.getElementById('article-title').textContent = article.title || 'Không có tiêu đề';
+      document.getElementById('article-body').innerHTML = article.articleBody || '<p>Nội dung không có sẵn.</p>';
+      magazineListView.style.display = 'none';
+      articleDetailView.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      loadComments(currentArticleId);
     }
     
-    // --- Comment Logic ---
+    // Comment
     async function loadComments(articleId) {
-        if (!db || !articleId) return;
-        const commentList = document.getElementById('comment-list');
-        const commentCount = document.getElementById('comment-count');
-        const commentsCol = collection(db, 'public', appId, 'articles', articleId, 'comments');
+      if (!db || !articleId) return;
+      const commentList = document.getElementById('comment-list');
+      const commentCount = document.getElementById('comment-count');
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'yadea-erp-portal';
+      const commentsCol = collection(db, 'public', appId, 'articles', articleId, 'comments');
 
-        unsubscribeComments = onSnapshot(commentsCol, (snapshot) => {
-            commentList.innerHTML = '';
-            commentCount.textContent = snapshot.size;
-            if(snapshot.empty) {
-                commentList.innerHTML = '<p class="text-gray-500 text-center">Chưa có bình luận nào. Hãy là người đầu tiên!</p>';
-                return;
-            }
-            const comments = [];
-            snapshot.forEach(doc => comments.push(doc.data()));
-            // Sắp xếp bình luận theo thời gian
-            comments.sort((a, b) => a.timestamp?.toMillis() - b.timestamp?.toMillis());
-            
-            comments.forEach(comment => {
-                const commentEl = document.createElement('div');
-                commentEl.className = 'flex items-start gap-3 p-3 bg-gray-50 rounded-lg';
-                const date = comment.timestamp ? comment.timestamp.toDate().toLocaleString('vi-VN') : '';
-                commentEl.innerHTML = `
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold">
-                        ${comment.authorName.charAt(0)}
-                    </div>
-                    <div>
-                        <p class="font-bold text-gray-800">${comment.authorName}</p>
-                        <p class="text-gray-600">${comment.text}</p>
-                        <p class="text-xs text-gray-400 mt-1">${date}</p>
-                    </div>
-                `;
-                commentList.appendChild(commentEl);
-            });
+      unsubscribeComments = onSnapshot(commentsCol, (snapshot) => {
+        commentList.innerHTML = '';
+        commentCount.textContent = snapshot.size;
+        if(snapshot.empty) {
+          commentList.innerHTML = '<p class="text-gray-500 text-center">Chưa có bình luận nào. Hãy là người đầu tiên!</p>';
+          return;
+        }
+        const comments = [];
+        snapshot.forEach(doc => comments.push(doc.data()));
+        comments.sort((a, b) => a.timestamp?.toMillis() - b.timestamp?.toMillis());
+        
+        comments.forEach(comment => {
+          const commentEl = document.createElement('div');
+          commentEl.className = 'flex items-start gap-3 p-3 bg-gray-50 rounded-lg';
+          const date = comment.timestamp ? comment.timestamp.toDate().toLocaleString('vi-VN') : '';
+          const authorInitial = (comment.authorName || '?').charAt(0).toUpperCase();
+          commentEl.innerHTML = `
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold">
+              ${authorInitial}
+            </div>
+            <div>
+              <p class="font-bold text-gray-800">${comment.authorName || 'Anonymous'}</p>
+              <p class="text-gray-600">${comment.text}</p>
+              <p class="text-xs text-gray-400 mt-1">${date}</p>
+            </div>
+          `;
+          commentList.appendChild(commentEl);
         });
+      });
     }
 
     commentForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!db || !currentArticleId || !userId) {
-            alert("Không thể gửi bình luận. Vui lòng thử lại.");
-            return;
+      e.preventDefault();
+      if (!db || !currentArticleId || !currentUserId) {
+        console.error("Không thể gửi bình luận. Vui lòng đăng nhập và thử lại.");
+        return;
+      }
+      const commentInput = document.getElementById('comment-input');
+      const text = commentInput.value.trim();
+      if (text) {
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'yadea-erp-portal';
+        const commentsCol = collection(db, 'public', appId, 'articles', currentArticleId, 'comments');
+        try {
+          await addDoc(commentsCol, {
+            text,
+            authorId: currentUserId,
+            authorName: currentUserData?.fullName || 'Anonymous',
+            timestamp: serverTimestamp()
+          });
+          commentInput.value = '';
+        } catch (error) {
+          console.error("Lỗi khi thêm bình luận:", error);
         }
-        const commentInput = document.getElementById('comment-input');
-        const text = commentInput.value.trim();
-        if (text) {
-            const commentsCol = collection(db, 'public', appId, 'articles', currentArticleId, 'comments');
-            try {
-                await addDoc(commentsCol, {
-                    text: text,
-                    authorId: userId,
-                    authorName: userDisplayName,
-                    timestamp: serverTimestamp()
-                });
-                commentInput.value = '';
-            } catch (error) {
-                console.error("Lỗi khi thêm bình luận:", error);
-                alert("Đã xảy ra lỗi khi gửi bình luận.");
-            }
-        }
+      }
     });
 
-    // Modal close events
-    modalCloseBtn.addEventListener('click', () => {
-        contentModal.classList.remove('visible');
-        modalIframe.src = ''; 
-    });
+    // Modal close
+    modalCloseBtn.addEventListener('click', () => { contentModal.classList.remove('visible'); modalIframe.src = ''; });
+    contentModal.addEventListener('click', (e) => { if(e.target === contentModal){ contentModal.classList.remove('visible'); modalIframe.src = ''; } });
     
-    contentModal.addEventListener('click', (e) => {
-        if(e.target === contentModal) {
-             contentModal.classList.remove('visible');
-             modalIframe.src = '';
-        }
-    });
-    
-    // --- Training Content ---
+    // Training
     const trainingListView = document.getElementById('training-list-view');
     const trainingPdfView = document.getElementById('training-pdf-view');
     const trainingArticleView = document.getElementById('training-article-view');
 
     document.querySelectorAll('.back-to-training-list').forEach(btn => {
-        btn.addEventListener('click', () => {
-            trainingPdfView.classList.add('hidden');
-            trainingArticleView.classList.add('hidden');
-            trainingListView.style.display = 'flex';
-            document.getElementById('pdf-iframe').src = '';
-        });
+      btn.addEventListener('click', () => {
+        trainingPdfView.classList.add('hidden');
+        trainingArticleView.classList.add('hidden');
+        trainingListView.style.display = 'flex';
+        document.getElementById('pdf-iframe').src = '';
+      });
     });
 
-
     async function loadTrainingContent() {
-        const apiUrl = "https://script.google.com/macros/s/AKfycbxvvoxGw4IPyNCQ6LMEEyCTtgsa1-M-UcMvCesTPaJHLZbgIbcODBlzQw85DkOGhKGI/exec";
-        try {
-            const response = await fetch(apiUrl);
-            if(!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
-            const data = await response.json();
-            allCourses = data.courses || [];
-            displayCourses(allCourses);
-            populateTrainingSlider(allCourses);
-        } catch(error) {
-            console.error("Không thể tải nội dung đào tạo:", error);
-            const container = document.getElementById('course-list-grid');
-            container.innerHTML = `<p class="col-span-full text-center text-red-500">Lỗi tải danh sách khóa học.</p>`;
-        }
+      const apiUrl = "https://script.google.com/macros/s/AKfycbxvvoxGw4IPyNCQ6LMEEyCTtgsa1-M-UcMvCesTPaJHLZbgIbcODBlzQw85DkOGhKGI/exec";
+      try {
+        const response = await fetch(apiUrl);
+        if(!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
+        const data = await response.json();
+        allCourses = data.courses || [];
+        displayCourses(allCourses);
+        populateTrainingSlider(allCourses);
+      } catch(error) {
+        console.error("Không thể tải nội dung đào tạo:", error);
+        const container = document.getElementById('course-list-grid');
+        container.innerHTML = `<p class="col-span-full text-center text-red-500">Lỗi tải danh sách khóa học.</p>`;
+      }
     }
 
     function displayCourses(courses) {
-        const container = document.getElementById('course-list-grid');
-        container.innerHTML = '';
-        if (courses && courses.length > 0) {
-            courses.forEach(course => container.appendChild(createCourseCardElement(course)));
-        } else {
-            container.innerHTML = `<p class="col-span-full text-center text-gray-500">Không tìm thấy khóa học nào.</p>`;
-        }
+      const container = document.getElementById('course-list-grid');
+      container.innerHTML = '';
+      if (courses && courses.length > 0) {
+        courses.forEach(course => container.appendChild(createCourseCardElement(course)));
+      } else {
+        container.innerHTML = `<p class="col-span-full text-center text-gray-500">Không tìm thấy khóa học nào.</p>`;
+      }
     }
 
     function createCourseCardElement(course) {
-        const card = document.createElement('div');
-        card.className = 'border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white';
-        
-        let thumbnailHtml = '';
-        if (course.thumbnailUrl && course.thumbnailUrl.startsWith('http')) {
-             thumbnailHtml = `<img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-36 object-cover">`;
-        } else {
-            const bgColor = course.category === 'Kỹ năng bán hàng' ? 'bg-blue-100 text-blue-700' : (course.category === 'Văn hoá & Quy định' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700');
-            const titleText = (course.title || 'YADEA').split(' ')[0];
-            thumbnailHtml = `<div class="h-36 flex items-center justify-center font-bold text-2xl p-6 text-center ${bgColor}">${titleText}</div>`;
-        }
+      const card = document.createElement('div');
+      card.className = 'border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white';
+      
+      let thumbnailHtml = '';
+      if (course.thumbnailUrl && course.thumbnailUrl.startsWith('http')) {
+        thumbnailHtml = `<img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-36 object-cover">`;
+      } else {
+        const bgColor = course.category === 'Kỹ năng bán hàng' ? 'bg-blue-100 text-blue-700' : (course.category === 'Văn hoá & Quy định' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700');
+        const titleText = (course.title || 'YADEA').split(' ')[0];
+        thumbnailHtml = `<div class="h-36 flex items-center justify-center font-bold text-2xl p-6 text-center ${bgColor}">${titleText}</div>`;
+      }
 
-        card.innerHTML = `
-            ${thumbnailHtml}
-            <div class="p-4">
-                <p class="font-semibold text-gray-800 text-sm">${course.title}</p>
-                <p class="text-sm text-gray-600 mt-1">Thời lượng: ${course.duration || 'N/A'}</p>
-            </div>`;
-        card.addEventListener('click', () => handleCourseClick(course));
-        return card;
+      card.innerHTML = `
+        ${thumbnailHtml}
+        <div class="p-4">
+          <p class="font-semibold text-gray-800 text-sm">${course.title}</p>
+          <p class="text-sm text-gray-600 mt-1">Thời lượng: ${course.duration || 'N/A'}</p>
+        </div>`;
+      card.addEventListener('click', () => handleCourseClick(course));
+      return card;
     }
 
-     function handleCourseClick(course) {
-        const type = course.contentType || 'article';
-        const url = course.contentUrl || '';
-        const body = course.articleBody || '';
+    function handleCourseClick(course) {
+      const type = course.contentType || 'article';
+      const url = course.contentUrl || '';
+      const body = course.articleBody || '';
 
-        if (type === 'youtube' && url) {
-            const videoId = url.split('v=')[1]?.split('&')[0];
-            if (videoId) {
-                modalIframe.src = `https://www.youtube.com/embed/${videoId}`;
-                contentModal.classList.add('visible');
-            } else { alert("URL YouTube không hợp lệ."); }
-            return;
-        }
-        
-        if (type === 'pdf' && url) {
-            showPdfView(course.title, url);
-            return;
-        }
+      if (type === 'youtube' && url) {
+        const videoId = url.split('v=')[1]?.split('&')[0];
+        if (videoId) {
+          modalIframe.src = `https://www.youtube.com/embed/${videoId}`;
+          contentModal.classList.add('visible');
+        } else { console.error("URL YouTube không hợp lệ."); }
+        return;
+      }
+      
+      if (type === 'pdf' && url) {
+        showPdfView(course.title, url);
+        return;
+      }
 
-        if (body.trim() !== '') {
-            showTrainingArticleView(course);
-            return;
-        }
-        
-        alert("Nội dung khóa học này chưa được cập nhật.");
+      if (body.trim() !== '') {
+        showTrainingArticleView(course);
+        return;
+      }
+      
+      console.warn("Nội dung khóa học này chưa được cập nhật.");
     }
 
     function showPdfView(title, url) {
-        let embedUrl = url;
-        if (url.includes('drive.google.com')) {
-            embedUrl = url.replace('/view?usp=sharing', '/preview').replace('/view', '/preview');
-        }
-        document.getElementById('pdf-title').textContent = title;
-        document.getElementById('pdf-iframe').src = embedUrl;
-        trainingListView.style.display = 'none';
-        trainingPdfView.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      let embedUrl = url;
+      if (url.includes('drive.google.com')) {
+        embedUrl = url.replace('/view?usp=sharing', '/preview').replace('/view', '/preview');
+      }
+      document.getElementById('pdf-title').textContent = title;
+      document.getElementById('pdf-iframe').src = embedUrl;
+      trainingListView.style.display = 'none';
+      trainingPdfView.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function showTrainingArticleView(course) {
-        document.getElementById('training-article-image').src = course.thumbnailUrl || 'https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA';
-        document.getElementById('training-article-title').textContent = course.title || 'Không có tiêu đề';
-        document.getElementById('training-article-body').innerHTML = course.articleBody || '<p>Nội dung không có sẵn.</p>';
-        trainingListView.style.display = 'none';
-        trainingArticleView.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('training-article-image').src = course.thumbnailUrl || 'https://placehold.co/900x400/CCCCCC/FFFFFF?text=YADEA';
+      document.getElementById('training-article-title').textContent = course.title || 'Không có tiêu đề';
+      document.getElementById('training-article-body').innerHTML = course.articleBody || '<p>Nội dung không có sẵn.</p>';
+      trainingListView.style.display = 'none';
+      trainingArticleView.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // --- Training Filter and Search ---
+    // Lọc & Tìm kiếm training
     const categoryNav = document.getElementById('training-category-nav');
     categoryNav.addEventListener('click', (e) => {
-        e.preventDefault();
-        const link = e.target.closest('.category-link');
-        if (link) {
-            document.querySelectorAll('#training-category-nav .category-link').forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
+      e.preventDefault();
+      const link = e.target.closest('.category-link');
+      if (link) {
+        document.querySelectorAll('#training-category-nav .category-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
 
-            const category = link.dataset.category;
-            let filteredCourses = [];
-            if (category === 'all') {
-                filteredCourses = allCourses;
-            } else {
-                filteredCourses = allCourses.filter(course => course.category === category);
-            }
-            displayCourses(filteredCourses);
-        }
+        const category = link.dataset.category;
+        let filteredCourses = [];
+        if (category === 'all') filteredCourses = allCourses;
+        else filteredCourses = allCourses.filter(course => course.category === category);
+        displayCourses(filteredCourses);
+      }
     });
 
     const searchInput = document.getElementById('training-search-input');
     const searchBtn = document.getElementById('training-search-btn');
-
     const performSearch = () => {
-        const searchTerm = searchInput.value.toLowerCase();
-        const filteredCourses = allCourses.filter(course => 
-            (course.title || '').toLowerCase().includes(searchTerm)
-        );
-        displayCourses(filteredCourses);
+      const searchTerm = searchInput.value.toLowerCase();
+      const filteredCourses = allCourses.filter(course => (course.title || '').toLowerCase().includes(searchTerm));
+      displayCourses(filteredCourses);
     };
-
     searchBtn.addEventListener('click', performSearch);
-    searchInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
+    searchInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') performSearch(); });
 
-    // --- Training Slider ---
+    // Slider
     const sliderContainer = document.getElementById('training-slider-container');
     const sliderInner = document.getElementById('training-slider-inner');
     const sliderPrevBtn = document.getElementById('slider-prev');
@@ -985,82 +1033,57 @@
     let slideInterval;
 
     function populateTrainingSlider(courses) {
-        sliderCourses = courses.filter(c => c.thumbnailUrl && c.thumbnailUrl.startsWith('http'));
-        sliderInner.innerHTML = '';
-        sliderDotsContainer.innerHTML = '';
+      sliderCourses = courses.filter(c => c.thumbnailUrl && c.thumbnailUrl.startsWith('http'));
+      sliderInner.innerHTML = '';
+      sliderDotsContainer.innerHTML = '';
 
-        if (sliderCourses.length === 0) {
-            sliderContainer.style.display = 'none';
-            return;
-        }
+      if (sliderCourses.length === 0) { sliderContainer.style.display = 'none'; return; }
 
-        sliderCourses.forEach((course, index) => {
-            const slide = document.createElement('div');
-            slide.className = 'w-full h-full flex-shrink-0 bg-cover bg-center relative cursor-pointer';
-            slide.style.backgroundImage = `url(${course.thumbnailUrl})`;
-            slide.innerHTML = `
-                <div class="absolute inset-0 bg-black/40"></div>
-                <div class="relative h-full flex flex-col justify-end p-8 text-white">
-                    <h2 class="text-2xl font-bold">${course.title}</h2>
-                    <p class="text-sm">${course.description}</p>
-                </div>
-            `;
-            slide.addEventListener('click', () => handleCourseClick(course));
-            sliderInner.appendChild(slide);
+      sliderCourses.forEach((course, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'w-full h-full flex-shrink-0 bg-gray-800 relative cursor-pointer';
+        
+        slide.innerHTML = `
+          <img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-full object-cover absolute inset-0 z-0" onerror="this.style.display='none'">
+          <div class="absolute inset-0 bg-black/40 z-10"></div>
+          <div class="relative z-20 h-full flex flex-col justify-end p-8 text-white">
+            <h2 class="text-2xl font-bold">${course.title}</h2>
+            <p class="text-sm">${course.description||''}</p>
+          </div>
+        `;
 
-            const dot = document.createElement('button');
-            dot.className = 'w-3 h-3 rounded-full bg-white/50 transition-colors';
-            dot.addEventListener('click', () => {
-                showSlide(index);
-                resetSlideInterval();
-            });
-            sliderDotsContainer.appendChild(dot);
-        });
-        showSlide(0);
-        startSlideInterval();
+        slide.addEventListener('click', () => handleCourseClick(course));
+        sliderInner.appendChild(slide);
+
+        const dot = document.createElement('button');
+        dot.className = 'w-3 h-3 rounded-full bg-white/50 transition-colors';
+        dot.addEventListener('click', () => { showSlide(index); resetSlideInterval(); });
+        sliderDotsContainer.appendChild(dot);
+      });
+      showSlide(0);
+      startSlideInterval();
     }
 
     function showSlide(index) {
-        sliderInner.style.transform = `translateX(-${index * 100}%)`;
-        document.querySelectorAll('#slider-dots button').forEach((dot, i) => {
-            dot.classList.toggle('bg-white', i === index);
-            dot.classList.toggle('bg-white/50', i !== index);
-        });
-        currentSlide = index;
+      sliderInner.style.transform = `translateX(-${index * 100}%)`;
+      document.querySelectorAll('#slider-dots button').forEach((dot, i) => {
+        dot.classList.toggle('bg-white', i === index);
+        dot.classList.toggle('bg-white/50', i !== index);
+      });
+      currentSlide = index;
     }
 
-    function nextSlide() {
-        const newIndex = (currentSlide + 1) % sliderCourses.length;
-        showSlide(newIndex);
-    }
+    function nextSlide() { const newIndex = (currentSlide + 1) % sliderCourses.length; showSlide(newIndex); }
+    function prevSlide() { const newIndex = (currentSlide - 1 + sliderCourses.length) % sliderCourses.length; showSlide(newIndex); }
+    function startSlideInterval() { slideInterval = setInterval(nextSlide, 5000); }
+    function resetSlideInterval() { clearInterval(slideInterval); startSlideInterval(); }
 
-    function prevSlide() {
-        const newIndex = (currentSlide - 1 + sliderCourses.length) % sliderCourses.length;
-        showSlide(newIndex);
-    }
-    
-    function startSlideInterval() {
-        slideInterval = setInterval(nextSlide, 5000);
-    }
-
-    function resetSlideInterval() {
-        clearInterval(slideInterval);
-        startSlideInterval();
-    }
-
-    sliderNextBtn.addEventListener('click', () => {
-        nextSlide();
-        resetSlideInterval();
-    });
-    sliderPrevBtn.addEventListener('click', () => {
-        prevSlide();
-        resetSlideInterval();
-    });
+    sliderNextBtn.addEventListener('click', () => { nextSlide(); resetSlideInterval(); });
+    sliderPrevBtn.addEventListener('click', () => { prevSlide(); resetSlideInterval(); });
     sliderContainer.addEventListener('mouseenter', () => clearInterval(slideInterval));
     sliderContainer.addEventListener('mouseleave', startSlideInterval);
 
-
-    });
+  });
 </script>
 </body>
 </html>

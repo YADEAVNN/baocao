@@ -139,6 +139,7 @@
           <a href="#" class="nav__link" data-target="van-hanh">VẬN HÀNH</a>
           <a href="#" class="nav__link" data-target="hoat-dong">HOẠT ĐỘNG</a>
           <a href="#" class="nav__link" data-target="dao-tao">ĐÀO TẠO</a>
+          <a href="#" id="admin-nav-link" class="nav__link hidden" data-target="quan-ly-thanh-vien">QUẢN LÝ THÀNH VIÊN</a>
         </div>
         <button id="logout-btn" title="Đăng xuất" class="ml-auto text-gray-500 hover:text-orange-500 transition-colors text-xl p-2 rounded-full flex-shrink-0">
           <i class="fas fa-sign-out-alt"></i>
@@ -331,6 +332,31 @@
             <div id="training-article-body" class="max-w-none text-gray-700 article-body-content"></div>
           </div>
         </div>
+        
+        <!-- Quản lý thành viên -->
+        <div id="quan-ly-thanh-vien-content" class="content-tab">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Quản lý thành viên</h2>
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ và Tên</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã nhân viên</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày vào làm</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng điểm</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Xếp hạng sao</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list-table" class="bg-white divide-y divide-gray-200">
+                            <!-- User data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -338,7 +364,7 @@
 <script type="module">
   // Firebase
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
   // --- Firebase Initialization ---
@@ -354,6 +380,7 @@
   
   // URL Web App báo cáo của bạn
   const REPORT_API_URL = "https://script.google.com/macros/s/AKfycbxnVVtnfvn5THOkjcW-UDlR8WXEkGl7gnqnQ8GN_TXzLSCtHw_FvLpFJUJ854CGbPn0/exec";
+  const ADMIN_EMAIL = "cchatgptplus2025@gmail.com";
 
   let db, auth;
   let currentUserId = null;
@@ -377,6 +404,7 @@
     const loadingSpinner = loginBtn.querySelector('.loading-animation');
     const loginError = document.getElementById('login-error');
     const logoutBtn = document.getElementById('logout-btn');
+    const adminNavLink = document.getElementById('admin-nav-link');
     let siChartInstance = null;
     let soChartInstance = null;
     let currentArticleId = null;
@@ -401,6 +429,13 @@
     onAuthStateChanged(auth, user => {
       if (user) {
         currentUserId = user.uid;
+        
+        if (user.email === ADMIN_EMAIL) {
+            adminNavLink.classList.remove('hidden');
+        } else {
+            adminNavLink.classList.add('hidden');
+        }
+
         fetchAndDisplayUserData(currentUserId);
         loginPage.classList.add('hidden');
         dashboardPage.classList.remove('hidden');
@@ -408,6 +443,7 @@
       } else {
         currentUserId = null;
         currentUserData = null;
+        adminNavLink.classList.add('hidden');
         dashboardPage.classList.add('hidden');
         dashboardPage.classList.remove('flex');
         loginPage.classList.remove('hidden');
@@ -755,7 +791,14 @@
         const targetId = this.getAttribute('data-target');
         contentTabs.forEach(tab => { tab.style.display = 'none'; tab.classList.remove('initial-active-tab'); });
         const targetTab = document.getElementById(targetId + '-content');
-        if (targetTab) { targetTab.style.display = 'block'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        if (targetTab) { 
+          targetTab.style.display = 'block'; 
+          window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        }
+
+        if (targetId === 'quan-ly-thanh-vien') {
+            loadAdminUserList();
+        }
       });
     });
 
@@ -1164,9 +1207,96 @@
     sliderContainer.addEventListener('mouseenter', () => clearInterval(slideInterval));
     sliderContainer.addEventListener('mouseleave', startSlideInterval);
 
+    // Admin function
+    async function loadAdminUserList() {
+        if (!db) return;
+        const userListTable = document.getElementById('user-list-table');
+        if (!userListTable) return;
+
+        userListTable.innerHTML = `<tr><td colspan="6" class="text-center p-8"><div class="loading-animation mx-auto"></div></td></tr>`;
+
+        try {
+            const usersCollection = collection(db, 'users');
+            const userSnapshot = await getDocs(usersCollection);
+            const userList = [];
+            userSnapshot.forEach(doc => {
+                userList.push({ id: doc.id, ...doc.data() });
+            });
+
+            userListTable.innerHTML = ''; // Clear loading spinner
+
+            if (userList.length === 0) {
+                userListTable.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-500">Không có thành viên nào.</td></tr>`;
+                return;
+            }
+
+            userList.forEach(userData => {
+                const tr = document.createElement('tr');
+                const userEmail = (userData.email && userData.email.trim()) ? userData.email.trim() : 'N/A';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <img class="h-10 w-10 rounded-full object-cover" src="${userData.avatarUrl || 'https://placehold.co/40x40/CCCCCC/FFFFFF?text=?'}" alt="">
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${userData.fullName || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userEmail}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userData.employeeId || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(userData.joinDate)}</td>
+                    <td class="score-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-center">...</td>
+                    <td class="stars-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">...</td>
+                `;
+                userListTable.appendChild(tr);
+
+                // Fetch and update score and stars for each user
+                if (userEmail !== 'N/A') {
+                    fetch(`${REPORT_API_URL}?email=${encodeURIComponent(userEmail)}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result && !result.error && result.sellOut) {
+                                const soArr = result.sellOut.data || [];
+                                const points = soArr.reduce((s, v) => s + (Number(v) || 0), 0);
+                                
+                                const POINTS_PER_STAR = 3000;
+                                const MAX_STARS = 5;
+                                const numStars = Math.max(0, Math.min(MAX_STARS, Math.floor(points / POINTS_PER_STAR)));
+
+                                let starsHtml = '';
+                                for (let i = 1; i <= MAX_STARS; i++) {
+                                    starsHtml += `<i class="${i <= numStars ? 'fas fa-star text-orange-400' : 'far fa-star text-gray-300'}"></i> `;
+                                }
+                                
+                                tr.querySelector('.score-cell').textContent = points.toLocaleString('vi-VN');
+                                tr.querySelector('.stars-cell').innerHTML = starsHtml.trim();
+                            } else {
+                                tr.querySelector('.score-cell').textContent = 'N/A';
+                                tr.querySelector('.stars-cell').innerHTML = `<span class="text-xs text-gray-400 italic">Lỗi tải dữ liệu</span>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error(`Lỗi tải điểm cho ${userEmail}:`, error);
+                            tr.querySelector('.score-cell').textContent = 'Lỗi';
+                            tr.querySelector('.stars-cell').textContent = 'Lỗi';
+                        });
+                } else {
+                     tr.querySelector('.score-cell').innerHTML = `<span class="text-xs text-gray-400 italic">Thiếu email</span>`;
+                     tr.querySelector('.stars-cell').innerHTML = `<span class="text-xs text-gray-400 italic">Không có dữ liệu</span>`;
+                }
+            });
+
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách thành viên:", error);
+            userListTable.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Không thể tải danh sách thành viên.</td></tr>`;
+        }
+    }
+
+
   });
 </script>
 </body>
 </html>
-
 

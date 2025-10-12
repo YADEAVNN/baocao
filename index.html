@@ -383,11 +383,14 @@
   // URL Web App báo cáo của bạn
   const REPORT_API_URL = "https://script.google.com/macros/s/AKfycbxnVVtnfvn5THOkjcW-UDlR8WXEkGl7gnqnQ8GN_TXzLSCtHw_FvLpFJUJ854CGbPn0/exec";
   const ADMIN_EMAILS = ["cchatgptplus2025@gmail.com", "vdhung.hvnh@gmail.com"];
+  // URL mới cho cả Tạp chí và Bình luận
+  const MAGAZINE_AND_COMMENT_API_URL = "https://script.google.com/macros/s/AKfycbx7DVqP5lmpqWQad8d179seRFxqoqadTNs2Nv26Je3uhwuhGdvU0JMQkNAEWDddzFet/exec";
+
 
   let db, auth;
   let currentUserId = null;
   let currentUserData = null;
-  let unsubscribeComments = null;
+  // let unsubscribeComments = null; // Không cần nữa
 
   try {
     const app = initializeApp(firebaseConfig);
@@ -901,16 +904,15 @@
       articleDetailView.classList.add('hidden');
       magazineListView.style.display = 'block';
       currentArticleId = null;
-      if (unsubscribeComments) unsubscribeComments();
+      // if (unsubscribeComments) unsubscribeComments(); // Không cần nữa
     });
 
     async function loadMagazineContent() {
-      const apiUrl = "https://script.google.com/macros/s/AKfycbxRV_BMTngqvMczfH5FWeLTb0cWJi923sdts9SUwHmmbZPQ8yU-1p_I_a0L_AWwy5Qr/exec";
       const featuredContainer = document.getElementById('featured-article-container');
       const listContainer = document.getElementById('article-list-container');
 
       try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(MAGAZINE_AND_COMMENT_API_URL);
         if (!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
         const data = await response.json();
         const articles = data.articles;
@@ -973,27 +975,33 @@
     
     // Comment
     async function loadComments(articleId) {
-      if (!db || !articleId) return;
+      if (!articleId || !MAGAZINE_AND_COMMENT_API_URL) {
+        console.warn("URL API bình luận chưa được cấu hình.");
+        return;
+      }
       const commentList = document.getElementById('comment-list');
       const commentCount = document.getElementById('comment-count');
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'yadea-erp-portal';
-      const commentsCol = collection(db, 'public', appId, 'articles', articleId, 'comments');
+      commentList.innerHTML = '<div class="loading-animation mx-auto"></div>';
 
-      unsubscribeComments = onSnapshot(commentsCol, (snapshot) => {
+      try {
+        const response = await fetch(`${MAGAZINE_AND_COMMENT_API_URL}?articleId=${articleId}`);
+        const comments = await response.json();
+        
         commentList.innerHTML = '';
-        commentCount.textContent = snapshot.size;
-        if(snapshot.empty) {
+        if (comments.error) throw new Error(comments.error);
+
+        commentCount.textContent = comments.length;
+        if(comments.length === 0) {
           commentList.innerHTML = '<p class="text-gray-500 text-center">Chưa có bình luận nào. Hãy là người đầu tiên!</p>';
           return;
         }
-        const comments = [];
-        snapshot.forEach(doc => comments.push(doc.data()));
-        comments.sort((a, b) => a.timestamp?.toMillis() - b.timestamp?.toMillis());
+
+        comments.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         
         comments.forEach(comment => {
           const commentEl = document.createElement('div');
           commentEl.className = 'flex items-start gap-3 p-3 bg-gray-50 rounded-lg';
-          const date = comment.timestamp ? comment.timestamp.toDate().toLocaleString('vi-VN') : '';
+          const date = new Date(comment.timestamp).toLocaleString('vi-VN');
           const authorInitial = (comment.authorName || '?').charAt(0).toUpperCase();
           commentEl.innerHTML = `
             <div class="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold">
@@ -1007,30 +1015,58 @@
           `;
           commentList.appendChild(commentEl);
         });
-      });
+      } catch (error) {
+        console.error("Lỗi khi tải bình luận:", error);
+        commentList.innerHTML = `<p class="text-red-500 text-center">Không thể tải bình luận.</p>`;
+      }
     }
 
     commentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!db || !currentArticleId || !currentUserId) {
-        console.error("Không thể gửi bình luận. Vui lòng đăng nhập và thử lại.");
+      if (!currentArticleId || !currentUserId) {
+        alert("Bạn cần đăng nhập để bình luận.");
         return;
       }
+      if (!MAGAZINE_AND_COMMENT_API_URL) {
+        alert("Chức năng bình luận chưa được cấu hình đúng.");
+        return;
+      }
+
       const commentInput = document.getElementById('comment-input');
       const text = commentInput.value.trim();
+      const submitBtn = commentForm.querySelector('button[type="submit"]');
+
       if (text) {
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'yadea-erp-portal';
-        const commentsCol = collection(db, 'public', appId, 'articles', currentArticleId, 'comments');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang gửi...';
+
+        const commentData = {
+          articleId: currentArticleId,
+          text: text,
+          authorId: currentUserId,
+          authorName: currentUserData?.fullName || 'Anonymous',
+        };
+
         try {
-          await addDoc(commentsCol, {
-            text,
-            authorId: currentUserId,
-            authorName: currentUserData?.fullName || 'Anonymous',
-            timestamp: serverTimestamp()
+          const response = await fetch(MAGAZINE_AND_COMMENT_API_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Cần thiết cho Apps Script web app đơn giản
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(commentData)
           });
+          
+          // Sau khi gửi, làm mới danh sách bình luận sau một khoảng trễ nhỏ
           commentInput.value = '';
+          setTimeout(() => {
+            loadComments(currentArticleId);
+          }, 1500);
+
         } catch (error) {
-          console.error("Lỗi khi thêm bình luận:", error);
+          console.error("Lỗi khi gửi bình luận:", error);
+          alert("Đã xảy ra lỗi khi gửi bình luận của bạn.");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Gửi bình luận';
         }
       }
     });

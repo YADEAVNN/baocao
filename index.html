@@ -380,7 +380,7 @@
   
   // URL Web App báo cáo của bạn
   const REPORT_API_URL = "https://script.google.com/macros/s/AKfycbxnVVtnfvn5THOkjcW-UDlR8WXEkGl7gnqnQ8GN_TXzLSCtHw_FvLpFJUJ854CGbPn0/exec";
-  const ADMIN_EMAIL = "cchatgptplus2025@gmail.com";
+  const ADMIN_EMAILS = ["cchatgptplus2025@gmail.com", "vdhung.hvnh@gmail.com"];
 
   let db, auth;
   let currentUserId = null;
@@ -430,7 +430,7 @@
       if (user) {
         currentUserId = user.uid;
         
-        if (user.email === ADMIN_EMAIL) {
+        if (ADMIN_EMAILS.includes(user.email)) {
             adminNavLink.classList.remove('hidden');
         } else {
             adminNavLink.classList.add('hidden');
@@ -1299,4 +1299,5 @@
 </script>
 </body>
 </html>
+
 

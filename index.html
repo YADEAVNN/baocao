@@ -257,7 +257,7 @@
           <div class="dashboard-view">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Bảng điều khiển Vận hành</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-              <a href="https://script.google.com/macros/s/AKfycbwEVhiPh4kEKBvRwlJDpnBSpdjt6tlrP7Kb3gyAFZQyb_bifCag51MLTRKRcdTBDhCJ/exec" class="dashboard-card operational-card">
+              <a href="https://script.google.com/macros/s/AKfycbwTg2UuJwCiT1LKniyKltpaZpk7HnLRuj6_aUfC8-pUNrKxEMFbncgh2RJ9X7CReiJS/exec" class="dashboard-card operational-card">
                 <i class="fas fa-cogs"></i>
                 <span>QUẢN LÝ VẬN HÀNH</span>
               </a>
@@ -347,6 +347,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày vào làm</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng điểm</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Xếp hạng sao</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                             </tr>
                         </thead>
                         <tbody id="user-list-table" class="bg-white divide-y divide-gray-200">
@@ -1213,7 +1214,7 @@
         const userListTable = document.getElementById('user-list-table');
         if (!userListTable) return;
 
-        userListTable.innerHTML = `<tr><td colspan="6" class="text-center p-8"><div class="loading-animation mx-auto"></div></td></tr>`;
+        userListTable.innerHTML = `<tr><td colspan="7" class="text-center p-8"><div class="loading-animation mx-auto"></div></td></tr>`;
 
         try {
             const usersCollection = collection(db, 'users');
@@ -1226,7 +1227,7 @@
             userListTable.innerHTML = ''; // Clear loading spinner
 
             if (userList.length === 0) {
-                userListTable.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-500">Không có thành viên nào.</td></tr>`;
+                userListTable.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">Không có thành viên nào.</td></tr>`;
                 return;
             }
 
@@ -1249,11 +1250,19 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(userData.joinDate)}</td>
                     <td class="score-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-center">...</td>
                     <td class="stars-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">...</td>
+                    <td class="action-cell px-6 py-4 whitespace-nowrap text-center text-sm font-medium"></td>
                 `;
                 userListTable.appendChild(tr);
 
-                // Fetch and update score and stars for each user
+                const actionCell = tr.querySelector('.action-cell');
                 if (userEmail !== 'N/A') {
+                    const resetButton = document.createElement('button');
+                    resetButton.textContent = 'Gửi reset';
+                    resetButton.className = 'reset-user-password-btn text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed';
+                    resetButton.dataset.email = userEmail;
+                    actionCell.appendChild(resetButton);
+
+                    // Fetch and update score and stars for each user
                     fetch(`${REPORT_API_URL}?email=${encodeURIComponent(userEmail)}`)
                         .then(response => response.json())
                         .then(result => {
@@ -1285,19 +1294,44 @@
                 } else {
                      tr.querySelector('.score-cell').innerHTML = `<span class="text-xs text-gray-400 italic">Thiếu email</span>`;
                      tr.querySelector('.stars-cell').innerHTML = `<span class="text-xs text-gray-400 italic">Không có dữ liệu</span>`;
+                     actionCell.innerHTML = `<span class="text-xs text-gray-400 italic">Không thể reset</span>`;
                 }
             });
 
         } catch (error) {
             console.error("Lỗi khi tải danh sách thành viên:", error);
-            userListTable.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Không thể tải danh sách thành viên.</td></tr>`;
+            userListTable.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Không thể tải danh sách thành viên.</td></tr>`;
         }
     }
+
+    document.getElementById('user-list-table').addEventListener('click', (e) => {
+        if (e.target.classList.contains('reset-user-password-btn')) {
+            const btn = e.target;
+            const email = btn.dataset.email;
+            
+            btn.disabled = true;
+            btn.textContent = 'Đang gửi...';
+
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    btn.textContent = 'Đã gửi ✔️';
+                    btn.classList.remove('text-indigo-600', 'hover:text-indigo-900');
+                    btn.classList.add('text-green-600');
+                })
+                .catch((error) => {
+                    console.error("Lỗi gửi email reset:", error);
+                    btn.textContent = 'Lỗi! Thử lại';
+                     setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = 'Gửi reset';
+                    }, 3000);
+                });
+        }
+    });
 
 
   });
 </script>
 </body>
 </html>
-
 

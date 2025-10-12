@@ -345,6 +345,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã nhân viên</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày vào làm</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Thâm niên (tháng)</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng điểm</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Xếp hạng sao</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
@@ -578,6 +579,35 @@
       } catch {
         return dateString;
       }
+    }
+
+    function calculateSeniorityInMonths(joinDateString) {
+        if (!joinDateString) return 'N/A';
+        
+        let joinDate;
+        
+        if (String(joinDateString).includes('/')) {
+            const parts = joinDateString.split('/');
+            if (parts.length === 3) {
+                joinDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+        }
+        
+        if (!joinDate || isNaN(joinDate.getTime())) {
+            joinDate = new Date(joinDateString);
+        }
+
+        if (isNaN(joinDate.getTime())) return 'N/A';
+
+        const today = new Date();
+        const todayYear = today.getFullYear();
+        const todayMonth = today.getMonth();
+        const joinYear = joinDate.getFullYear();
+        const joinMonth = joinDate.getMonth();
+
+        const months = (todayYear - joinYear) * 12 + (todayMonth - joinMonth);
+        
+        return months < 0 ? 0 : months;
     }
 
     function populateUserInfo(userData) {
@@ -1214,7 +1244,7 @@
         const userListTable = document.getElementById('user-list-table');
         if (!userListTable) return;
 
-        userListTable.innerHTML = `<tr><td colspan="7" class="text-center p-8"><div class="loading-animation mx-auto"></div></td></tr>`;
+        userListTable.innerHTML = `<tr><td colspan="8" class="text-center p-8"><div class="loading-animation mx-auto"></div></td></tr>`;
 
         try {
             const usersCollection = collection(db, 'users');
@@ -1223,11 +1253,37 @@
             userSnapshot.forEach(doc => {
                 userList.push({ id: doc.id, ...doc.data() });
             });
+            
+            // Sắp xếp danh sách nhân viên theo thâm niên (ngày vào làm cũ nhất lên đầu)
+            userList.sort((a, b) => {
+                const parseDate = (dateString) => {
+                    if (!dateString) return null;
+                    let date;
+                    if (String(dateString).includes('/')) {
+                        const parts = dateString.split('/');
+                        if (parts.length === 3) {
+                            date = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+                    }
+                    if (!date || isNaN(date.getTime())) {
+                        date = new Date(dateString);
+                    }
+                    return isNaN(date.getTime()) ? null : date;
+                };
+
+                const dateA = parseDate(a.joinDate);
+                const dateB = parseDate(b.joinDate);
+
+                if (!dateA) return 1;
+                if (!dateB) return -1;
+                return dateA - dateB; 
+            });
+
 
             userListTable.innerHTML = ''; // Clear loading spinner
 
             if (userList.length === 0) {
-                userListTable.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">Không có thành viên nào.</td></tr>`;
+                userListTable.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-gray-500">Không có thành viên nào.</td></tr>`;
                 return;
             }
 
@@ -1248,6 +1304,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userEmail}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userData.employeeId || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(userData.joinDate)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${calculateSeniorityInMonths(userData.joinDate)}</td>
                     <td class="score-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-center">...</td>
                     <td class="stars-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">...</td>
                     <td class="action-cell px-6 py-4 whitespace-nowrap text-center text-sm font-medium"></td>
@@ -1300,7 +1357,7 @@
 
         } catch (error) {
             console.error("Lỗi khi tải danh sách thành viên:", error);
-            userListTable.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Không thể tải danh sách thành viên.</td></tr>`;
+            userListTable.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-red-500">Không thể tải danh sách thành viên.</td></tr>`;
         }
     }
 
@@ -1334,4 +1391,5 @@
 </script>
 </body>
 </html>
+
 

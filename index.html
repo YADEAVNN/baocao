@@ -1247,14 +1247,45 @@
         userListTable.innerHTML = `<tr><td colspan="8" class="text-center p-8"><div class="loading-animation mx-auto"></div></td></tr>`;
 
         try {
+            // 1. Fetch all users from Firestore
             const usersCollection = collection(db, 'users');
             const userSnapshot = await getDocs(usersCollection);
             const userList = [];
             userSnapshot.forEach(doc => {
                 userList.push({ id: doc.id, ...doc.data() });
             });
+
+            if (userList.length === 0) {
+                userListTable.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-gray-500">Không có thành viên nào.</td></tr>`;
+                return;
+            }
+
+            // 2. Create an array of promises to fetch scores for all users with valid emails
+            const scorePromises = userList
+                .filter(user => user.email && user.email.trim())
+                .map(user =>
+                    fetch(`${REPORT_API_URL}?email=${encodeURIComponent(user.email.trim())}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(result => ({ email: user.email.trim(), data: result }))
+                    .catch(error => ({ email: user.email.trim(), error }))
+                );
+
+            // 3. Wait for all score requests to complete
+            const settledScores = await Promise.allSettled(scorePromises);
             
-            // Sắp xếp danh sách nhân viên theo thâm niên (ngày vào làm cũ nhất lên đầu)
+            const scoreMap = new Map();
+            settledScores.forEach(res => {
+                if (res.status === 'fulfilled' && res.value && !res.value.error) {
+                    scoreMap.set(res.value.email, res.value.data);
+                }
+            });
+
+            // 4. Sort the user list by seniority (oldest join date first)
             userList.sort((a, b) => {
                 const parseDate = (dateString) => {
                     if (!dateString) return null;
@@ -1270,90 +1301,69 @@
                     }
                     return isNaN(date.getTime()) ? null : date;
                 };
-
                 const dateA = parseDate(a.joinDate);
                 const dateB = parseDate(b.joinDate);
-
                 if (!dateA) return 1;
                 if (!dateB) return -1;
-                return dateA - dateB; 
+                return dateA - dateB;
             });
 
-
-            userListTable.innerHTML = ''; // Clear loading spinner
-
-            if (userList.length === 0) {
-                userListTable.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-gray-500">Không có thành viên nào.</td></tr>`;
-                return;
-            }
-
+            // 5. Build the entire table HTML and render it all at once
+            let tableHtml = '';
             userList.forEach(userData => {
-                const tr = document.createElement('tr');
                 const userEmail = (userData.email && userData.email.trim()) ? userData.email.trim() : 'N/A';
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-full object-cover" src="${userData.avatarUrl || 'https://placehold.co/40x40/CCCCCC/FFFFFF?text=?'}" alt="">
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">${userData.fullName || 'N/A'}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userEmail}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userData.employeeId || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(userData.joinDate)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${calculateSeniorityInMonths(userData.joinDate)}</td>
-                    <td class="score-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-center">...</td>
-                    <td class="stars-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">...</td>
-                    <td class="action-cell px-6 py-4 whitespace-nowrap text-center text-sm font-medium"></td>
-                `;
-                userListTable.appendChild(tr);
+                let scoreCellHtml = `<span class="text-xs text-gray-400 italic">Thiếu email</span>`;
+                let starsCellHtml = `<span class="text-xs text-gray-400 italic">Không có dữ liệu</span>`;
+                let actionCellHtml = `<span class="text-xs text-gray-400 italic">Không thể reset</span>`;
 
-                const actionCell = tr.querySelector('.action-cell');
                 if (userEmail !== 'N/A') {
-                    const resetButton = document.createElement('button');
-                    resetButton.textContent = 'Gửi reset';
-                    resetButton.className = 'reset-user-password-btn text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed';
-                    resetButton.dataset.email = userEmail;
-                    actionCell.appendChild(resetButton);
-
-                    // Fetch and update score and stars for each user
-                    fetch(`${REPORT_API_URL}?email=${encodeURIComponent(userEmail)}`)
-                        .then(response => response.json())
-                        .then(result => {
-                            if (result && !result.error && result.sellOut) {
-                                const soArr = result.sellOut.data || [];
-                                const points = soArr.reduce((s, v) => s + (Number(v) || 0), 0);
-                                
-                                const POINTS_PER_STAR = 3000;
-                                const MAX_STARS = 5;
-                                const numStars = Math.max(0, Math.min(MAX_STARS, Math.floor(points / POINTS_PER_STAR)));
-
-                                let starsHtml = '';
-                                for (let i = 1; i <= MAX_STARS; i++) {
-                                    starsHtml += `<i class="${i <= numStars ? 'fas fa-star text-orange-400' : 'far fa-star text-gray-300'}"></i> `;
-                                }
-                                
-                                tr.querySelector('.score-cell').textContent = points.toLocaleString('vi-VN');
-                                tr.querySelector('.stars-cell').innerHTML = starsHtml.trim();
-                            } else {
-                                tr.querySelector('.score-cell').textContent = 'N/A';
-                                tr.querySelector('.stars-cell').innerHTML = `<span class="text-xs text-gray-400 italic">Lỗi tải dữ liệu</span>`;
-                            }
-                        })
-                        .catch(error => {
-                            console.error(`Lỗi tải điểm cho ${userEmail}:`, error);
-                            tr.querySelector('.score-cell').textContent = 'Lỗi';
-                            tr.querySelector('.stars-cell').textContent = 'Lỗi';
-                        });
-                } else {
-                     tr.querySelector('.score-cell').innerHTML = `<span class="text-xs text-gray-400 italic">Thiếu email</span>`;
-                     tr.querySelector('.stars-cell').innerHTML = `<span class="text-xs text-gray-400 italic">Không có dữ liệu</span>`;
-                     actionCell.innerHTML = `<span class="text-xs text-gray-400 italic">Không thể reset</span>`;
+                    actionCellHtml = `<button class="reset-user-password-btn text-indigo-600 hover:text-indigo-900" data-email="${userEmail}">Gửi reset</button>`;
+                    const result = scoreMap.get(userEmail);
+                    
+                    if (result && !result.error && result.sellOut) {
+                        const soArr = result.sellOut.data || [];
+                        const points = soArr.reduce((s, v) => s + (Number(v) || 0), 0);
+                        const POINTS_PER_STAR = 3000;
+                        const MAX_STARS = 5;
+                        const numStars = Math.max(0, Math.min(MAX_STARS, Math.floor(points / POINTS_PER_STAR)));
+                        
+                        let starsHtmlContent = '';
+                        for (let i = 1; i <= MAX_STARS; i++) {
+                            starsHtmlContent += `<i class="${i <= numStars ? 'fas fa-star text-orange-400' : 'far fa-star text-gray-300'}"></i> `;
+                        }
+                        
+                        scoreCellHtml = points.toLocaleString('vi-VN');
+                        starsCellHtml = starsHtmlContent.trim();
+                    } else {
+                        scoreCellHtml = 'N/A';
+                        starsCellHtml = `<span class="text-xs text-gray-400 italic">Lỗi tải dữ liệu</span>`;
+                    }
                 }
+
+                tableHtml += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-full object-cover" src="${userData.avatarUrl || 'https://placehold.co/40x40/CCCCCC/FFFFFF?text=?'}" alt="">
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${userData.fullName || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userEmail}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userData.employeeId || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(userData.joinDate)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${calculateSeniorityInMonths(userData.joinDate)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-center">${scoreCellHtml}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${starsCellHtml}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">${actionCellHtml}</td>
+                    </tr>
+                `;
             });
+            
+            userListTable.innerHTML = tableHtml;
 
         } catch (error) {
             console.error("Lỗi khi tải danh sách thành viên:", error);
@@ -1391,5 +1401,6 @@
 </script>
 </body>
 </html>
+
 
 

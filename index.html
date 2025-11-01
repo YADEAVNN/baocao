@@ -58,6 +58,7 @@
     .article-body-content a { color:#F97316; text-decoration:underline }
     .article-body-content img { width:100%; border-radius:8px; margin:1rem 0 }
     .category-link.active { background-color:#4b5563 }
+    /* Added for Training card alignment - REMOVED */
   </style>
 </head>
 <body class="bg-gray-100">
@@ -107,11 +108,16 @@
           <form id="login-form">
             <div class="mb-4">
               <label for="username" class="block text-gray-600 text-sm font-medium mb-2">Email</label>
-              <input type="email" id="username" value="vuhuythanhtd@gmail.com" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <input type="email" id="username" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
             </div>
             <div class="mb-6">
               <label for="password" class="block text-gray-600 text-sm font-medium mb-2">Password</label>
-              <input type="password" id="password" value="123456" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <div class="relative">
+                <input type="password" id="password" class="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-10">
+                <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-orange-500">
+                  <i class="fas fa-eye" id="toggle-password-icon"></i>
+                </button>
+              </div>
             </div>
             <button type="submit" id="login-btn" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center h-[48px]">
               <span class="login-text">Sign In</span>
@@ -257,7 +263,7 @@
           <div class="dashboard-view">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Bảng điều khiển Vận hành</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-              <a href="https://script.google.com/macros/s/AKfycbwTg2UuJwCiT1LKniyKltpaZpk7HnLRuj6_aUfC8-pUNrKxEMFbncgh2RJ9X7CReiJS/exec" class="dashboard-card operational-card">
+              <a href="https://script.google.com/macros/s/AKfycbzx-EURYnMgGb2sFqhAdjMPcMLUEDnmSJCxXlfUGOJKVV10n-fCxbHTqeh5JB1_H3s81g/exec" class="dashboard-card operational-card">
                 <i class="fas fa-cogs"></i>
                 <span>QUẢN LÝ VẬN HÀNH</span>
               </a>
@@ -284,7 +290,7 @@
         <!-- Đào tạo -->
         <div id="dao-tao-content" class="content-tab">
           <div id="training-list-view" class="flex flex-col md:flex-row gap-8 bg-white p-4 rounded-lg shadow-sm">
-            <aside class="w-full md:w-1/4 lg:w-1/5 bg-gray-800 text-white rounded-lg p-6">
+            <aside class="w-full md:w-60 lg:w-64 flex-shrink-0 bg-gray-800 text-white rounded-lg p-6">
               <h3 class="font-bold text-lg mb-6">Danh mục</h3>
               <nav id="training-category-nav" class="space-y-4">
                 <a href="#" class="category-link flex items-center gap-3 hover:bg-gray-700 p-2 rounded-md transition-colors" data-category="Kiến thức sản phẩm"><i class="fas fa-book w-5 text-center"></i><span>Kiến thức sản phẩm</span></a>
@@ -293,7 +299,7 @@
                 <a href="#" class="category-link flex items-center gap-3 active p-2 rounded-md transition-colors" data-category="all"><i class="fas fa-list-alt w-5 text-center"></i><span>Tất cả bài học</span></a>
               </nav>
             </aside>
-            <div class="flex-grow">
+            <div class="flex-grow min-w-0">
               <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <div><p class="text-sm text-gray-500">Training > Training Online</p><h2 class="text-2xl font-bold text-gray-800">ONLINE TRAINING</h2></div>
                 <div class="flex items-center mt-4 md:mt-0"><input type="text" id="training-search-input" placeholder="Nhập tên bài học..." class="border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"><button id="training-search-btn" class="bg-orange-500 text-white px-4 py-2 rounded-r-md hover:bg-orange-600 font-semibold">Tìm kiếm</button></div>
@@ -308,7 +314,7 @@
 
               <div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Tất cả bài học</h3>
-                <div id="course-list-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div id="course-list-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   <div class="col-span-full flex justify-center items-center h-48"><div class="loading-animation"></div></div>
                 </div>
               </div>
@@ -363,7 +369,7 @@
     </main>
   </div>
 
-<script type="module">
+  <script type="module">
   // Firebase
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -427,8 +433,22 @@
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     const resetEmailInput = document.getElementById('reset-email');
     const resetMessage = document.getElementById('reset-message');
+    const togglePasswordBtn = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordIcon = document.getElementById('toggle-password-icon');
 
     Chart.register(ChartDataLabels);
+
+    // Toggle Password Visibility
+    if (togglePasswordBtn) {
+      togglePasswordBtn.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        // Change icon
+        togglePasswordIcon.classList.toggle('fa-eye');
+        togglePasswordIcon.classList.toggle('fa-eye-slash');
+      });
+    }
 
     // Auth
     onAuthStateChanged(auth, user => {
@@ -1121,11 +1141,11 @@
       
       let thumbnailHtml = '';
       if (course.thumbnailUrl && course.thumbnailUrl.startsWith('http')) {
-        thumbnailHtml = `<img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full h-36 object-cover" loading="lazy" decoding="async">`;
+        thumbnailHtml = `<img src="${course.thumbnailUrl}" alt="${course.title}" class="w-full aspect-video object-cover" loading="lazy" decoding="async">`;
       } else {
         const bgColor = course.category === 'Kỹ năng bán hàng' ? 'bg-blue-100 text-blue-700' : (course.category === 'Văn hoá & Quy định' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700');
         const titleText = (course.title || 'YADEA').split(' ')[0];
-        thumbnailHtml = `<div class="h-36 flex items-center justify-center font-bold text-2xl p-6 text-center ${bgColor}">${titleText}</div>`;
+        thumbnailHtml = `<div class="aspect-video flex items-center justify-center font-bold text-2xl p-6 text-center ${bgColor}">${titleText}</div>`;
       }
 
       card.innerHTML = `
@@ -1437,6 +1457,5 @@
 </script>
 </body>
 </html>
-
 
 

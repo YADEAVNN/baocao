@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>YADEA Admin Portal V23 (Auto Area Mapping)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>YADEA Admin Portal V23 (Final Fixed)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,16 +21,23 @@
     .animate-fade { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .modal { transition: opacity 0.25s ease; }
-    body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+    body.modal-active { overflow: hidden; } /* Chỉ khóa cuộn khi mở Modal */
+    
+    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    .sub-tab-btn { border-bottom: 2px solid transparent; color: #6b7280; font-weight: 600; padding: 10px 20px; transition: all 0.2s; }
+    
+    .sub-tab-btn { border-bottom: 2px solid transparent; color: #6b7280; font-weight: 600; padding: 10px 20px; transition: all 0.2s; white-space: nowrap; }
     .sub-tab-btn:hover { color: #1f2937; background-color: #f3f4f6; border-radius: 8px 8px 0 0; }
     .sub-tab-btn.active { color: #FF4500; border-bottom-color: #FF4500; background-color: white; border-radius: 8px 8px 0 0; }
+
+    /* Chặn zoom trên iOS khi nhập liệu */
+    select, input { font-size: 16px !important; } 
   </style>
 </head>
-<body class="bg-[#F3F4F6] min-h-screen flex text-slate-800 font-sans">
+
+<body class="bg-[#F3F4F6] min-h-screen flex flex-col md:flex-row text-slate-800 font-sans">
 
   <div id="loginSection" class="fixed inset-0 z-[100] bg-[#F2F4F8] flex items-center justify-center p-4">
     <div class="bg-white rounded-[30px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-w-4xl w-full min-h-[550px] animate-fade">
@@ -42,170 +49,232 @@
       </div>
       <div class="w-full md:w-1/2 p-10 flex flex-col justify-center bg-white">
         <h3 class="text-2xl font-black text-slate-800 mb-2">Đăng Nhập Admin</h3>
-        <input id="adm_email" type="email" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4" placeholder="Email Quản Trị">
-        <input id="adm_pass" type="password" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4" placeholder="Mật khẩu">
+        <input id="adm_email" type="email" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4 focus:border-orange-500" placeholder="Email Quản Trị">
+        <input id="adm_pass" type="password" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4 focus:border-orange-500" placeholder="Mật khẩu">
         <button id="btnLogin" class="w-full bg-[#FF4500] text-white font-bold py-4 rounded-xl shadow-lg uppercase text-xs tracking-widest hover:bg-orange-600 transition">Truy cập Dashboard</button>
         <p id="loginMsg" class="mt-4 text-center text-xs font-bold text-red-500"></p>
       </div>
     </div>
   </div>
 
-  <div id="detailModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+  <div id="detailModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[60]">
     <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('detailModal')"></div>
-    <div class="modal-container bg-white w-11/12 md:max-w-5xl mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] animate-fade transform scale-95 transition-transform duration-300">
-       <div class="flex justify-between items-center pb-4 px-6 pt-6 border-b border-gray-100 bg-white sticky top-0 z-20">
+    <div class="modal-container bg-white w-full md:w-11/12 md:max-w-5xl mx-auto rounded-none md:rounded-2xl shadow-2xl z-50 overflow-y-auto h-full md:h-auto md:max-h-[90vh] animate-fade transform scale-100 md:scale-95 transition-transform duration-300 flex flex-col">
+       <div class="flex justify-between items-center pb-4 px-6 pt-6 border-b border-gray-100 bg-white sticky top-0 z-20 shrink-0">
         <div class="flex items-center gap-4">
             <div class="bg-orange-100 text-orange-600 w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"><i class="fa-solid fa-file-invoice-dollar text-xl"></i></div>
-            <div><p class="text-2xl font-black text-slate-800">CHI TIẾT P&L</p><div class="flex gap-2 text-xs font-bold uppercase mt-1"><span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200" id="modalProvince">---</span><span class="text-gray-500 flex items-center gap-1"><i class="fa-solid fa-store"></i> <span id="modalShopName">---</span></span></div></div>
+            <div><p class="text-xl md:text-2xl font-black text-slate-800">CHI TIẾT P&L</p><div class="flex gap-2 text-xs font-bold uppercase mt-1 flex-wrap"><span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200" id="modalProvince">---</span><span class="text-gray-500 flex items-center gap-1"><i class="fa-solid fa-store"></i> <span id="modalShopName">---</span></span></div></div>
         </div>
         <button class="bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 w-10 h-10 rounded-full transition flex items-center justify-center" onclick="toggleModal('detailModal')"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
-      <div class="px-6 py-6 bg-[#F8FAFC]">
+      <div class="px-4 md:px-6 py-6 bg-[#F8FAFC] overflow-y-auto flex-1">
         <div class="grid grid-cols-3 gap-4 mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <div class="text-center border-r border-gray-100"><p class="text-[10px] uppercase font-bold text-gray-400">Tồn Đầu</p><p class="text-lg font-black text-slate-700" id="modalOpenStock">0</p></div>
             <div class="text-center border-r border-gray-100"><p class="text-[10px] uppercase font-bold text-gray-400">Nhập - Bán</p><p class="text-lg font-black text-slate-700" id="modalNetFlow">0</p></div>
             <div class="text-center"><p class="text-[10px] uppercase font-bold text-blue-500">Tồn Cuối</p><p class="text-xl font-black text-blue-600" id="modalEndStock">0</p></div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6"><h4 class="text-sm font-black text-slate-800 uppercase mb-4 flex items-center gap-2"><span class="bg-blue-500 w-1 h-4 rounded-full"></span> 1. Chi Tiết Nhập / Xuất Kho</h4><div class="overflow-x-auto rounded-lg border border-gray-100"><table class="w-full text-left text-sm"><thead class="bg-slate-50 text-[10px] font-black text-gray-500 uppercase tracking-wider"><tr><th class="p-3">Model Xe</th><th class="p-3 text-center bg-orange-50 text-orange-600 border-l border-orange-100">S.I (Nhập)</th><th class="p-3 text-center bg-blue-50 text-blue-600 border-l border-blue-100">S.O (Bán)</th><th class="p-3 text-right">Giá Vốn</th><th class="p-3 text-right">Giá Bán</th><th class="p-3 text-right bg-blue-50 text-blue-700">Thành Tiền (S.O)</th></tr></thead><tbody id="modalDetailBody" class="divide-y divide-gray-100 text-slate-700 font-medium bg-white"></tbody><tfoot class="bg-slate-100 font-bold text-xs text-slate-800"><tr><td colspan="5" class="p-3 text-right uppercase">Tổng Doanh Thu Xe:</td><td class="p-3 text-right text-blue-600 font-mono text-sm" id="modalTotalRev">0</td></tr></tfoot></table></div></div>
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"><h4 class="text-sm font-black text-slate-800 uppercase mb-6 flex items-center gap-2"><span class="bg-green-500 w-1 h-4 rounded-full"></span> 2. Tóm Tắt Tài Chính (P&L Theo Nhóm)</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 bg-blue-50 rounded-xl border border-blue-100"><p class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Tổng Doanh Thu (+Hỗ trợ)</p><p class="text-2xl font-black text-blue-600 mt-1" id="modalMainRev">0</p></div><div class="p-4 bg-red-50 rounded-xl border border-red-100"><p class="text-[10px] font-black text-red-400 uppercase tracking-widest">Giá Vốn Hàng Bán (COGS)</p><p class="text-2xl font-black text-red-600 mt-1" id="modalMainCOGS">0</p></div><div class="p-4 bg-green-50 rounded-xl border border-green-100"><p class="text-[10px] font-black text-green-400 uppercase tracking-widest">Lợi Nhuận Gộp</p><p class="text-2xl font-black text-green-600 mt-1" id="modalMainGross">0</p></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pt-6 border-t border-dashed border-gray-200"><div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">I. Vận Hành & NS</p><p class="text-sm font-black text-slate-700" id="modalCostOp">0</p></div><div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">II. Logistic & Xe</p><p class="text-sm font-black text-slate-700" id="modalCostLog">0</p></div><div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">III. Marketing</p><p class="text-sm font-black text-slate-700" id="modalCostMkt">0</p></div><div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">IV. Khác</p><p class="text-sm font-black text-slate-700" id="modalCostOther">0</p></div></div><div class="flex flex-col md:flex-row justify-between items-center bg-slate-800 text-white p-5 rounded-xl shadow-lg"><div class="mb-2 md:mb-0"><p class="text-xs font-bold text-slate-400 uppercase">Tổng Chi Phí (I + II + III + IV)</p><p class="text-xl font-mono font-bold" id="modalTotalExpense">0</p></div><div class="text-right"><p class="text-xs font-bold text-slate-400 uppercase">Lợi Nhuận Ròng (Net Profit)</p><p class="text-3xl font-black text-green-400" id="modalNetProfit">0</p></div></div></div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <h4 class="text-sm font-black text-slate-800 uppercase mb-4 flex items-center gap-2"><span class="bg-blue-500 w-1 h-4 rounded-full"></span> 1. Chi Tiết Nhập / Xuất Kho</h4>
+            <div class="overflow-x-auto rounded-lg border border-gray-100">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-50 text-[10px] font-black text-gray-500 uppercase tracking-wider"><tr><th class="p-3">Model Xe</th><th class="p-3 text-center bg-orange-50 text-orange-600 border-l border-orange-100">S.I (Nhập)</th><th class="p-3 text-center bg-blue-50 text-blue-600 border-l border-blue-100">S.O (Bán)</th><th class="p-3 text-right">Giá Vốn</th><th class="p-3 text-right">Giá Bán</th><th class="p-3 text-right bg-blue-50 text-blue-700">Thành Tiền (S.O)</th></tr></thead>
+                    <tbody id="modalDetailBody" class="divide-y divide-gray-100 text-slate-700 font-medium bg-white"></tbody>
+                    <tfoot class="bg-slate-100 font-bold text-xs text-slate-800"><tr><td colspan="5" class="p-3 text-right uppercase">Tổng Doanh Thu Xe:</td><td class="p-3 text-right text-blue-600 font-mono text-sm" id="modalTotalRev">0</td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-sm font-black text-slate-800 uppercase mb-6 flex items-center gap-2"><span class="bg-green-500 w-1 h-4 rounded-full"></span> 2. Tóm Tắt Tài Chính (P&L Theo Nhóm)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100"><p class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Tổng Doanh Thu (+Hỗ trợ)</p><p class="text-2xl font-black text-blue-600 mt-1" id="modalMainRev">0</p></div>
+                <div class="p-4 bg-red-50 rounded-xl border border-red-100"><p class="text-[10px] font-black text-red-400 uppercase tracking-widest">Giá Vốn Hàng Bán (COGS)</p><p class="text-2xl font-black text-red-600 mt-1" id="modalMainCOGS">0</p></div>
+                <div class="p-4 bg-green-50 rounded-xl border border-green-100"><p class="text-[10px] font-black text-green-400 uppercase tracking-widest">Lợi Nhuận Gộp</p><p class="text-2xl font-black text-green-600 mt-1" id="modalMainGross">0</p></div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pt-6 border-t border-dashed border-gray-200">
+                <div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">I. Vận Hành & NS</p><p class="text-sm font-black text-slate-700" id="modalCostOp">0</p></div>
+                <div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">II. Logistic & Xe</p><p class="text-sm font-black text-slate-700" id="modalCostLog">0</p></div>
+                <div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">III. Marketing</p><p class="text-sm font-black text-slate-700" id="modalCostMkt">0</p></div>
+                <div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">IV. Khác</p><p class="text-sm font-black text-slate-700" id="modalCostOther">0</p></div>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center bg-slate-800 text-white p-5 rounded-xl shadow-lg gap-4">
+                <div class="mb-2 md:mb-0 w-full md:w-auto"><p class="text-xs font-bold text-slate-400 uppercase">Tổng Chi Phí (I + II + III + IV)</p><p class="text-xl font-mono font-bold" id="modalTotalExpense">0</p></div>
+                <div class="text-right w-full md:w-auto"><p class="text-xs font-bold text-slate-400 uppercase">Lợi Nhuận Ròng (Net Profit)</p><p class="text-3xl font-black text-green-400" id="modalNetProfit">0</p></div>
+            </div>
+        </div>
       </div>
-      <div class="flex justify-end pt-4 px-6 pb-6 bg-white border-t border-gray-100 gap-3 sticky bottom-0 z-20"><button onclick="toggleModal('detailModal')" class="px-6 py-3 bg-gray-100 rounded-xl text-gray-600 text-sm font-bold hover:bg-gray-200 transition">Đóng lại</button><button id="btnModalApprove" class="px-8 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition transform hover:-translate-y-0.5"><i class="fa-solid fa-check-circle mr-2"></i> DUYỆT BÁO CÁO</button></div>
+      <div class="flex justify-end pt-4 px-6 pb-6 bg-white border-t border-gray-100 gap-3 sticky bottom-0 z-20 shrink-0">
+          <button onclick="toggleModal('detailModal')" class="flex-1 md:flex-none px-6 py-3 bg-gray-100 rounded-xl text-gray-600 text-sm font-bold hover:bg-gray-200 transition">Đóng lại</button>
+          <button id="btnModalApprove" class="flex-1 md:flex-none px-8 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition transform hover:-translate-y-0.5"><i class="fa-solid fa-check-circle mr-2"></i> DUYỆT BÁO CÁO</button>
+      </div>
     </div>
   </div>
 
-  <div id="priceEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-full max-w-sm mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Giá</h3><div class="space-y-4"><div><input id="edit_p_key" class="w-full bg-gray-100 border p-2 rounded text-sm" readonly></div><div><label class="text-xs font-bold text-red-500">Giá Nhập</label><input id="edit_p_cost" type="number" class="w-full border p-2 rounded"></div><div><label class="text-xs font-bold text-blue-500">Giá Bán</label><input id="edit_p_price" type="number" class="w-full border p-2 rounded"></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('priceEditModal')" class="flex-1 py-2 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitPriceEdit()" class="flex-1 py-2 bg-orange-600 text-white rounded font-bold">Lưu</button></div></div></div>
-  <div id="shopEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Shop</h3><div class="space-y-3"><input id="edit_s_code" class="w-full bg-gray-100 border p-2 rounded text-xs" readonly><input id="edit_s_name" class="w-full border p-2 rounded text-xs" placeholder="Tên"><input id="edit_s_area" class="w-full border p-2 rounded text-xs" placeholder="Khu vực"><input id="edit_s_svn" class="w-full border p-2 rounded text-xs" placeholder="SVN"><input id="edit_s_province" class="w-full border p-2 rounded text-xs" placeholder="Tỉnh"><input id="edit_s_sale" class="w-full border p-2 rounded text-xs" placeholder="Sale"></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('shopEditModal')" class="flex-1 py-2 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitShopEdit()" class="flex-1 py-2 bg-blue-600 text-white rounded font-bold">Lưu</button></div></div></div>
+  <div id="priceEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-sm mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Giá</h3><div class="space-y-4"><div><input id="edit_p_key" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly></div><div><label class="text-xs font-bold text-red-500">Giá Nhập</label><input id="edit_p_cost" type="number" class="w-full border p-3 rounded"></div><div><label class="text-xs font-bold text-blue-500">Giá Bán</label><input id="edit_p_price" type="number" class="w-full border p-3 rounded"></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('priceEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitPriceEdit()" class="flex-1 py-3 bg-orange-600 text-white rounded font-bold">Lưu</button></div></div></div>
+  
+  <div id="shopEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Shop</h3><div class="space-y-3"><input id="edit_s_code" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly><input id="edit_s_name" class="w-full border p-3 rounded text-sm" placeholder="Tên"><input id="edit_s_area" class="w-full border p-3 rounded text-sm" placeholder="Khu vực"><input id="edit_s_svn" class="w-full border p-3 rounded text-sm" placeholder="SVN"><input id="edit_s_province" class="w-full border p-3 rounded text-sm" placeholder="Tỉnh"><input id="edit_s_sale" class="w-full border p-3 rounded text-sm" placeholder="Sale"></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('shopEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitShopEdit()" class="flex-1 py-3 bg-blue-600 text-white rounded font-bold">Lưu</button></div></div></div>
 
-  <div id="userEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+  <div id="userEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]">
     <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-    <div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 animate-fade p-6">
+    <div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 animate-fade p-6">
         <h3 class="text-xl font-black text-slate-800 mb-4">Sửa Thông Tin & Quyền</h3>
         <input type="hidden" id="edit_u_id">
         <div class="space-y-4">
-            <div><label class="text-[10px] uppercase font-bold text-gray-500">Email (Không đổi)</label><input id="edit_u_email" type="text" class="w-full bg-gray-100 border p-2 rounded text-xs font-bold text-gray-500" readonly></div>
-            
+            <div><label class="text-[10px] uppercase font-bold text-gray-500">Email (Không đổi)</label><input id="edit_u_email" type="text" class="w-full bg-gray-100 border p-3 rounded text-xs font-bold text-gray-500" readonly></div>
             <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <label class="text-[10px] uppercase font-bold text-blue-700">Họ và Tên (Phải khớp Master Data)</label>
                 <input id="edit_u_name" type="text" class="w-full border p-2 rounded text-sm font-bold text-slate-800 bg-white mt-1 focus:border-blue-500 outline-none" placeholder="Nhập đúng tên trong file Excel...">
                 <p class="text-[9px] text-blue-500 mt-1 italic">* Hệ thống sẽ tự động tìm Khu Vực dựa trên tên này.</p>
             </div>
-
             <div><label class="text-[10px] uppercase font-bold text-slate-700">Vai Trò</label>
-                <select id="edit_u_role" class="w-full border p-2 rounded text-sm font-bold bg-white text-slate-800">
-                    <option value="Sale">Sale</option>
-                    <option value="Giám Đốc">Giám Đốc</option>
-                    <option value="Admin">Admin</option>
-                </select>
+                <select id="edit_u_role" class="w-full border p-3 rounded text-sm font-bold bg-white text-slate-800"><option value="Sale">Sale</option><option value="Giám Đốc">Giám Đốc</option><option value="Admin">Admin</option></select>
             </div>
         </div>
         <div class="flex gap-3 mt-6">
-            <button onclick="toggleModal('userEditModal')" class="flex-1 py-2 bg-gray-100 text-gray-600 font-bold rounded-lg text-xs">Hủy</button>
-            <button onclick="submitUserEdit()" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded-lg text-xs shadow-lg hover:bg-blue-700">Cập Nhật</button>
+            <button onclick="toggleModal('userEditModal')" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-lg text-xs">Hủy</button>
+            <button onclick="submitUserEdit()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg text-xs shadow-lg hover:bg-blue-700">Cập Nhật</button>
         </div>
     </div>
   </div>
 
-  <aside id="sidebar" class="hidden w-64 bg-[#111827] text-gray-400 flex-shrink-0 fixed h-full z-40 shadow-2xl border-r border-gray-800">
-    <div class="h-20 flex items-center justify-center bg-[#1F2937] border-b border-gray-700">
-      <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-8 brightness-0 invert">
-    </div>
-    <div class="p-6 border-b border-gray-800 flex items-center gap-3 bg-[#111827]">
-      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-bold shadow-lg text-sm" id="avtUser">A</div>
-      <div><h4 id="sidebarName" class="text-white text-sm font-bold truncate">Admin</h4><div class="text-[10px] text-green-500 font-bold">Online</div></div>
-    </div>
-    <nav class="mt-6 space-y-1 px-2">
-      <a onclick="switchTab('dashboard')" id="tab-dashboard" class="sidebar-link active flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-clock-rotate-left text-blue-400 mr-3"></i> Lịch sử nhập</a>
-      <a onclick="switchTab('analytics-full')" id="tab-analytics-full" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-line text-yellow-400 mr-3"></i> Biểu đồ phân tích</a>
-      <a onclick="switchTab('users')" id="tab-users" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-users text-purple-400 mr-3"></i> Quản lý User</a>
-      <a onclick="switchTab('master')" id="tab-master" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-database text-green-400 mr-3"></i> Dữ Liệu Đại Lý</a>
-      <a onclick="switchTab('pricing')" id="tab-pricing" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-tags text-orange-400 mr-3"></i> Thiết Lập Giá</a>
-    </nav>
-    <div class="absolute bottom-0 w-full p-4 border-t border-gray-800 bg-[#0f1523]">
-      <button id="btnLogout" class="flex items-center justify-center gap-2 text-gray-300 hover:text-white w-full py-2.5 font-bold text-xs"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
-    </div>
-  </aside>
+  <div id="mainApp" class="hidden flex-1 flex flex-col md:flex-row h-full w-full">
+      
+      <div class="md:hidden flex-shrink-0 h-16 bg-[#111827] flex items-center justify-between px-4 z-40 shadow-lg sticky top-0">
+          <div class="flex items-center gap-2">
+              <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-6 brightness-0 invert">
+              <span class="text-white font-bold text-sm tracking-widest">ADMIN PORTAL</span>
+          </div>
+          <button onclick="toggleSidebar()" class="text-white text-2xl p-2 focus:outline-none"><i class="fa-solid fa-bars"></i></button>
+      </div>
 
-  <main id="mainContent" class="hidden flex-1 md:ml-64 p-4 md:p-8 overflow-x-hidden">
-    
-    <div id="view-dashboard" class="space-y-6 animate-fade">
-      <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h2 class="text-2xl font-black text-slate-800">Lịch Sử Nhập Liệu</h2>
-        <div class="flex gap-2">
-          <input id="f_month" type="month" class="bg-slate-50 border p-2 rounded-lg text-sm font-bold">
-          <button onclick="loadDashboard()" class="bg-[#FF4500] text-white w-10 h-10 rounded-lg shadow hover:bg-orange-600"><i class="fa-solid fa-rotate"></i></button>
+      <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-[#111827] text-gray-400 flex flex-col z-50 shadow-2xl border-r border-gray-800 transition-transform duration-300 transform -translate-x-full md:translate-x-0 md:relative">
+        <div class="md:hidden absolute top-4 right-4">
+             <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-      </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-end">
-          <div class="flex-1 min-w-[200px]"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">Giám Đốc</label><select id="dash_director" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-sm w-full" onchange="updateDashChain('director')"><option value="">-- Tất cả --</option></select></div>
-          <div class="flex-1 min-w-[150px]"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">Sale Phụ Trách</label><select id="dash_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-sm w-full" onchange="updateDashChain('sale')"><option value="">-- Tất cả --</option></select></div>
-          <div class="flex-1 min-w-[120px]"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">Mã SVN</label><select id="dash_svn" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-sm w-full" onchange="updateDashChain('svn')"><option value="">-- Tất cả --</option></select></div>
-          <div class="flex-1 min-w-[250px]"><label class="block text-[10px] font-bold text-purple-500 uppercase mb-1">Mã DVN (Shop)</label><select id="dash_dvn" class="bg-purple-50/50 border border-purple-100 text-purple-700 font-bold rounded-lg p-2 text-sm w-full" onchange="filterDashboardData()"><option value="">-- Tất cả --</option></select></div>
-          <div class="flex-1 min-w-[150px]"><label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">Trạng Thái</label><select id="dash_status" class="bg-orange-50 border border-orange-200 text-orange-800 font-bold rounded-lg p-2 text-sm w-full" onchange="filterDashboardData()"><option value="">-- Tất cả --</option><option value="submitted">Chờ Duyệt</option><option value="approved">Đã Duyệt</option></select></div>
-          <button onclick="resetDashFilters()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-2.5 rounded-xl transition" title="Reset"><i class="fa-solid fa-filter-circle-xmark"></i></button>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Doanh Thu</p><h3 id="kpi_rev" class="text-2xl font-black text-blue-600 mt-2">0</h3></div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Lợi Nhuận</p><h3 id="kpi_profit" class="text-2xl font-black text-green-600 mt-2">0</h3></div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Số Lượng Shop</p><h3 id="submittedCount" class="text-2xl font-black text-orange-500 mt-2">0</h3></div>
-      </div>
-      <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-        <div class="p-4 border-b font-bold text-sm bg-gray-50 flex justify-between items-center"><div class="flex items-center gap-2"><i class="fa-solid fa-list text-slate-400"></i> <span class="text-slate-700">Danh sách báo cáo</span></div><div class="flex gap-2"><button onclick="toggleLossFilter()" id="btnLossFilter" class="bg-white border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Xem Shop Báo Động (Lỗ)</button></div></div>
-        <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50 font-bold text-gray-500 uppercase text-xs"><tr><th class="p-3">Tháng</th><th class="p-3">Shop</th><th class="p-3 text-center">SL Bán</th><th class="p-3 text-right">Doanh Thu</th><th class="p-3 text-right bg-green-50 text-green-700 cursor-pointer hover:bg-green-100 transition" onclick="sortPendingByProfit()" title="Sắp xếp">Lợi Nhuận <i class="fa-solid fa-sort"></i></th><th class="p-3 text-center bg-green-50 text-green-700">% Lãi</th><th class="p-3 text-center">Trạng Thái</th><th class="p-3 text-center">Xem</th><th class="p-3 text-center">Hành Động</th></tr></thead><tbody id="pendingBody" class="divide-y text-slate-700"></tbody></table></div>
-      </div>
-    </div>
 
-    <div id="view-analytics-full" class="hidden space-y-4 animate-fade">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 sticky top-0 z-30">
-            <div class="flex flex-wrap gap-4 items-end justify-between">
-                <div class="flex flex-wrap gap-3 items-end">
-                    <div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tháng & Xu Hướng</label><div class="flex gap-2"><input type="month" id="ana_month" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-sm w-32"><select id="ana_trend_range" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-sm"><option value="3">3T</option><option value="6" selected>6T</option><option value="12">12T</option></select></div></div>
-                    <div class="pl-3 border-l border-gray-200 flex flex-wrap gap-3">
-                        <div><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">1. Giám Đốc</label><select id="ana_director" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-sm w-40" onchange="updateFilterChain('director')"><option value="">-- Tất cả --</option></select></div>
-                        <div><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">2. Sale Phụ Trách</label><select id="ana_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-sm w-36" onchange="updateFilterChain('sale')"><option value="">-- Tất cả --</option></select></div>
-                        <div><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">3. Mã SVN</label><select id="ana_svn" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-sm w-32" onchange="updateFilterChain('svn')"><option value="">-- Tất cả --</option></select></div>
-                        <div><label class="block text-[10px] font-bold text-purple-500 uppercase mb-1">4. Mã DVN (Shop)</label><select id="ana_dvn" class="bg-purple-50/50 border border-purple-100 text-purple-700 font-bold rounded-lg p-2 text-sm w-64"><option value="">-- Tất cả --</option></select></div>
+        <div class="h-20 flex items-center justify-center bg-[#1F2937] border-b border-gray-700">
+          <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-8 brightness-0 invert">
+        </div>
+        <div class="p-6 border-b border-gray-800 flex items-center gap-3 bg-[#111827]">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-bold shadow-lg text-sm" id="avtUser">A</div>
+          <div class="overflow-hidden">
+              <h4 id="sidebarName" class="text-white text-sm font-bold truncate">Admin</h4>
+              <div class="text-[10px] text-green-500 font-bold">Online</div>
+          </div>
+        </div>
+        <nav class="flex-1 mt-6 space-y-1 px-2 overflow-y-auto">
+          <a onclick="switchTab('dashboard')" id="tab-dashboard" class="sidebar-link active flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-clock-rotate-left text-blue-400 mr-3 w-5 text-center"></i> Lịch sử nhập</a>
+          <a onclick="switchTab('analytics-full')" id="tab-analytics-full" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-line text-yellow-400 mr-3 w-5 text-center"></i> Biểu đồ phân tích</a>
+          <a onclick="switchTab('users')" id="tab-users" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-users text-purple-400 mr-3 w-5 text-center"></i> Quản lý User</a>
+          <a onclick="switchTab('master')" id="tab-master" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-database text-green-400 mr-3 w-5 text-center"></i> Dữ Liệu Đại Lý</a>
+          <a onclick="switchTab('pricing')" id="tab-pricing" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-tags text-orange-400 mr-3 w-5 text-center"></i> Thiết Lập Giá</a>
+        </nav>
+        <div class="p-4 border-t border-gray-800 bg-[#0f1523]">
+          <button id="btnLogout" class="flex items-center justify-center gap-2 text-gray-300 hover:text-white w-full py-2.5 font-bold text-xs"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+        </div>
+      </aside>
+
+      <main id="mainContent" class="flex-1 p-4 md:p-8 overflow-x-hidden pb-20">
+      
+        <div id="view-dashboard" class="space-y-6 animate-fade">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 gap-4">
+            <h2 class="text-2xl font-black text-slate-800">Lịch Sử Nhập Liệu</h2>
+            <div class="flex gap-2 w-full md:w-auto">
+              <input id="f_month" type="month" class="bg-slate-50 border p-2 rounded-lg text-sm font-bold flex-1 md:w-auto">
+              <button onclick="loadDashboard()" class="bg-[#FF4500] text-white w-12 md:w-10 h-10 rounded-lg shadow hover:bg-orange-600"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+          </div>
+          
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row flex-wrap gap-4 items-end">
+              <div class="w-full md:flex-1 md:min-w-[200px]"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">Giám Đốc</label><select id="dash_director" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-3 text-sm w-full" onchange="updateDashChain('director')"><option value="">-- Tất cả --</option></select></div>
+              <div class="w-full md:flex-1 md:min-w-[150px]"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">Sale Phụ Trách</label><select id="dash_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-3 text-sm w-full" onchange="updateDashChain('sale')"><option value="">-- Tất cả --</option></select></div>
+              <div class="w-full md:flex-1 md:min-w-[120px]"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">Mã SVN</label><select id="dash_svn" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-3 text-sm w-full" onchange="updateDashChain('svn')"><option value="">-- Tất cả --</option></select></div>
+              <div class="w-full md:flex-1 md:min-w-[250px]"><label class="block text-[10px] font-bold text-purple-500 uppercase mb-1">Mã DVN (Shop)</label><select id="dash_dvn" class="bg-purple-50/50 border border-purple-100 text-purple-700 font-bold rounded-lg p-3 text-sm w-full" onchange="filterDashboardData()"><option value="">-- Tất cả --</option></select></div>
+              <div class="w-full md:flex-1 md:min-w-[150px]"><label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">Trạng Thái</label><select id="dash_status" class="bg-orange-50 border border-orange-200 text-orange-800 font-bold rounded-lg p-3 text-sm w-full" onchange="filterDashboardData()"><option value="">-- Tất cả --</option><option value="submitted">Chờ Duyệt</option><option value="approved">Đã Duyệt</option></select></div>
+              <button onclick="resetDashFilters()" class="w-full md:w-auto bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-3 rounded-xl transition" title="Reset"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Doanh Thu</p><h3 id="kpi_rev" class="text-2xl font-black text-blue-600 mt-2">0</h3></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Lợi Nhuận</p><h3 id="kpi_profit" class="text-2xl font-black text-green-600 mt-2">0</h3></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Số Lượng Shop</p><h3 id="submittedCount" class="text-2xl font-black text-orange-500 mt-2">0</h3></div>
+          </div>
+          
+          <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+            <div class="p-4 border-b font-bold text-sm bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                <div class="flex items-center gap-2"><i class="fa-solid fa-list text-slate-400"></i> <span class="text-slate-700">Danh sách báo cáo</span></div>
+                <div class="flex gap-2 w-full md:w-auto"><button onclick="toggleLossFilter()" id="btnLossFilter" class="w-full md:w-auto bg-white border border-red-200 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Xem Shop Báo Động (Lỗ)</button></div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-50 font-bold text-gray-500 uppercase text-xs"><tr><th class="p-3">Tháng</th><th class="p-3">Shop</th><th class="p-3 text-center">SL Bán</th><th class="p-3 text-right">Doanh Thu</th><th class="p-3 text-right bg-green-50 text-green-700 cursor-pointer hover:bg-green-100 transition" onclick="sortPendingByProfit()" title="Sắp xếp">Lợi Nhuận <i class="fa-solid fa-sort"></i></th><th class="p-3 text-center bg-green-50 text-green-700">% Lãi</th><th class="p-3 text-center">Trạng Thái</th><th class="p-3 text-center">Xem</th><th class="p-3 text-center">Hành Động</th></tr></thead>
+                    <tbody id="pendingBody" class="divide-y text-slate-700"></tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-analytics-full" class="hidden space-y-4 animate-fade">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 sticky top-0 z-30">
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col md:flex-row flex-wrap gap-4 items-end">
+                        <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tháng & Xu Hướng</label><div class="flex gap-2"><input type="month" id="ana_month" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-sm flex-1 md:w-32"><select id="ana_trend_range" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-sm"><option value="3">3T</option><option value="6" selected>6T</option><option value="12">12T</option></select></div></div>
+                        <div class="w-full md:w-auto pl-0 md:pl-3 border-l-0 md:border-l border-gray-200 flex flex-col md:flex-row flex-wrap gap-3">
+                            <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">1. Giám Đốc</label><select id="ana_director" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-sm w-full md:w-40" onchange="updateFilterChain('director')"><option value="">-- Tất cả --</option></select></div>
+                            <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">2. Sale Phụ Trách</label><select id="ana_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-sm w-full md:w-36" onchange="updateFilterChain('sale')"><option value="">-- Tất cả --</option></select></div>
+                            <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">3. Mã SVN</label><select id="ana_svn" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-sm w-full md:w-32" onchange="updateFilterChain('svn')"><option value="">-- Tất cả --</option></select></div>
+                            <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-purple-500 uppercase mb-1">4. Mã DVN (Shop)</label><select id="ana_dvn" class="bg-purple-50/50 border border-purple-100 text-purple-700 font-bold rounded-lg p-2 text-sm w-full md:w-64"><option value="">-- Tất cả --</option></select></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <button onclick="resetFilters()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-2.5 rounded-xl transition"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+                        <button onclick="exportAnalyticsExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center gap-2 text-sm uppercase flex-1 md:flex-none justify-center"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                        <button onclick="loadAnalyticsFull()" class="bg-slate-900 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition flex items-center gap-2 text-sm uppercase flex-1 md:flex-none justify-center"><i class="fa-solid fa-bolt"></i> Tải Dashboard</button>
                     </div>
                 </div>
-                <div class="flex gap-2"><button onclick="resetFilters()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-2.5 rounded-xl transition"><i class="fa-solid fa-filter-circle-xmark"></i></button><button onclick="exportAnalyticsExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center gap-2 text-sm uppercase"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button><button onclick="loadAnalyticsFull()" class="bg-slate-900 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition flex items-center gap-2 text-sm uppercase"><i class="fa-solid fa-bolt"></i> Tải Dashboard</button></div>
             </div>
-        </div>
-        <div id="ana_loading" class="hidden text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-5xl text-orange-500"></i><p class="mt-4 font-bold text-gray-500 uppercase tracking-widest">Đang phân tích dữ liệu...</p></div>
-        <div id="ana_content" class="hidden">
-            <div class="flex border-b border-gray-200 mb-6 bg-white rounded-t-2xl px-4 pt-2"><button onclick="switchSubTab('national')" id="btn-tab-national" class="sub-tab-btn active"><i class="fa-solid fa-globe mr-2"></i>1. TỔNG QUAN TOÀN QUỐC</button><button onclick="switchSubTab('regional')" id="btn-tab-regional" class="sub-tab-btn"><i class="fa-solid fa-map-location-dot mr-2"></i>2. PHÂN TÍCH VÙNG / GIÁM ĐỐC</button><button onclick="switchSubTab('shop')" id="btn-tab-shop" class="sub-tab-btn"><i class="fa-solid fa-store mr-2"></i>3. CHI TIẾT SHOP</button></div>
-            <div id="ana-tab-national" class="space-y-8 pb-20">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4"><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Doanh Thu</p><h4 id="nat_rev" class="text-2xl font-black text-blue-600 mt-1">0</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-green-500"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Lợi Nhuận</p><h4 id="nat_profit" class="text-2xl font-black text-green-600 mt-1">0</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-purple-500"><p class="text-[10px] font-black text-gray-400 uppercase">% Shop Có Lãi</p><h4 id="nat_pct" class="text-2xl font-black text-purple-600 mt-1">0%</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-red-500"><p class="text-[10px] font-black text-gray-400 uppercase">Shop Dưới Hòa Vốn</p><h4 id="nat_risk" class="text-2xl font-black text-red-500 mt-1">0</h4></div></div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A2. Xu Hướng Doanh Thu & Lợi Nhuận</h4><div class="h-[300px]"><canvas id="chart_A2_Trend"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A3. Cơ Cấu Chi Phí Hệ Thống</h4><div class="h-[300px]"><canvas id="chart_A3_Cost"></canvas></div></div></div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A4. Top 10 Shop Lợi Nhuận Cao Nhất</h4><div class="h-[300px]"><canvas id="chart_A4_Top10"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A6. Bản Đồ Hiệu Suất (Theo Tỉnh)</h4><div class="h-[300px]"><canvas id="chart_A6_Map"></canvas></div></div></div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-red-200 relative overflow-hidden"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-red-600 uppercase">A5. Danh Sách Cảnh Báo Rủi Ro (Lỗ > 2 tháng)</h4></div><div class="overflow-y-auto h-[300px]"><table class="w-full text-xs text-left" id="table_A5_Risk"><thead class="bg-red-50 text-red-700 font-bold sticky top-0"><tr><th class="p-2">Shop (DVN)</th><th class="p-2">Tên Shop</th><th class="p-2 text-center">Số tháng lỗ</th><th class="p-2 text-right">Tổng lỗ (VNĐ)</th></tr></thead><tbody id="body_A5_Risk"></tbody></table></div></div>
-            </div>
-            <div id="ana-tab-regional" class="hidden space-y-8 pb-20">
-                <div class="flex items-center gap-2 mb-2 p-2 bg-blue-50 text-blue-800 rounded-lg inline-flex border border-blue-100"><span class="bg-blue-600 text-white px-2 rounded text-xs font-bold">VÙNG</span><span id="lbl_Director_Name" class="text-xs font-bold uppercase ml-1">---</span></div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B2. Xếp Hạng Shop Trong Vùng (Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_B2_Rank"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B6. Phân Loại Shop (Doanh Thu vs Chi Phí)</h4><div class="h-[300px]"><canvas id="chart_B6_Scatter"></canvas></div></div></div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B4. Xu Hướng Vùng (3/6/12 Tháng)</h4><div class="h-[300px]"><canvas id="chart_B4_Trend"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B5. Hiệu Quả Marketing (Chi phí vs Doanh thu)</h4><div class="h-[300px]"><canvas id="chart_B5_Mkt"></canvas></div></div></div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 overflow-hidden"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">B3. Heatmap Hiệu Suất Vùng (Shop x KPI)</h4></div><div class="overflow-x-auto max-h-[400px]"><table class="w-full text-xs text-left border-collapse" id="table_B3_Heatmap"><thead class="bg-slate-100 font-black text-slate-600 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-3 border">Shop Name</th><th class="p-3 border text-right">Doanh Thu</th><th class="p-3 border text-right">Net Profit</th><th class="p-3 border text-center">Margin %</th><th class="p-3 border text-center">SL Bán</th><th class="p-3 border text-center">MKT %</th></tr></thead><tbody id="body_B3_Heatmap" class="divide-y divide-gray-100"></tbody></table></div></div>
-            </div>
-            <div id="ana-tab-shop" class="hidden space-y-8 pb-20">
-                <div class="flex items-center gap-2 mb-2 p-2 bg-purple-50 text-purple-800 rounded-lg inline-flex border border-purple-100"><span class="bg-purple-600 text-white px-2 rounded text-xs font-bold">SHOP</span><span id="lbl_Shop_Name" class="text-xs font-bold uppercase ml-1">---</span></div>
-                <div id="shop_kpi_inventory" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
-                <div id="shop_analysis_content">
-                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C1. P&L Waterfall (Dòng Thác Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_C1_Waterfall"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C4. Điểm Hòa Vốn (Break-even)</h4><span id="txt_C4_BEP" class="text-xs font-black text-orange-600 bg-orange-100 px-2 py-1 rounded"></span></div><div class="h-[300px]"><canvas id="chart_C4_BEP"></canvas></div></div></div>
-                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C2. Cơ Cấu Chi Phí Shop</h4><div class="h-[200px]"><canvas id="chart_C2_Donut"></canvas></div></div><div class="col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C3. Xu Hướng Shop (6 Tháng)</h4><div class="h-[200px]"><canvas id="chart_C3_Trend"></canvas></div></div></div>
-                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C5. Top Model Bán Chạy (Theo SL)</h4></div><div class="overflow-y-auto h-[300px]" id="div_C5_Model"></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C6. Nhập (S.I) vs Bán (S.O) Theo Model</h4><div class="h-[300px]"><canvas id="chart_C6_Stack"></canvas></div></div></div>
+            <div id="ana_loading" class="hidden text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-5xl text-orange-500"></i><p class="mt-4 font-bold text-gray-500 uppercase tracking-widest">Đang phân tích dữ liệu...</p></div>
+            <div id="ana_content" class="hidden">
+                <div class="flex border-b border-gray-200 mb-6 bg-white rounded-t-2xl px-4 pt-2 overflow-x-auto"><button onclick="switchSubTab('national')" id="btn-tab-national" class="sub-tab-btn active"><i class="fa-solid fa-globe mr-2"></i>1. TỔNG QUAN</button><button onclick="switchSubTab('regional')" id="btn-tab-regional" class="sub-tab-btn"><i class="fa-solid fa-map-location-dot mr-2"></i>2. PHÂN TÍCH VÙNG</button><button onclick="switchSubTab('shop')" id="btn-tab-shop" class="sub-tab-btn"><i class="fa-solid fa-store mr-2"></i>3. CHI TIẾT SHOP</button></div>
+                
+                <div id="ana-tab-national" class="space-y-8 pb-20">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4"><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Doanh Thu</p><h4 id="nat_rev" class="text-xl md:text-2xl font-black text-blue-600 mt-1">0</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-green-500"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Lợi Nhuận</p><h4 id="nat_profit" class="text-xl md:text-2xl font-black text-green-600 mt-1">0</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-purple-500"><p class="text-[10px] font-black text-gray-400 uppercase">% Shop Có Lãi</p><h4 id="nat_pct" class="text-xl md:text-2xl font-black text-purple-600 mt-1">0%</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-red-500"><p class="text-[10px] font-black text-gray-400 uppercase">Shop Dưới Hòa Vốn</p><h4 id="nat_risk" class="text-xl md:text-2xl font-black text-red-500 mt-1">0</h4></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A2. Xu Hướng Doanh Thu & Lợi Nhuận</h4><div class="h-[300px]"><canvas id="chart_A2_Trend"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A3. Cơ Cấu Chi Phí Hệ Thống</h4><div class="h-[300px]"><canvas id="chart_A3_Cost"></canvas></div></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A4. Top 10 Shop Lợi Nhuận Cao Nhất</h4><div class="h-[300px]"><canvas id="chart_A4_Top10"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A6. Bản Đồ Hiệu Suất (Theo Tỉnh)</h4><div class="h-[300px]"><canvas id="chart_A6_Map"></canvas></div></div></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-red-200 relative overflow-hidden"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-red-600 uppercase">A5. Danh Sách Cảnh Báo Rủi Ro (Lỗ > 2 tháng)</h4></div><div class="overflow-y-auto h-[300px]"><table class="w-full text-xs text-left" id="table_A5_Risk"><thead class="bg-red-50 text-red-700 font-bold sticky top-0"><tr><th class="p-2">Shop (DVN)</th><th class="p-2">Tên Shop</th><th class="p-2 text-center">Số tháng lỗ</th><th class="p-2 text-right">Tổng lỗ (VNĐ)</th></tr></thead><tbody id="body_A5_Risk"></tbody></table></div></div>
                 </div>
-                <div id="shop_analysis_empty" class="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-300"><i class="fa-solid fa-shop text-4xl text-gray-300 mb-2"></i><p class="text-gray-500 font-bold">Hãy chọn Mã DVN ở bộ lọc trên cùng để xem chi tiết Shop.</p></div>
+                <div id="ana-tab-regional" class="hidden space-y-8 pb-20">
+                    <div class="flex items-center gap-2 mb-2 p-2 bg-blue-50 text-blue-800 rounded-lg inline-flex border border-blue-100"><span class="bg-blue-600 text-white px-2 rounded text-xs font-bold">VÙNG</span><span id="lbl_Director_Name" class="text-xs font-bold uppercase ml-1">---</span></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B2. Xếp Hạng Shop Trong Vùng (Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_B2_Rank"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B6. Phân Loại Shop (Doanh Thu vs Chi Phí)</h4><div class="h-[300px]"><canvas id="chart_B6_Scatter"></canvas></div></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B4. Xu Hướng Vùng (3/6/12 Tháng)</h4><div class="h-[300px]"><canvas id="chart_B4_Trend"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B5. Hiệu Quả Marketing (Chi phí vs Doanh thu)</h4><div class="h-[300px]"><canvas id="chart_B5_Mkt"></canvas></div></div></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 overflow-hidden"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">B3. Heatmap Hiệu Suất Vùng (Shop x KPI)</h4></div><div class="overflow-x-auto max-h-[400px]"><table class="w-full text-xs text-left border-collapse whitespace-nowrap" id="table_B3_Heatmap"><thead class="bg-slate-100 font-black text-slate-600 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-3 border">Shop Name</th><th class="p-3 border text-right">Doanh Thu</th><th class="p-3 border text-right">Net Profit</th><th class="p-3 border text-center">Margin %</th><th class="p-3 border text-center">SL Bán</th><th class="p-3 border text-center">MKT %</th></tr></thead><tbody id="body_B3_Heatmap" class="divide-y divide-gray-100"></tbody></table></div></div>
+                </div>
+                <div id="ana-tab-shop" class="hidden space-y-8 pb-20">
+                    <div class="flex items-center gap-2 mb-2 p-2 bg-purple-50 text-purple-800 rounded-lg inline-flex border border-purple-100"><span class="bg-purple-600 text-white px-2 rounded text-xs font-bold">SHOP</span><span id="lbl_Shop_Name" class="text-xs font-bold uppercase ml-1">---</span></div>
+                    <div id="shop_kpi_inventory" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"></div>
+                    <div id="shop_analysis_content">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C1. P&L Waterfall (Dòng Thác Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_C1_Waterfall"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C4. Điểm Hòa Vốn (Break-even)</h4><span id="txt_C4_BEP" class="text-xs font-black text-orange-600 bg-orange-100 px-2 py-1 rounded"></span></div><div class="h-[300px]"><canvas id="chart_C4_BEP"></canvas></div></div></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C2. Cơ Cấu Chi Phí Shop</h4><div class="h-[200px]"><canvas id="chart_C2_Donut"></canvas></div></div><div class="col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C3. Xu Hướng Shop (6 Tháng)</h4><div class="h-[200px]"><canvas id="chart_C3_Trend"></canvas></div></div></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C5. Top Model Bán Chạy (Theo SL)</h4></div><div class="overflow-y-auto h-[300px]" id="div_C5_Model"></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C6. Nhập (S.I) vs Bán (S.O) Theo Model</h4><div class="h-[300px]"><canvas id="chart_C6_Stack"></canvas></div></div></div>
+                    </div>
+                    <div id="shop_analysis_empty" class="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-300"><i class="fa-solid fa-shop text-4xl text-gray-300 mb-2"></i><p class="text-gray-500 font-bold">Hãy chọn Mã DVN ở bộ lọc trên cùng để xem chi tiết Shop.</p></div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="view-users" class="hidden space-y-6 animate-fade">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border flex justify-between"><h2 class="text-2xl font-black text-slate-800">Quản Lý Nhân Sự</h2><button onclick="loadUsers()" class="bg-slate-100 px-4 py-2 rounded font-bold text-xs hover:bg-slate-200">Làm mới</button></div>
-        <div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><table class="w-full text-left text-sm"><thead class="bg-slate-50 text-[10px] font-bold text-gray-500 uppercase"><tr><th class="p-4">Nhân Sự</th><th class="p-4">Khu Vực (Auto)</th><th class="p-4">Vai Trò</th><th class="p-4 text-center">Trạng Thái</th><th class="p-4 text-center">Hành Động</th></tr></thead><tbody id="userTableBody"></tbody></table></div>
-    </div>
-    
-    <div id="view-master" class="hidden space-y-6 animate-fade"><div class="bg-white p-8 rounded-2xl shadow-sm border text-center"><h2 class="text-2xl font-black text-slate-800">Dữ Liệu Đại Lý</h2><label class="cursor-pointer bg-slate-900 text-white font-bold py-3 px-6 rounded-xl shadow-lg inline-block hover:bg-slate-800 transition"><i class="fa-solid fa-upload mr-2"></i> Tải lên danh sách Mới<input type="file" id="excelFile" class="hidden" accept=".xlsx,.csv"></label><p id="uploadStatus" class="mt-4 text-xs font-bold text-blue-500"></p></div><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="p-4 border-b font-bold text-sm bg-gray-50 flex justify-between items-center"><span>Danh sách Shop</span><span id="shopCount" class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">0 Shop</span></div><div class="overflow-x-auto max-h-[600px]"><table class="w-full text-left text-sm"><thead class="bg-slate-100 sticky top-0 z-10"><tr class="text-[10px] font-black text-gray-500 uppercase"><th class="p-4">Khu Vực</th><th class="p-4">Mã SVN</th><th class="p-4">Mã DVN</th><th class="p-4">Tên Đại Lý</th><th class="p-4">Tỉnh/Thành</th><th class="p-4">Sale Phụ Trách</th><th class="p-4 text-center">Tác Vụ</th></tr></thead><tbody id="masterBody" class="divide-y divide-gray-100 font-medium text-slate-700"></tbody></table></div></div></div>
-    <div id="view-pricing" class="hidden space-y-6 animate-fade"><div class="bg-white p-8 rounded-2xl shadow-sm border border-orange-100 text-center"><h2 class="text-2xl font-black text-slate-800">Thiết Lập Giá</h2><label class="cursor-pointer bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg mt-4 inline-block"><i class="fa-solid fa-file-invoice-dollar"></i> Upload Bảng Giá<input type="file" id="priceFile" class="hidden" accept=".xlsx,.xls,.csv"></label><p id="priceStatus" class="mt-4 text-xs font-bold text-blue-500"></p></div><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="p-4 bg-gray-50 border-b flex justify-between items-center"><h3 class="font-bold text-slate-700 text-sm">Lịch sử giá</h3><div class="flex items-center gap-2"><input type="month" id="search_price_month" class="bg-white border p-1.5 rounded text-xs font-bold outline-none" onchange="loadPriceHistory()"><button onclick="document.getElementById('search_price_month').value='';loadPriceHistory()" class="text-gray-400 hover:text-red-500 text-xs"><i class="fa-solid fa-xmark"></i></button></div></div><table class="w-full text-left text-sm"><thead class="bg-slate-100"><tr class="text-[10px] font-black text-gray-500 uppercase"><th class="p-4">Tháng</th><th class="p-4">Model</th><th class="p-4 text-right">Giá Nhập</th><th class="p-4 text-right">Giá Bán</th><th class="p-4 text-center">Tác Vụ</th></tr></thead><tbody id="priceBody" class="divide-y divide-gray-100"></tbody></table></div></div>
+        <div id="view-users" class="hidden space-y-6 animate-fade">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><h2 class="text-2xl font-black text-slate-800">Quản Lý Nhân Sự</h2><button onclick="loadUsers()" class="w-full md:w-auto bg-slate-100 px-4 py-2 rounded font-bold text-xs hover:bg-slate-200">Làm mới</button></div>
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-[10px] font-bold text-gray-500 uppercase"><tr><th class="p-4">Nhân Sự</th><th class="p-4">Khu Vực (Auto)</th><th class="p-4">Vai Trò</th><th class="p-4 text-center">Trạng Thái</th><th class="p-4 text-center">Hành Động</th></tr></thead><tbody id="userTableBody"></tbody></table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="view-master" class="hidden space-y-6 animate-fade"><div class="bg-white p-8 rounded-2xl shadow-sm border text-center"><h2 class="text-2xl font-black text-slate-800">Dữ Liệu Đại Lý</h2><label class="cursor-pointer bg-slate-900 text-white font-bold py-3 px-6 rounded-xl shadow-lg inline-block hover:bg-slate-800 transition"><i class="fa-solid fa-upload mr-2"></i> Tải lên danh sách Mới<input type="file" id="excelFile" class="hidden" accept=".xlsx,.csv"></label><p id="uploadStatus" class="mt-4 text-xs font-bold text-blue-500"></p></div><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="p-4 border-b font-bold text-sm bg-gray-50 flex justify-between items-center"><span>Danh sách Shop</span><span id="shopCount" class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">0 Shop</span></div><div class="overflow-x-auto max-h-[600px]"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-100 sticky top-0 z-10"><tr class="text-[10px] font-black text-gray-500 uppercase"><th class="p-4">Khu Vực</th><th class="p-4">Mã SVN</th><th class="p-4">Mã DVN</th><th class="p-4">Tên Đại Lý</th><th class="p-4">Tỉnh/Thành</th><th class="p-4">Sale Phụ Trách</th><th class="p-4 text-center">Tác Vụ</th></tr></thead><tbody id="masterBody" class="divide-y divide-gray-100 font-medium text-slate-700"></tbody></table></div></div></div>
+        <div id="view-pricing" class="hidden space-y-6 animate-fade"><div class="bg-white p-8 rounded-2xl shadow-sm border border-orange-100 text-center"><h2 class="text-2xl font-black text-slate-800">Thiết Lập Giá</h2><label class="cursor-pointer bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg mt-4 inline-block"><i class="fa-solid fa-file-invoice-dollar"></i> Upload Bảng Giá<input type="file" id="priceFile" class="hidden" accept=".xlsx,.xls,.csv"></label><p id="priceStatus" class="mt-4 text-xs font-bold text-blue-500"></p></div><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="p-4 bg-gray-50 border-b flex justify-between items-center"><h3 class="font-bold text-slate-700 text-sm">Lịch sử giá</h3><div class="flex items-center gap-2"><input type="month" id="search_price_month" class="bg-white border p-1.5 rounded text-xs font-bold outline-none" onchange="loadPriceHistory()"><button onclick="document.getElementById('search_price_month').value='';loadPriceHistory()" class="text-gray-400 hover:text-red-500 text-xs"><i class="fa-solid fa-xmark"></i></button></div></div><div class="overflow-x-auto"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-100"><tr class="text-[10px] font-black text-gray-500 uppercase"><th class="p-4">Tháng</th><th class="p-4">Model</th><th class="p-4 text-right">Giá Nhập</th><th class="p-4 text-right">Giá Bán</th><th class="p-4 text-center">Tác Vụ</th></tr></thead><tbody id="priceBody" class="divide-y divide-gray-100"></tbody></table></div></div></div>
 
-  </main>
+      </main>
+  </div>
 
   <script>
     const SUPABASE_URL = "https://esbukwnoaimkapinaevt.supabase.co";
@@ -215,7 +284,18 @@
     const fmn = n => new Intl.NumberFormat('vi-VN').format(Math.round(n));
     Chart.defaults.font.family = "'Roboto', sans-serif";
 
-    let globalAdminShopMap = {}; let fullChartInstances = {}; let cachedAnalyticsData = [];
+    let globalAdminShopMap = {}; let fullChartInstances = {};
+    let cachedAnalyticsData = [];
+
+    // --- SIDEBAR TOGGLE LOGIC (QUAN TRỌNG CHO MOBILE) ---
+    function toggleSidebar() {
+        const sb = document.getElementById('sidebar');
+        if (sb.classList.contains('-translate-x-full')) {
+            sb.classList.remove('-translate-x-full'); // Hiện sidebar
+        } else {
+            sb.classList.add('-translate-x-full'); // Ẩn sidebar
+        }
+    }
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
@@ -224,34 +304,81 @@
       if (!profile || (profile.role !== 'Admin' && profile.role !== 'Giám Đốc')) { await sb.auth.signOut(); $('loginSection').classList.remove('hidden'); return; }
       
       $('sidebarName').innerText = profile.full_name || "Admin";
-      $('loginSection').classList.add('hidden'); $('sidebar').classList.remove('hidden'); $('mainContent').classList.remove('hidden');
+      
+      // FIX QUAN TRỌNG: Hiển thị cả mainApp và mainContent
+      $('loginSection').classList.add('hidden'); 
+      $('mainApp').classList.remove('hidden');
+      // Sidebar trên PC sẽ tự hiện do CSS, trên Mobile sẽ ẩn.
       
       const now = new Date(); const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
       $('f_month').value = currentMonth; $('ana_month').value = currentMonth;
       
       await loadAllShops(); 
-      loadDashboard(); initDashFilters(); initFilterChain(); 
+      loadDashboard(); initDashFilters(); initFilterChain();
     }
     
-    $('btnLogin').onclick = async () => { const { error } = await sb.auth.signInWithPassword({ email: $('adm_email').value, password: $('adm_pass').value }); if(error) $('loginMsg').innerText = error.message; else init(); };
+    $('btnLogin').onclick = async () => { const { error } = await sb.auth.signInWithPassword({ email: $('adm_email').value, password: $('adm_pass').value });
+    if(error) $('loginMsg').innerText = error.message; else init(); };
     $('btnLogout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
-    window.switchTab = (tab) => { document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active')); ['view-dashboard','view-users','view-master','view-pricing', 'view-analytics-full'].forEach(id => $(id).classList.add('hidden')); $(`tab-${tab}`).classList.add('active'); $(`view-${tab}`).classList.remove('hidden'); if(tab === 'pricing') loadPriceHistory(); if(tab === 'users') loadUsers(); if(tab === 'master') loadMasterData(); if(tab === 'analytics-full') initFilterChain(); }
-    async function loadAllShops() { const { data } = await sb.from('master_shop_list').select('*'); if(data) { data.forEach(s => { globalAdminShopMap[s.shop_code] = s; }); } }
-    window.switchSubTab = (subTab) => { ['national', 'regional', 'shop'].forEach(t => { $(`ana-tab-${t}`).classList.add('hidden'); $(`btn-tab-${t}`).classList.remove('active'); }); $(`ana-tab-${subTab}`).classList.remove('hidden'); $(`btn-tab-${subTab}`).classList.add('active'); }
-    function initFilterChain() { const directors = [...new Set(Object.values(globalAdminShopMap).map(s => s.director_name).filter(n => n))].sort(); $('ana_director').innerHTML = `<option value="">-- Tất cả --</option>` + directors.map(d => `<option value="${d}">${d}</option>`).join(''); updateFilterChain('director'); }
-    window.updateFilterChain = (level) => { const selDir = $('ana_director').value; const selSale = $('ana_sale').value; const selSVN = $('ana_svn').value; let filtered = Object.values(globalAdminShopMap); if(selDir) filtered = filtered.filter(s => s.director_name === selDir); if(level === 'director') { const sales = [...new Set(filtered.map(s => s.sale_name).filter(n => n))].sort(); $('ana_sale').innerHTML = `<option value="">-- Tất cả --</option>` + sales.map(s => `<option value="${s}">${s}</option>`).join(''); $('ana_sale').value = ""; } if($('ana_sale').value) filtered = filtered.filter(s => s.sale_name === $('ana_sale').value); if(level === 'director' || level === 'sale') { const svns = [...new Set(filtered.map(s => s.svn_code).filter(n => n))].sort(); $('ana_svn').innerHTML = `<option value="">-- Tất cả --</option>` + svns.map(s => `<option value="${s}">${s}</option>`).join(''); $('ana_svn').value = ""; } if($('ana_svn').value) filtered = filtered.filter(s => s.svn_code === $('ana_svn').value); const dvns = filtered.sort((a,b) => a.shop_code.localeCompare(b.shop_code)); $('ana_dvn').innerHTML = `<option value="">-- Tất cả Shop (${dvns.length}) --</option>` + dvns.map(s => `<option value="${s.shop_code}">${s.shop_code} - ${s.shop_name}</option>`).join(''); }
-    window.resetFilters = () => { $('ana_director').value = ""; updateFilterChain('director'); }
+    window.switchTab = (tab) => { 
+        document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active')); 
+        ['view-dashboard','view-users','view-master','view-pricing', 'view-analytics-full'].forEach(id => $(id).classList.add('hidden')); 
+        $(`tab-${tab}`).classList.add('active'); 
+        $(`view-${tab}`).classList.remove('hidden'); 
+        
+        // Auto Close Sidebar on Mobile
+        if(window.innerWidth < 768) { toggleSidebar(); }
+
+        if(tab === 'pricing') loadPriceHistory();
+        if(tab === 'users') loadUsers(); if(tab === 'master') loadMasterData(); if(tab === 'analytics-full') initFilterChain();
+    }
+    async function loadAllShops() { const { data } = await sb.from('master_shop_list').select('*');
+    if(data) { data.forEach(s => { globalAdminShopMap[s.shop_code] = s; }); } }
+    window.switchSubTab = (subTab) => { ['national', 'regional', 'shop'].forEach(t => { $(`ana-tab-${t}`).classList.add('hidden'); $(`btn-tab-${t}`).classList.remove('active'); });
+    $(`ana-tab-${subTab}`).classList.remove('hidden'); $(`btn-tab-${subTab}`).classList.add('active'); }
+    function initFilterChain() { const directors = [...new Set(Object.values(globalAdminShopMap).map(s => s.director_name).filter(n => n))].sort();
+    $('ana_director').innerHTML = `<option value="">-- Tất cả --</option>` + directors.map(d => `<option value="${d}">${d}</option>`).join(''); updateFilterChain('director');
+    }
+    window.updateFilterChain = (level) => { const selDir = $('ana_director').value; const selSale = $('ana_sale').value;
+    const selSVN = $('ana_svn').value; let filtered = Object.values(globalAdminShopMap); if(selDir) filtered = filtered.filter(s => s.director_name === selDir);
+    if(level === 'director') { const sales = [...new Set(filtered.map(s => s.sale_name).filter(n => n))].sort();
+    $('ana_sale').innerHTML = `<option value="">-- Tất cả --</option>` + sales.map(s => `<option value="${s}">${s}</option>`).join(''); $('ana_sale').value = "";
+    } if($('ana_sale').value) filtered = filtered.filter(s => s.sale_name === $('ana_sale').value); if(level === 'director' || level === 'sale') { const svns = [...new Set(filtered.map(s => s.svn_code).filter(n => n))].sort();
+    $('ana_svn').innerHTML = `<option value="">-- Tất cả --</option>` + svns.map(s => `<option value="${s}">${s}</option>`).join(''); $('ana_svn').value = "";
+    } if($('ana_svn').value) filtered = filtered.filter(s => s.svn_code === $('ana_svn').value); const dvns = filtered.sort((a,b) => a.shop_code.localeCompare(b.shop_code));
+    $('ana_dvn').innerHTML = `<option value="">-- Tất cả Shop (${dvns.length}) --</option>` + dvns.map(s => `<option value="${s.shop_code}">${s.shop_code} - ${s.shop_name}</option>`).join('');
+    }
+    window.resetFilters = () => { $('ana_director').value = ""; updateFilterChain('director');
+    }
 
     // --- DASHBOARD FILTER CHAIN ---
-    function initDashFilters() { const directors = [...new Set(Object.values(globalAdminShopMap).map(s => s.director_name).filter(n => n))].sort(); $('dash_director').innerHTML = `<option value="">-- Tất cả --</option>` + directors.map(d => `<option value="${d}">${d}</option>`).join(''); updateDashChain('director'); }
-    window.updateDashChain = (level) => { const selDir = $('dash_director').value; const selSale = $('dash_sale').value; const selSVN = $('dash_svn').value; let filtered = Object.values(globalAdminShopMap); if(selDir) filtered = filtered.filter(s => s.director_name === selDir); if(level === 'director') { const sales = [...new Set(filtered.map(s => s.sale_name).filter(n => n))].sort(); $('dash_sale').innerHTML = `<option value="">-- Tất cả --</option>` + sales.map(s => `<option value="${s}">${s}</option>`).join(''); $('dash_sale').value = ""; } if($('dash_sale').value) filtered = filtered.filter(s => s.sale_name === $('dash_sale').value); if(level === 'director' || level === 'sale') { const svns = [...new Set(filtered.map(s => s.svn_code).filter(n => n))].sort(); $('dash_svn').innerHTML = `<option value="">-- Tất cả --</option>` + svns.map(s => `<option value="${s}">${s}</option>`).join(''); $('dash_svn').value = ""; } if($('dash_svn').value) filtered = filtered.filter(s => s.svn_code === $('dash_svn').value); const dvns = filtered.sort((a,b) => a.shop_code.localeCompare(b.shop_code)); $('dash_dvn').innerHTML = `<option value="">-- Tất cả Shop (${dvns.length}) --</option>` + dvns.map(s => `<option value="${s.shop_code}">${s.shop_code} - ${s.shop_name}</option>`).join(''); filterDashboardData(); }
-    window.resetDashFilters = () => { $('dash_director').value = ""; $('dash_status').value = ""; updateDashChain('director'); }
-    window.filterDashboardData = () => { const selDir = $('dash_director').value; const selSale = $('dash_sale').value; const selSVN = $('dash_svn').value; const selDVN = $('dash_dvn').value; const selStatus = $('dash_status').value; let filteredData = [...pendingReportsCache]; if(selDir || selSale || selSVN || selDVN) { filteredData = filteredData.filter(r => { const shop = globalAdminShopMap[r.shop_code] || {}; const matchDir = selDir ? shop.director_name === selDir : true; const matchSale = selSale ? shop.sale_name === selSale : true; const matchSVN = selSVN ? shop.svn_code === selSVN : true; const matchDVN = selDVN ? r.shop_code === selDVN : true; return matchDir && matchSale && matchSVN && matchDVN; }); } if(selStatus) { filteredData = filteredData.filter(r => r.status === selStatus); } const totalRev = filteredData.reduce((s,r)=>s+safeVal(r.actual_revenue),0); let totalProfit = 0; filteredData.forEach(r => totalProfit += calcKPI(r).net); $('kpi_rev').innerText = fmn(totalRev); $('kpi_profit').innerText = fmn(totalProfit); $('submittedCount').innerText = `${filteredData.length} SHOP`; renderTable(filteredData); }
+    function initDashFilters() { const directors = [...new Set(Object.values(globalAdminShopMap).map(s => s.director_name).filter(n => n))].sort();
+    $('dash_director').innerHTML = `<option value="">-- Tất cả --</option>` + directors.map(d => `<option value="${d}">${d}</option>`).join(''); updateDashChain('director');
+    }
+    window.updateDashChain = (level) => { const selDir = $('dash_director').value; const selSale = $('dash_sale').value;
+    const selSVN = $('dash_svn').value; let filtered = Object.values(globalAdminShopMap); if(selDir) filtered = filtered.filter(s => s.director_name === selDir);
+    if(level === 'director') { const sales = [...new Set(filtered.map(s => s.sale_name).filter(n => n))].sort();
+    $('dash_sale').innerHTML = `<option value="">-- Tất cả --</option>` + sales.map(s => `<option value="${s}">${s}</option>`).join(''); $('dash_sale').value = "";
+    } if($('dash_sale').value) filtered = filtered.filter(s => s.sale_name === $('dash_sale').value); if(level === 'director' || level === 'sale') { const svns = [...new Set(filtered.map(s => s.svn_code).filter(n => n))].sort();
+    $('dash_svn').innerHTML = `<option value="">-- Tất cả --</option>` + svns.map(s => `<option value="${s}">${s}</option>`).join(''); $('dash_svn').value = "";
+    } if($('dash_svn').value) filtered = filtered.filter(s => s.svn_code === $('dash_svn').value); const dvns = filtered.sort((a,b) => a.shop_code.localeCompare(b.shop_code));
+    $('dash_dvn').innerHTML = `<option value="">-- Tất cả Shop (${dvns.length}) --</option>` + dvns.map(s => `<option value="${s.shop_code}">${s.shop_code} - ${s.shop_name}</option>`).join(''); filterDashboardData();
+    }
+    window.resetDashFilters = () => { $('dash_director').value = ""; $('dash_status').value = ""; updateDashChain('director');
+    }
+    window.filterDashboardData = () => { const selDir = $('dash_director').value; const selSale = $('dash_sale').value;
+    const selSVN = $('dash_svn').value; const selDVN = $('dash_dvn').value; const selStatus = $('dash_status').value; let filteredData = [...pendingReportsCache];
+    if(selDir || selSale || selSVN || selDVN) { filteredData = filteredData.filter(r => { const shop = globalAdminShopMap[r.shop_code] || {}; const matchDir = selDir ? shop.director_name === selDir : true; const matchSale = selSale ? shop.sale_name === selSale : true; const matchSVN = selSVN ? shop.svn_code === selSVN : true; const matchDVN = selDVN ? r.shop_code === selDVN : true; return matchDir && matchSale && matchSVN && matchDVN; });
+    } if(selStatus) { filteredData = filteredData.filter(r => r.status === selStatus); } const totalRev = filteredData.reduce((s,r)=>s+safeVal(r.actual_revenue),0); let totalProfit = 0;
+    filteredData.forEach(r => totalProfit += calcKPI(r).net); $('kpi_rev').innerText = fmn(totalRev); $('kpi_profit').innerText = fmn(totalProfit); $('submittedCount').innerText = `${filteredData.length} SHOP`; renderTable(filteredData);
+    }
 
     // --- ANALYTICS CORE ---
     async function loadAnalyticsFull() {
-        const monthInput = $('ana_month').value; if(!monthInput) return alert("Chưa chọn tháng!");
-        const trendRange = parseInt($('ana_trend_range').value) || 6; const selDVN = $('ana_dvn').value; const selectedFullDate = monthInput + "-01";
+        const monthInput = $('ana_month').value;
+        if(!monthInput) return alert("Chưa chọn tháng!");
+        const trendRange = parseInt($('ana_trend_range').value) || 6; const selDVN = $('ana_dvn').value;
+        const selectedFullDate = monthInput + "-01";
         $('ana_loading').classList.remove('hidden'); $('ana_content').classList.add('hidden');
         let monthsToFetch = []; let d = new Date(selectedFullDate);
         for(let i=0; i<trendRange; i++) { let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); monthsToFetch.push(`${y}-${m}-01`); d.setMonth(d.getMonth() - 1); } monthsToFetch.reverse();
@@ -259,25 +386,86 @@
         $('ana_loading').classList.add('hidden'); $('ana_content').classList.remove('hidden'); if(error) return alert("Lỗi: " + error.message);
         cachedAnalyticsData = (reports||[]).map(r => ({ ...r, ...(globalAdminShopMap[r.shop_code] || {}) })); const richReports = cachedAnalyticsData;
         renderNationalLevel(richReports, selectedFullDate, monthsToFetch);
-        let regionReports = richReports; let regionLabel = "Toàn quốc"; if($('ana_director').value) { regionReports = regionReports.filter(r => r.director_name === $('ana_director').value); regionLabel = $('ana_director').value; } else if($('ana_sale').value) { regionReports = regionReports.filter(r => r.sale_name === $('ana_sale').value); regionLabel = $('ana_sale').value; } else if($('ana_svn').value) { regionReports = regionReports.filter(r => r.svn_code === $('ana_svn').value); regionLabel = $('ana_svn').value; } $('lbl_Director_Name').innerText = regionLabel; renderRegionalLevel(regionReports, selectedFullDate, monthsToFetch);
-        if(selDVN) { const shopReports = richReports.filter(r => r.shop_code === selDVN); const shopInfo = globalAdminShopMap[selDVN]; $('lbl_Shop_Name').innerText = `${shopInfo?.shop_name} (${selDVN})`; $('shop_analysis_content').classList.remove('hidden'); $('shop_analysis_empty').classList.add('hidden'); renderShopLevel(shopReports, selectedFullDate, monthsToFetch, selDVN); switchSubTab('shop'); } else { $('lbl_Shop_Name').innerText = "---"; $('shop_analysis_content').classList.add('hidden'); $('shop_analysis_empty').classList.remove('hidden'); if($('ana_director').value) switchSubTab('regional'); else switchSubTab('national'); }
+        let regionReports = richReports; let regionLabel = "Toàn quốc"; if($('ana_director').value) { regionReports = regionReports.filter(r => r.director_name === $('ana_director').value);
+        regionLabel = $('ana_director').value; } else if($('ana_sale').value) { regionReports = regionReports.filter(r => r.sale_name === $('ana_sale').value); regionLabel = $('ana_sale').value;
+        } else if($('ana_svn').value) { regionReports = regionReports.filter(r => r.svn_code === $('ana_svn').value); regionLabel = $('ana_svn').value; } $('lbl_Director_Name').innerText = regionLabel;
+        renderRegionalLevel(regionReports, selectedFullDate, monthsToFetch);
+        if(selDVN) { const shopReports = richReports.filter(r => r.shop_code === selDVN); const shopInfo = globalAdminShopMap[selDVN];
+        $('lbl_Shop_Name').innerText = `${shopInfo?.shop_name} (${selDVN})`; $('shop_analysis_content').classList.remove('hidden'); $('shop_analysis_empty').classList.add('hidden'); renderShopLevel(shopReports, selectedFullDate, monthsToFetch, selDVN); switchSubTab('shop'); } else { $('lbl_Shop_Name').innerText = "---"; $('shop_analysis_content').classList.add('hidden'); $('shop_analysis_empty').classList.remove('hidden');
+        if($('ana_director').value) switchSubTab('regional'); else switchSubTab('national'); }
     }
     
-    const safeVal = (v) => { if(typeof v === 'number') return v; if(typeof v === 'string') return parseInt(v.replace(/[\.,]/g, '')) || 0; return 0; };
-    function calcKPI(r) { const rev = safeVal(r.actual_revenue) + safeVal(r.revenue_support); const cogs = safeVal(r.cost_goods); const op = safeVal(r.cost_op_depreciation_build) + safeVal(r.cost_op_depreciation_equip) + safeVal(r.cost_op_rent) + safeVal(r.cost_op_salary) + safeVal(r.cost_op_utility) + safeVal(r.cost_op_maintain) + safeVal(r.cost_op_interest) + safeVal(r.cost_log_commission) + safeVal(r.cost_log_kpi_bonus) + safeVal(r.cost_log_discount); const log = safeVal(r.cost_log_shipping) + safeVal(r.cost_log_pdi) + safeVal(r.cost_log_warranty) + safeVal(r.cost_log_warehouse_labor) + safeVal(r.cost_log_display_storage) + safeVal(r.cost_log_plate_support) + safeVal(r.cost_log_maintenance_free) + safeVal(r.cost_log_cskh); const mkt = safeVal(r.cost_op_ads_social) + safeVal(r.cost_op_offline_print) + safeVal(r.cost_op_promotion_gift) + safeVal(r.cost_op_event_store) + safeVal(r.cost_mkt_livestream) + safeVal(r.cost_mkt_kol_koc) + safeVal(r.cost_mkt_pr_branding) + safeVal(r.cost_mkt_roadshow) + safeVal(r.cost_mkt_testdrive) + safeVal(r.cost_mkt_school) + safeVal(r.cost_mkt_mobile_sales) + safeVal(r.cost_mkt_square) + safeVal(r.cost_mkt_opening) + safeVal(r.cost_mkt_other); const other = safeVal(r.cost_other_general); const totalExp = op + log + mkt + other + cogs; const net = rev - totalExp; return { rev, cogs, op, log, mkt, other, totalExp, net }; }
-    function renderNationalLevel(data, curMonth, months) { const curData = data.filter(r => r.report_month === curMonth); let totRev = 0, totNet = 0, profitCount = 0; curData.forEach(r => { const k=calcKPI(r); totRev+=k.rev; totNet+=k.net; if(k.net>0) profitCount++; }); $('nat_rev').innerText = fmn(totRev); $('nat_profit').innerText = fmn(totNet); $('nat_pct').innerText = curData.length ? Math.round((profitCount/curData.length)*100)+"%" : "0%"; $('nat_risk').innerText = (curData.length - profitCount); const trendRev = months.map(m => data.filter(r=>r.report_month===m).reduce((s,r)=>s+calcKPI(r).rev,0)); const trendNet = months.map(m => data.filter(r=>r.report_month===m).reduce((s,r)=>s+calcKPI(r).net,0)); renderChart('line', 'chart_A2_Trend', { labels:months, datasets: [{ label:'Doanh Thu', data:trendRev, borderColor:'#2563eb' }, { label:'Lợi Nhuận', data:trendNet, borderColor:'#16a34a' }] }); const agg = { op:0, log:0, mkt:0, other:0 }; curData.forEach(r => { const k=calcKPI(r); agg.op+=k.op; agg.log+=k.log; agg.mkt+=k.mkt; agg.other+=k.other; }); renderChart('doughnut', 'chart_A3_Cost', { labels:['Vận hành','Logistic','Marketing','Khác'], datasets:[{data:[agg.op, agg.log, agg.mkt, agg.other], backgroundColor:['#64748b','#3b82f6','#f97316','#a8a29e']}] }); const top10 = curData.map(r=>({name:r.shop_name, net:calcKPI(r).net})).sort((a,b)=>b.net-a.net).slice(0,10); renderChart('bar', 'chart_A4_Top10', { labels:top10.map(x=>x.name.substring(0,15)), datasets:[{label:'Lợi Nhuận', data:top10.map(x=>x.net), backgroundColor:'#16a34a'}] }); const provMap = {}; curData.forEach(r => { const p = r.province || "Unknown"; if(!provMap[p]) provMap[p]=0; provMap[p]+=calcKPI(r).net; }); const sortedProv = Object.entries(provMap).sort((a,b)=>b[1]-a[1]).slice(0,12); renderChart('bar', 'chart_A6_Map', { labels:sortedProv.map(x=>x[0]), datasets:[{label:'Lợi nhuận theo Tỉnh', data:sortedProv.map(x=>x[1]), backgroundColor:'#059669'}] }, {indexAxis:'y'}); const shopHistory = {}; data.forEach(r => { if(!shopHistory[r.shop_code]) shopHistory[r.shop_code]=[]; shopHistory[r.shop_code].push(r); }); let risks = []; Object.keys(shopHistory).forEach(code => { const hist = shopHistory[code].sort((a,b)=>a.report_month.localeCompare(b.report_month)); const recent = hist.slice(-3); if(recent.length >= 2 && recent.every(x => calcKPI(x).net < 0)) { risks.push({ code, name: globalAdminShopMap[code]?.shop_name, months: recent.length, totalLoss: recent.reduce((s,x)=>s+calcKPI(x).net,0) }); } }); $('body_A5_Risk').innerHTML = risks.sort((a,b)=>a.totalLoss - b.totalLoss).map(r => `<tr class="border-b hover:bg-red-50"><td class="p-2 font-bold">${r.code}</td><td class="p-2">${r.name}</td><td class="p-2 text-center text-red-600 font-bold">${r.months}</td><td class="p-2 text-right text-red-600 font-mono">${fmn(r.totalLoss)}</td></tr>`).join('') || `<tr><td colspan="4" class="p-4 text-center text-green-600">Tuyệt vời! Không có shop nào lỗ liên tiếp.</td></tr>`; }
-    function renderRegionalLevel(data, curMonth, months) { const curData = data.filter(r => r.report_month === curMonth); const sorted = curData.map(r=>({name:r.shop_code, net:calcKPI(r).net})).sort((a,b)=>b.net-a.net).slice(0,20); renderChart('bar', 'chart_B2_Rank', { labels: sorted.map(x=>x.name), datasets:[{label:'Lợi nhuận', data:sorted.map(x=>x.net), backgroundColor: sorted.map(x=>x.net>=0?'#16a34a':'#ef4444')}] }); $('body_B3_Heatmap').innerHTML = curData.map(r => { const k = calcKPI(r); const margin = k.rev? (k.net/k.rev)*100 : 0; const mktPct = k.rev? (k.mkt/k.rev)*100 : 0; return `<tr class="border-b hover:bg-gray-50"><td class="p-2 font-bold">${r.shop_name}</td><td class="p-2 text-right font-mono text-blue-600">${fmn(k.rev)}</td><td class="p-2 text-right font-black ${k.net>=0?'text-green-600':'text-red-600'}">${fmn(k.net)}</td><td class="p-2 text-center font-bold ${margin<0?'bg-red-100 text-red-600':'bg-green-100 text-green-600'}">${margin.toFixed(1)}%</td><td class="p-2 text-center">${r.sold_quantity||0}</td><td class="p-2 text-center text-xs">${mktPct.toFixed(1)}%</td></tr>`; }).join(''); const regTrendRev = months.map(m => data.filter(r=>r.report_month===m).reduce((s,r)=>s+calcKPI(r).rev,0)); const regTrendNet = months.map(m => data.filter(r=>r.report_month===m).reduce((s,r)=>s+calcKPI(r).net,0)); renderChart('line', 'chart_B4_Trend', { labels:months, datasets: [{ label:'Doanh Thu Vùng', data:regTrendRev, borderColor:'#8b5cf6' }, { label:'Lợi Nhuận Vùng', data:regTrendNet, borderColor:'#10b981' }] }); const mktData = curData.map(r=>({name:r.shop_code, mkt:calcKPI(r).mkt, rev:calcKPI(r).rev})).sort((a,b)=>b.mkt-a.mkt).slice(0,15); renderChart('bar', 'chart_B5_Mkt', { labels:mktData.map(d=>d.name), datasets:[{label:'Chi phí MKT', data:mktData.map(d=>d.mkt), backgroundColor:'#ef4444'}, {type:'line', label:'Doanh thu', data:mktData.map(d=>d.rev), borderColor:'#3b82f6', yAxisID:'y1'}]}, {scales:{y:{display:true}, y1:{display:true, position:'right', grid:{drawOnChartArea:false}}}}); const scatterData = curData.map(r => ({ x: calcKPI(r).rev, y: calcKPI(r).totalExp, shop: r.shop_code })); const maxV = Math.max(...scatterData.map(d=>d.x), ...scatterData.map(d=>d.y), 10000); renderChart('scatter', 'chart_B6_Scatter', { datasets:[{label:'Shop', data:scatterData, backgroundColor:'#f97316'}] }, { plugins: { annotation: { annotations: { line1: { type:'line', scaleID:'x', value:0, endValue:maxV, scaleID:'y', value:0, endValue:maxV, borderColor:'gray', borderDash:[5,5] } } } } }); }
-    function renderShopLevel(data, curMonth, months, code) { const r = data.find(x => x.report_month === curMonth); if(!r) return; const k = calcKPI(r); let totalSI = 0; let details = []; try{details = typeof r.sales_detail_json==='string'?JSON.parse(r.sales_detail_json):r.sales_detail_json||[];}catch(e){} if(details.length) { details.forEach(d => totalSI += (d.qty_si || 0)); } const openStock = safeVal(r.opening_stock); const totalSO = r.sold_quantity || 0; const endStock = openStock + totalSI - totalSO; const stockDiff = totalSI - totalSO; $('shop_kpi_inventory').innerHTML = `<div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-gray-400"><p class="text-[10px] font-black text-gray-400 uppercase">Tồn Đầu (Khai báo)</p><h4 class="text-3xl font-black text-slate-600 mt-1">${openStock} <span class="text-sm font-medium text-gray-400">xe</span></h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-[10px] font-black text-gray-400 uppercase">S.I (Nhập)</p><h4 class="text-3xl font-black text-blue-600 mt-1">${totalSI} <span class="text-sm font-medium text-gray-400">xe</span></h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-green-500"><p class="text-[10px] font-black text-gray-400 uppercase">S.O (Bán)</p><h4 class="text-3xl font-black text-green-600 mt-1">${totalSO} <span class="text-sm font-medium text-gray-400">xe</span></h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 ${endStock<5?'border-red-500':'border-purple-500'}"><p class="text-[10px] font-black text-gray-400 uppercase">Tồn Cuối (Real)</p><h4 class="text-3xl font-black ${endStock<5?'text-red-600':'text-purple-600'} mt-1">${endStock} <span class="text-sm font-medium text-gray-400">xe</span></h4></div>`; renderChart('bar', 'chart_C1_Waterfall', { labels: ['Doanh Thu', 'Giá Vốn', 'Vận Hành', 'Logistic', 'Marketing', 'Khác', 'LỢI NHUẬN'], datasets: [{ data: [k.rev, -k.cogs, -k.op, -k.log, -k.mkt, -k.other, k.net], backgroundColor: ['#3b82f6', '#ef4444', '#ef4444', '#ef4444', '#ef4444', '#ef4444', k.net>=0?'#16a34a':'#b91c1c'] }] }, {plugins:{legend:{display:false}}}); renderChart('doughnut', 'chart_C2_Donut', { labels:['Vận hành','Logistic','MKT','Khác'], datasets:[{data:[k.op, k.log, k.mkt, k.other], backgroundColor:['#64748b','#3b82f6','#f97316','#a8a29e']}]}); const sRev = months.map(m => { const x=data.find(d=>d.report_month===m); return x?calcKPI(x).rev:0; }); const sNet = months.map(m => { const x=data.find(d=>d.report_month===m); return x?calcKPI(x).net:0; }); renderChart('line', 'chart_C3_Trend', {labels:months, datasets:[{label:'Doanh Thu', data:sRev, borderColor:'#2563eb'}, {label:'Lợi Nhuận', data:sNet, borderColor:'#16a34a'}]}); if(totalSO > 0) { const fixed = k.op + k.mkt + k.other; const varUnit = (k.cogs + k.log) / totalSO; const asp = k.rev / totalSO; const contrib = asp - varUnit; const bep = contrib>0 ? Math.ceil(fixed/contrib) : 0; $('txt_C4_BEP').innerText = bep>0 ? `~${bep} xe` : "Lỗ gộp"; const maxQ = Math.max(totalSO*1.5, bep*1.5, 20); const pts=[], dRev=[], dCost=[]; for(let i=0; i<=maxQ; i+=Math.ceil(maxQ/10)) { pts.push(i); dRev.push(i*asp); dCost.push(fixed + i*varUnit); } renderChart('line', 'chart_C4_BEP', {labels:pts, datasets:[{label:'Doanh Thu', data:dRev, borderColor:'#16a34a'}, {label:'Tổng Chi Phí', data:dCost, borderColor:'#ef4444'}]}, {plugins:{annotation:{annotations:{pt:{type:'point', xValue:bep, yValue:bep*asp, backgroundColor:'orange', radius:6}}}}}); } else $('txt_C4_BEP').innerText = "Chưa bán hàng"; if(details.length) { details.sort((a,b)=>(b.qty_so||0)-(a.qty_so||0)); $('div_C5_Model').innerHTML = `<table class="w-full text-xs text-left" id="table_C5_Model"><thead class="bg-gray-100 font-bold sticky top-0"><tr><th class="p-2">Model</th><th class="p-2 text-center">SL Bán</th><th class="p-2 text-right">Doanh Thu</th></tr></thead><tbody>${details.map(d => `<tr class="border-b"><td class="p-2">${d.model}</td><td class="p-2 text-center font-bold">${d.qty_so||0}</td><td class="p-2 text-right font-mono">${fmn((d.qty_so||0)*(d.so||0))}</td></tr>`).join('')}</tbody></table>`; renderChart('bar', 'chart_C6_Stack', { labels: details.map(d=>d.model), datasets: [{label:'Bán (S.O)', data:details.map(d=>d.qty_so||0), backgroundColor:'#3b82f6'}, {label:'Nhập (S.I)', data:details.map(d=>d.qty_si||0), backgroundColor:'#f97316'}] }, {scales:{x:{stacked:true}, y:{stacked:true}}}); } else { $('div_C5_Model').innerHTML="<p class='p-4 text-gray-400 italic'>Chưa có dữ liệu model</p>"; } }
-    function renderChart(type, id, data, options={}) { const ctx = $(id).getContext('2d'); if(fullChartInstances[id]) fullChartInstances[id].destroy(); fullChartInstances[id] = new Chart(ctx, { type, data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'bottom', labels:{boxWidth:10, font:{size:10}}}, datalabels: { color: '#fff', font:{weight:'bold', size:9}, formatter: (v) => type==='pie'||type==='doughnut'||type==='bar'? (v>0?fmn(v):'') : '', display: type==='pie'||type==='doughnut' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmn(c.raw.y||c.raw)}` } }, ...options.plugins }, scales: options.scales || {}, ...options } }); }
-    window.exportAnalyticsExcel = () => { if(!cachedAnalyticsData || cachedAnalyticsData.length === 0) return alert("Chưa có dữ liệu! Vui lòng bấm 'Tải Dashboard' trước."); const wsDataAgg = [["Mã Shop", "Tên Shop", "Giám Đốc", "Khu Vực", "Doanh Thu", "Lợi Nhuận", "Tổng Chi Phí", "Margin %", "SL Bán", "Chi Phí MKT"]]; cachedAnalyticsData.forEach(r => { const k = calcKPI(r); const margin = k.rev > 0 ? (k.net/k.rev)*100 : 0; wsDataAgg.push([r.shop_code, r.shop_name, r.director_name, r.area, k.rev, k.net, k.totalExp, margin.toFixed(2), r.sold_quantity, k.mkt]); }); const wsDataDetail = [["Tháng", "Mã Shop", "Tên Shop", "Doanh Thu", "Giá Vốn", "Lợi Nhuận Gộp", "Vận Hành", "Logistic", "Marketing", "Khác", "Lợi Nhuận Ròng"]]; cachedAnalyticsData.forEach(r => { const k = calcKPI(r); wsDataDetail.push([r.report_month, r.shop_code, r.shop_name, k.rev, k.cogs, k.rev-k.cogs, k.op, k.log, k.mkt, k.other, k.net]); }); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsDataAgg), "Tong_Hop_Vung"); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsDataDetail), "Chi_Tiet_PL"); XLSX.writeFile(wb, `Bao_Cao_Phan_Tich_${$('ana_month').value}.xlsx`); }
+    const safeVal = (v) => { if(typeof v === 'number') return v;
+    if(typeof v === 'string') return parseInt(v.replace(/[\.,]/g, '')) || 0; return 0; };
+    function calcKPI(r) { const rev = safeVal(r.actual_revenue) + safeVal(r.revenue_support); const cogs = safeVal(r.cost_goods);
+    const op = safeVal(r.cost_op_depreciation_build) + safeVal(r.cost_op_depreciation_equip) + safeVal(r.cost_op_rent) + safeVal(r.cost_op_salary) + safeVal(r.cost_op_utility) + safeVal(r.cost_op_maintain) + safeVal(r.cost_op_interest) + safeVal(r.cost_log_commission) + safeVal(r.cost_log_kpi_bonus) + safeVal(r.cost_log_discount);
+    const log = safeVal(r.cost_log_shipping) + safeVal(r.cost_log_pdi) + safeVal(r.cost_log_warranty) + safeVal(r.cost_log_warehouse_labor) + safeVal(r.cost_log_display_storage) + safeVal(r.cost_log_plate_support) + safeVal(r.cost_log_maintenance_free) + safeVal(r.cost_log_cskh);
+    const mkt = safeVal(r.cost_op_ads_social) + safeVal(r.cost_op_offline_print) + safeVal(r.cost_op_promotion_gift) + safeVal(r.cost_op_event_store) + safeVal(r.cost_mkt_livestream) + safeVal(r.cost_mkt_kol_koc) + safeVal(r.cost_mkt_pr_branding) + safeVal(r.cost_mkt_roadshow) + safeVal(r.cost_mkt_testdrive) + safeVal(r.cost_mkt_school) + safeVal(r.cost_mkt_mobile_sales) + safeVal(r.cost_mkt_square) + safeVal(r.cost_mkt_opening) + safeVal(r.cost_mkt_other);
+    const other = safeVal(r.cost_other_general); const totalExp = op + log + mkt + other + cogs;
+    const net = rev - totalExp; return { rev, cogs, op, log, mkt, other, totalExp, net };
+    }
+    function renderNationalLevel(data, curMonth, months) { const curData = data.filter(r => r.report_month === curMonth);
+    let totRev = 0, totNet = 0, profitCount = 0; curData.forEach(r => { const k=calcKPI(r); totRev+=k.rev; totNet+=k.net; if(k.net>0) profitCount++; });
+    $('nat_rev').innerText = fmn(totRev); $('nat_profit').innerText = fmn(totNet); $('nat_pct').innerText = curData.length ? Math.round((profitCount/curData.length)*100)+"%" : "0%"; $('nat_risk').innerText = (curData.length - profitCount);
+    const trendRev = months.map(m => data.filter(r=>r.report_month===m).reduce((s,r)=>s+calcKPI(r).rev,0)); const trendNet = months.map(m => data.filter(r=>r.report_month===m).reduce((s,r)=>s+calcKPI(r).net,0));
+    renderChart('line', 'chart_A2_Trend', { labels:months, datasets: [{ label:'Doanh Thu', data:trendRev, borderColor:'#2563eb' }, { label:'Lợi Nhuận', data:trendNet, borderColor:'#16a34a' }] });
+    const agg = { op:0, log:0, mkt:0, other:0 }; curData.forEach(r => { const k=calcKPI(r); agg.op+=k.op; agg.log+=k.log; agg.mkt+=k.mkt; agg.other+=k.other; });
+    renderChart('doughnut', 'chart_A3_Cost', { labels:['Vận hành','Logistic','Marketing','Khác'], datasets:[{data:[agg.op, agg.log, agg.mkt, agg.other], backgroundColor:['#64748b','#3b82f6','#f97316','#a8a29e']}] }); const top10 = curData.map(r=>({name:r.shop_name, net:calcKPI(r).net})).sort((a,b)=>b.net-a.net).slice(0,10);
+    renderChart('bar', 'chart_A4_Top10', { labels:top10.map(x=>x.name.substring(0,15)), datasets:[{label:'Lợi Nhuận', data:top10.map(x=>x.net), backgroundColor:'#16a34a'}] }); const provMap = {};
+    curData.forEach(r => { const p = r.province || "Unknown"; if(!provMap[p]) provMap[p]=0; provMap[p]+=calcKPI(r).net; }); const sortedProv = Object.entries(provMap).sort((a,b)=>b[1]-a[1]).slice(0,12);
+    renderChart('bar', 'chart_A6_Map', { labels:sortedProv.map(x=>x[0]), datasets:[{label:'Lợi nhuận theo Tỉnh', data:sortedProv.map(x=>x[1]), backgroundColor:'#059669'}] }, {indexAxis:'y'}); const shopHistory = {};
+    data.forEach(r => { if(!shopHistory[r.shop_code]) shopHistory[r.shop_code]=[]; shopHistory[r.shop_code].push(r); }); let risks = [];
+    Object.keys(shopHistory).forEach(code => { const hist = shopHistory[code].sort((a,b)=>a.report_month.localeCompare(b.report_month)); const recent = hist.slice(-3); if(recent.length >= 2 && recent.every(x => calcKPI(x).net < 0)) { risks.push({ code, name: globalAdminShopMap[code]?.shop_name, months: recent.length, totalLoss: recent.reduce((s,x)=>s+calcKPI(x).net,0) }); } });
+    $('body_A5_Risk').innerHTML = risks.sort((a,b)=>a.totalLoss - b.totalLoss).map(r => `<tr class="border-b hover:bg-red-50"><td class="p-2 font-bold">${r.code}</td><td class="p-2">${r.name}</td><td class="p-2 text-center text-red-600 font-bold">${r.months}</td><td class="p-2 text-right text-red-600 font-mono">${fmn(r.totalLoss)}</td></tr>`).join('') ||
+    `<tr><td colspan="4" class="p-4 text-center text-green-600">Tuyệt vời! Không có shop nào lỗ liên tiếp.</td></tr>`;
+    }
+    function renderRegionalLevel(data, curMonth, months) { const curData = data.filter(r => r.report_month === curMonth);
+    const sorted = curData.map(r=>({name:r.shop_code, net:calcKPI(r).net})).sort((a,b)=>b.net-a.net).slice(0,20); renderChart('bar', 'chart_B2_Rank', { labels: sorted.map(x=>x.name), datasets:[{label:'Lợi nhuận', data:sorted.map(x=>x.net), backgroundColor: sorted.map(x=>x.net>=0?'#16a34a':'#ef4444')}] });
+    $('body_B3_Heatmap').innerHTML = curData.map(r => { const k = calcKPI(r); const margin = k.rev? (k.net/k.rev)*100 : 0; const mktPct = k.rev? (k.mkt/k.rev)*100 : 0; return `<tr class="border-b hover:bg-gray-50"><td class="p-2 font-bold">${r.shop_name}</td><td class="p-2 text-right font-mono text-blue-600">${fmn(k.rev)}</td><td class="p-2 text-right font-black ${k.net>=0?'text-green-600':'text-red-600'}">${fmn(k.net)}</td><td class="p-2 text-center font-bold ${margin<0?'bg-red-100 text-red-600':'bg-green-100 text-green-600'}">${margin.toFixed(1)}%</td><td class="p-2 text-center">${r.sold_quantity||0}</td><td class="p-2 text-center text-xs">${mktPct.toFixed(1)}%</td></tr>`; }).join('');
+    const regTrendRev = months.map(m => data.filter(r=>r.report_month===m).reduce((s,r)=>s+calcKPI(r).rev,0)); const regTrendNet = months.map(m => data.filter(r=>r.report_month===m).reduce((s,r)=>s+calcKPI(r).net,0));
+    renderChart('line', 'chart_B4_Trend', { labels:months, datasets: [{ label:'Doanh Thu Vùng', data:regTrendRev, borderColor:'#8b5cf6' }, { label:'Lợi Nhuận Vùng', data:regTrendNet, borderColor:'#10b981' }] });
+    const mktData = curData.map(r=>({name:r.shop_code, mkt:calcKPI(r).mkt, rev:calcKPI(r).rev})).sort((a,b)=>b.mkt-a.mkt).slice(0,15); renderChart('bar', 'chart_B5_Mkt', { labels:mktData.map(d=>d.name), datasets:[{label:'Chi phí MKT', data:mktData.map(d=>d.mkt), backgroundColor:'#ef4444'}, {type:'line', label:'Doanh thu', data:mktData.map(d=>d.rev), borderColor:'#3b82f6', yAxisID:'y1'}]}, {scales:{y:{display:true}, y1:{display:true, position:'right', grid:{drawOnChartArea:false}}}});
+    const scatterData = curData.map(r => ({ x: calcKPI(r).rev, y: calcKPI(r).totalExp, shop: r.shop_code })); const maxV = Math.max(...scatterData.map(d=>d.x), ...scatterData.map(d=>d.y), 10000);
+    renderChart('scatter', 'chart_B6_Scatter', { datasets:[{label:'Shop', data:scatterData, backgroundColor:'#f97316'}] }, { plugins: { annotation: { annotations: { line1: { type:'line', scaleID:'x', value:0, endValue:maxV, scaleID:'y', value:0, endValue:maxV, borderColor:'gray', borderDash:[5,5] } } } } });
+    }
+    function renderShopLevel(data, curMonth, months, code) { const r = data.find(x => x.report_month === curMonth); if(!r) return;
+    const k = calcKPI(r); let totalSI = 0; let details = [];
+    try{details = typeof r.sales_detail_json==='string'?JSON.parse(r.sales_detail_json):r.sales_detail_json||[];}catch(e){} if(details.length) { details.forEach(d => totalSI += (d.qty_si || 0)); } const openStock = safeVal(r.opening_stock);
+    const totalSO = r.sold_quantity || 0; const endStock = openStock + totalSI - totalSO; const stockDiff = totalSI - totalSO;
+    $('shop_kpi_inventory').innerHTML = `<div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-gray-400"><p class="text-[10px] font-black text-gray-400 uppercase">Tồn Đầu (Khai báo)</p><h4 class="text-3xl font-black text-slate-600 mt-1">${openStock} <span class="text-sm font-medium text-gray-400">xe</span></h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-[10px] font-black text-gray-400 uppercase">S.I (Nhập)</p><h4 class="text-3xl font-black text-blue-600 mt-1">${totalSI} <span class="text-sm font-medium text-gray-400">xe</span></h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-green-500"><p class="text-[10px] font-black text-gray-400 uppercase">S.O (Bán)</p><h4 class="text-3xl font-black text-green-600 mt-1">${totalSO} <span class="text-sm font-medium text-gray-400">xe</span></h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 ${endStock<5?'border-red-500':'border-purple-500'}"><p class="text-[10px] font-black text-gray-400 uppercase">Tồn Cuối (Real)</p><h4 class="text-3xl font-black ${endStock<5?'text-red-600':'text-purple-600'} mt-1">${endStock} <span class="text-sm font-medium text-gray-400">xe</span></h4></div>`;
+    renderChart('bar', 'chart_C1_Waterfall', { labels: ['Doanh Thu', 'Giá Vốn', 'Vận Hành', 'Logistic', 'Marketing', 'Khác', 'LỢI NHUẬN'], datasets: [{ data: [k.rev, -k.cogs, -k.op, -k.log, -k.mkt, -k.other, k.net], backgroundColor: ['#3b82f6', '#ef4444', '#ef4444', '#ef4444', '#ef4444', '#ef4444', k.net>=0?'#16a34a':'#b91c1c'] }] }, {plugins:{legend:{display:false}}});
+    renderChart('doughnut', 'chart_C2_Donut', { labels:['Vận hành','Logistic','MKT','Khác'], datasets:[{data:[k.op, k.log, k.mkt, k.other], backgroundColor:['#64748b','#3b82f6','#f97316','#a8a29e']}]});
+    const sRev = months.map(m => { const x=data.find(d=>d.report_month===m); return x?calcKPI(x).rev:0; });
+    const sNet = months.map(m => { const x=data.find(d=>d.report_month===m); return x?calcKPI(x).net:0; });
+    renderChart('line', 'chart_C3_Trend', {labels:months, datasets:[{label:'Doanh Thu', data:sRev, borderColor:'#2563eb'}, {label:'Lợi Nhuận', data:sNet, borderColor:'#16a34a'}]});
+    if(totalSO > 0) { const fixed = k.op + k.mkt + k.other; const varUnit = (k.cogs + k.log) / totalSO;
+    const asp = k.rev / totalSO; const contrib = asp - varUnit; const bep = contrib>0 ? Math.ceil(fixed/contrib) : 0;
+    $('txt_C4_BEP').innerText = bep>0 ? `~${bep} xe` : "Lỗ gộp"; const maxQ = Math.max(totalSO*1.5, bep*1.5, 20); const pts=[], dRev=[], dCost=[];
+    for(let i=0; i<=maxQ; i+=Math.ceil(maxQ/10)) { pts.push(i); dRev.push(i*asp); dCost.push(fixed + i*varUnit);
+    } renderChart('line', 'chart_C4_BEP', {labels:pts, datasets:[{label:'Doanh Thu', data:dRev, borderColor:'#16a34a'}, {label:'Tổng Chi Phí', data:dCost, borderColor:'#ef4444'}]}, {plugins:{annotation:{annotations:{pt:{type:'point', xValue:bep, yValue:bep*asp, backgroundColor:'orange', radius:6}}}}});
+    } else $('txt_C4_BEP').innerText = "Chưa bán hàng"; if(details.length) { details.sort((a,b)=>(b.qty_so||0)-(a.qty_so||0));
+    $('div_C5_Model').innerHTML = `<table class="w-full text-xs text-left" id="table_C5_Model"><thead class="bg-gray-100 font-bold sticky top-0"><tr><th class="p-2">Model</th><th class="p-2 text-center">SL Bán</th><th class="p-2 text-right">Doanh Thu</th></tr></thead><tbody>${details.map(d => `<tr class="border-b"><td class="p-2">${d.model}</td><td class="p-2 text-center font-bold">${d.qty_so||0}</td><td class="p-2 text-right font-mono">${fmn((d.qty_so||0)*(d.so||0))}</td></tr>`).join('')}</tbody></table>`;
+    renderChart('bar', 'chart_C6_Stack', { labels: details.map(d=>d.model), datasets: [{label:'Bán (S.O)', data:details.map(d=>d.qty_so||0), backgroundColor:'#3b82f6'}, {label:'Nhập (S.I)', data:details.map(d=>d.qty_si||0), backgroundColor:'#f97316'}] }, {scales:{x:{stacked:true}, y:{stacked:true}}});
+    } else { $('div_C5_Model').innerHTML="<p class='p-4 text-gray-400 italic'>Chưa có dữ liệu model</p>";
+    } }
+    function renderChart(type, id, data, options={}) { const ctx = $(id).getContext('2d'); if(fullChartInstances[id]) fullChartInstances[id].destroy();
+    fullChartInstances[id] = new Chart(ctx, { type, data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'bottom', labels:{boxWidth:10, font:{size:10}}}, datalabels: { color: '#fff', font:{weight:'bold', size:9}, formatter: (v) => type==='pie'||type==='doughnut'||type==='bar'? (v>0?fmn(v):'') : '', display: type==='pie'||type==='doughnut' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmn(c.raw.y||c.raw)}` } }, ...options.plugins }, scales: options.scales || {}, ...options } });
+    }
+    window.exportAnalyticsExcel = () => { if(!cachedAnalyticsData || cachedAnalyticsData.length === 0) return alert("Chưa có dữ liệu! Vui lòng bấm 'Tải Dashboard' trước.");
+    const wsDataAgg = [["Mã Shop", "Tên Shop", "Giám Đốc", "Khu Vực", "Doanh Thu", "Lợi Nhuận", "Tổng Chi Phí", "Margin %", "SL Bán", "Chi Phí MKT"]];
+    cachedAnalyticsData.forEach(r => { const k = calcKPI(r); const margin = k.rev > 0 ? (k.net/k.rev)*100 : 0; wsDataAgg.push([r.shop_code, r.shop_name, r.director_name, r.area, k.rev, k.net, k.totalExp, margin.toFixed(2), r.sold_quantity, k.mkt]); });
+    const wsDataDetail = [["Tháng", "Mã Shop", "Tên Shop", "Doanh Thu", "Giá Vốn", "Lợi Nhuận Gộp", "Vận Hành", "Logistic", "Marketing", "Khác", "Lợi Nhuận Ròng"]];
+    cachedAnalyticsData.forEach(r => { const k = calcKPI(r); wsDataDetail.push([r.report_month, r.shop_code, r.shop_name, k.rev, k.cogs, k.rev-k.cogs, k.op, k.log, k.mkt, k.other, k.net]); });
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsDataAgg), "Tong_Hop_Vung"); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsDataDetail), "Chi_Tiet_PL"); XLSX.writeFile(wb, `Bao_Cao_Phan_Tich_${$('ana_month').value}.xlsx`);
+    }
 
     // --- DASHBOARD: LỊCH SỬ NHẬP & FILTER ---
     let pendingReportsCache = [];
     async function loadDashboard() { 
-        const month = $('f_month').value + "-01"; 
+        const month = $('f_month').value + "-01";
         const { data: allReports, error } = await sb.from('financial_reports').select('*').eq('report_month', month).order('created_at', {ascending: false});
         if(error) return console.error(error);
-        pendingReportsCache = allReports || []; 
+        pendingReportsCache = allReports || [];
         filterDashboardData(); // Call filter initially to populate/render
     }
     
@@ -303,22 +491,43 @@
     }
 
     let isLossFilterActive = false;
-    window.toggleLossFilter = () => { isLossFilterActive = !isLossFilterActive; const btn = document.getElementById('btnLossFilter'); if(isLossFilterActive) { btn.className = "bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-lg flex items-center gap-1"; btn.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Hủy lọc`; const lossShops = pendingReportsCache.filter(r => calcKPI(r).net < 0).sort((a,b) => calcKPI(a).net - calcKPI(b).net); renderTable(lossShops); } else { btn.className = "bg-white border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1"; btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Xem Shop Báo Động (Lỗ)`; filterDashboardData(); } }
-    window.sortPendingByProfit = () => { const sorted = [...pendingReportsCache].sort((a,b) => calcKPI(a).net - calcKPI(b).net); renderTable(sorted); }
-    window.deleteReport = async (id) => { if(confirm("CẢNH BÁO: Xóa dữ liệu này sẽ mất vĩnh viễn. Tiếp tục?")) { await sb.from('financial_reports').delete().eq('report_id', id); loadDashboard(); } }
-    window.openDetailModal = (id) => { const r = pendingReportsCache.find(x => String(x.report_id) === String(id)); if(!r) return; const shop = globalAdminShopMap[r.shop_code] || {}; $('modalShopName').innerText = `${shop.shop_name || ''} (${r.shop_code})`; $('modalProvince').innerText = shop.province || 'Chưa cập nhật'; $('btnModalApprove').onclick = () => { approve(id); toggleModal('detailModal'); }; let details = []; try { details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json || []; } catch(e){} $('modalDetailBody').innerHTML = details.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-gray-400 bg-gray-50 rounded-lg italic">Không có dữ liệu chi tiết xe.</td></tr>` : details.map(d => `<tr class="border-b border-gray-50"><td class="p-3 font-bold text-slate-700">${d.model}</td><td class="p-3 text-center text-orange-600 font-bold bg-orange-50/30">${d.qty_si || 0}</td><td class="p-3 text-center text-blue-600 font-bold bg-blue-50/30">${d.qty_so || 0}</td><td class="p-3 text-right text-gray-400 text-xs">${fmn(d.si)}</td><td class="p-3 text-right text-gray-400 text-xs">${fmn(d.so)}</td><td class="p-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30">${fmn((d.qty_so||0) * (d.so||0))}</td></tr>`).join(''); $('modalTotalRev').innerText = fmn(safeVal(r.actual_revenue)) + " VNĐ"; const sumOp = safeVal(r.cost_op_depreciation_build) + safeVal(r.cost_op_depreciation_equip) + safeVal(r.cost_op_rent) + safeVal(r.cost_op_salary) + safeVal(r.cost_op_utility) + safeVal(r.cost_op_maintain) + safeVal(r.cost_op_interest) + safeVal(r.cost_log_commission) + safeVal(r.cost_log_kpi_bonus) + safeVal(r.cost_log_discount); const sumLog = safeVal(r.cost_log_shipping) + safeVal(r.cost_log_pdi) + safeVal(r.cost_log_warranty) + safeVal(r.cost_log_warehouse_labor) + safeVal(r.cost_log_display_storage) + safeVal(r.cost_log_plate_support) + safeVal(r.cost_log_maintenance_free) + safeVal(r.cost_log_cskh); const sumMkt = safeVal(r.cost_op_ads_social) + safeVal(r.cost_op_offline_print) + safeVal(r.cost_op_promotion_gift) + safeVal(r.cost_op_event_store) + safeVal(r.cost_mkt_livestream) + safeVal(r.cost_mkt_kol_koc) + safeVal(r.cost_mkt_pr_branding) + safeVal(r.cost_mkt_roadshow) + safeVal(r.cost_mkt_testdrive) + safeVal(r.cost_mkt_school) + safeVal(r.cost_mkt_mobile_sales) + safeVal(r.cost_mkt_square) + safeVal(r.cost_mkt_opening) + safeVal(r.cost_mkt_other); const sumOther = safeVal(r.cost_other_general); const totalRevenue = safeVal(r.actual_revenue) + safeVal(r.revenue_support); const totalCOGS = safeVal(r.cost_goods); const totalGrossProfit = totalRevenue - totalCOGS; const totalExpense = sumOp + sumLog + sumMkt + sumOther; const netProfit = totalGrossProfit - totalExpense; $('modalMainRev').innerText = fmn(totalRevenue); $('modalMainCOGS').innerText = fmn(totalCOGS); $('modalMainGross').innerText = fmn(totalGrossProfit); $('modalMainGross').className = `text-2xl font-black mt-1 ${totalGrossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`; $('modalCostOp').innerText = fmn(sumOp); $('modalCostLog').innerText = fmn(sumLog); $('modalCostMkt').innerText = fmn(sumMkt); $('modalCostOther').innerText = fmn(sumOther); $('modalTotalExpense').innerText = fmn(totalExpense); $('modalNetProfit').innerText = fmn(netProfit); $('modalNetProfit').className = `text-3xl font-black ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`; let totalSI = 0; if(details.length) details.forEach(d => totalSI += (d.qty_si || 0)); const opStock = safeVal(r.opening_stock); $('modalOpenStock').innerText = opStock; $('modalNetFlow').innerText = (totalSI - (r.sold_quantity||0)); $('modalEndStock').innerText = (opStock + totalSI - (r.sold_quantity||0)); toggleModal('detailModal'); }
-    window.toggleModal = (modalId) => { const body = document.querySelector('body'); const modal = document.getElementById(modalId); modal.classList.toggle('opacity-0'); modal.classList.toggle('pointer-events-none'); body.classList.toggle('modal-active'); }
-    window.approve = async (id) => { if(confirm("Duyệt?")) await sb.from('financial_reports').update({status:'approved'}).eq('report_id', id); loadDashboard(); }
+    window.toggleLossFilter = () => { isLossFilterActive = !isLossFilterActive; const btn = document.getElementById('btnLossFilter');
+    if(isLossFilterActive) { btn.className = "w-full md:w-auto bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold transition shadow-lg flex items-center justify-center gap-1";
+    btn.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Hủy lọc`; const lossShops = pendingReportsCache.filter(r => calcKPI(r).net < 0).sort((a,b) => calcKPI(a).net - calcKPI(b).net); renderTable(lossShops);
+    } else { btn.className = "w-full md:w-auto bg-white border border-red-200 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1";
+    btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Xem Shop Báo Động (Lỗ)`; filterDashboardData();
+    } }
+    window.sortPendingByProfit = () => { const sorted = [...pendingReportsCache].sort((a,b) => calcKPI(a).net - calcKPI(b).net); renderTable(sorted);
+    }
+    window.deleteReport = async (id) => { if(confirm("CẢNH BÁO: Xóa dữ liệu này sẽ mất vĩnh viễn. Tiếp tục?")) { await sb.from('financial_reports').delete().eq('report_id', id);
+    loadDashboard(); } }
+    window.openDetailModal = (id) => { const r = pendingReportsCache.find(x => String(x.report_id) === String(id));
+    if(!r) return; const shop = globalAdminShopMap[r.shop_code] || {}; $('modalShopName').innerText = `${shop.shop_name || ''} (${r.shop_code})`; $('modalProvince').innerText = shop.province ||
+    'Chưa cập nhật'; $('btnModalApprove').onclick = () => { approve(id); toggleModal('detailModal'); }; let details = [];
+    try { details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json || [];
+    } catch(e){} $('modalDetailBody').innerHTML = details.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-gray-400 bg-gray-50 rounded-lg italic">Không có dữ liệu chi tiết xe.</td></tr>` : details.map(d => `<tr class="border-b border-gray-50"><td class="p-3 font-bold text-slate-700">${d.model}</td><td class="p-3 text-center text-orange-600 font-bold bg-orange-50/30">${d.qty_si || 0}</td><td class="p-3 text-center text-blue-600 font-bold bg-blue-50/30">${d.qty_so || 0}</td><td class="p-3 text-right text-gray-400 text-xs">${fmn(d.si)}</td><td class="p-3 text-right text-gray-400 text-xs">${fmn(d.so)}</td><td class="p-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30">${fmn((d.qty_so||0) * (d.so||0))}</td></tr>`).join('');
+    $('modalTotalRev').innerText = fmn(safeVal(r.actual_revenue)) + " VNĐ"; const sumOp = safeVal(r.cost_op_depreciation_build) + safeVal(r.cost_op_depreciation_equip) + safeVal(r.cost_op_rent) + safeVal(r.cost_op_salary) + safeVal(r.cost_op_utility) + safeVal(r.cost_op_maintain) + safeVal(r.cost_op_interest) + safeVal(r.cost_log_commission) + safeVal(r.cost_log_kpi_bonus) + safeVal(r.cost_log_discount);
+    const sumLog = safeVal(r.cost_log_shipping) + safeVal(r.cost_log_pdi) + safeVal(r.cost_log_warranty) + safeVal(r.cost_log_warehouse_labor) + safeVal(r.cost_log_display_storage) + safeVal(r.cost_log_plate_support) + safeVal(r.cost_log_maintenance_free) + safeVal(r.cost_log_cskh);
+    const sumMkt = safeVal(r.cost_op_ads_social) + safeVal(r.cost_op_offline_print) + safeVal(r.cost_op_promotion_gift) + safeVal(r.cost_op_event_store) + safeVal(r.cost_mkt_livestream) + safeVal(r.cost_mkt_kol_koc) + safeVal(r.cost_mkt_pr_branding) + safeVal(r.cost_mkt_roadshow) + safeVal(r.cost_mkt_testdrive) + safeVal(r.cost_mkt_school) + safeVal(r.cost_mkt_mobile_sales) + safeVal(r.cost_mkt_square) + safeVal(r.cost_mkt_opening) + safeVal(r.cost_mkt_other);
+    const sumOther = safeVal(r.cost_other_general); const totalRevenue = safeVal(r.actual_revenue) + safeVal(r.revenue_support); const totalCOGS = safeVal(r.cost_goods); const totalGrossProfit = totalRevenue - totalCOGS;
+    const totalExpense = sumOp + sumLog + sumMkt + sumOther; const netProfit = totalGrossProfit - totalExpense; $('modalMainRev').innerText = fmn(totalRevenue);
+    $('modalMainCOGS').innerText = fmn(totalCOGS); $('modalMainGross').innerText = fmn(totalGrossProfit); $('modalMainGross').className = `text-2xl font-black mt-1 ${totalGrossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`;
+    $('modalCostOp').innerText = fmn(sumOp); $('modalCostLog').innerText = fmn(sumLog); $('modalCostMkt').innerText = fmn(sumMkt); $('modalCostOther').innerText = fmn(sumOther); $('modalTotalExpense').innerText = fmn(totalExpense); $('modalNetProfit').innerText = fmn(netProfit);
+    $('modalNetProfit').className = `text-3xl font-black ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`; let totalSI = 0;
+    if(details.length) details.forEach(d => totalSI += (d.qty_si || 0)); const opStock = safeVal(r.opening_stock); $('modalOpenStock').innerText = opStock; $('modalNetFlow').innerText = (totalSI - (r.sold_quantity||0));
+    $('modalEndStock').innerText = (opStock + totalSI - (r.sold_quantity||0)); toggleModal('detailModal'); }
+    window.toggleModal = (modalId) => { const body = document.querySelector('body');
+    const modal = document.getElementById(modalId); modal.classList.toggle('opacity-0'); modal.classList.toggle('pointer-events-none'); body.classList.toggle('modal-active'); }
+    window.approve = async (id) => { if(confirm("Duyệt?")) await sb.from('financial_reports').update({status:'approved'}).eq('report_id', id);
+    loadDashboard(); }
 
-    // --- USERS MANAGEMENT (AUTO MAPPING V23) ---
+    // --- USERS MANAGEMENT ---
     async function loadUsers() {
       const { data: users, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
       if(error || !users || users.length === 0) { $('userTableBody').innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Chưa có dữ liệu.</td></tr>`; return; }
       $('userTableBody').innerHTML = users.map(u => {
-          // AUTO MAPPING LOGIC: Find area by matching name
           const areaInfo = getAreaBySaleName(u.full_name);
           const areaDisplay = areaInfo ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200 text-xs font-bold">${areaInfo}</span>` : `<span class="text-gray-400 italic text-xs">Chưa gán shop</span>`;
-          
           return `<tr class="hover:bg-slate-50 border-b">
             <td class="p-4"><div class="font-bold text-slate-800">${u.full_name || '...'}</div><div class="text-xs text-gray-500">${u.email}</div></td>
             <td class="p-4">${areaDisplay}</td>
@@ -332,55 +541,57 @@
           </tr>`
       }).join('');
     }
-
-    // Helper: Find Area by Name
     function getAreaBySaleName(name) {
         if (!name) return null;
-        // Search in globalAdminShopMap
-        const shops = Object.values(globalAdminShopMap).filter(s => 
-            s.sale_name && s.sale_name.trim().toLowerCase() === name.trim().toLowerCase()
-        );
+        const shops = Object.values(globalAdminShopMap).filter(s => s.sale_name && s.sale_name.trim().toLowerCase() === name.trim().toLowerCase());
         if (shops.length === 0) return null;
-        // Get unique areas
         const areas = [...new Set(shops.map(s => s.area))];
         return areas.join(", ");
     }
-
-    // New User Edit Logic (Name only)
     window.openUserEdit = (id, name, role, email) => {
-        $('edit_u_id').value = id;
-        $('edit_u_name').value = name === 'null' ? '' : name;
-        $('edit_u_role').value = role;
-        $('edit_u_email').value = email;
-        toggleModal('userEditModal');
+        $('edit_u_id').value = id; $('edit_u_name').value = name === 'null' ? '' : name;
+        $('edit_u_role').value = role; $('edit_u_email').value = email; toggleModal('userEditModal');
     }
-
     window.submitUserEdit = async () => {
         const uid = $('edit_u_id').value;
-        const payload = {
-            full_name: $('edit_u_name').value,
-            role: $('edit_u_role').value
-        };
+        const payload = { full_name: $('edit_u_name').value, role: $('edit_u_role').value };
         const { error } = await sb.from('profiles').update(payload).eq('id', uid);
-        if(error) alert("Lỗi cập nhật: " + error.message);
-        else {
-            toggleModal('userEditModal');
-            loadUsers();
-        }
+        if(error) alert("Lỗi cập nhật: " + error.message); else { toggleModal('userEditModal'); loadUsers(); }
     }
-
     window.toggleApprove = async (uid, s) => { await sb.from('profiles').update({ is_approved: !s }).eq('id', uid); loadUsers(); }
     window.deleteUser = async (uid) => { if(confirm("CẢNH BÁO: Xóa người dùng này vĩnh viễn?")) { await sb.from('profiles').delete().eq('id', uid); loadUsers(); } }
 
-    $('excelFile').onchange = (e) => { const file=e.target.files[0]; if(!file)return; if(!confirm("XÓA CŨ & NẠP MỚI?")) return; $('uploadStatus').innerText="Đang xử lý..."; const reader=new FileReader(); reader.onload=async(e)=>{ try{ const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); const jsonData=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); const getVal=(row,...kws)=>{const keys=Object.keys(row);for(const k of keys){if(kws.some(kw=>k.toLowerCase().trim()===kw.toLowerCase()))return row[k];}return null;}; const dbData=jsonData.map(row=>({area:getVal(row,'khu vực'),svn_code:getVal(row,'mã khách hàng'),shop_code:getVal(row,'mã dvn'),shop_name:getVal(row,'tên đại lý'),director_name:getVal(row,'giám đốc'),sale_name:getVal(row,'sale phụ trách'),province:getVal(row,'tỉnh/thành'),shop_type:getVal(row,'loại hình')})).filter(x=>x.shop_code); await sb.from('master_shop_list').delete().neq('shop_code','PLACEHOLDER'); await sb.from('master_shop_list').insert(dbData); $('uploadStatus').innerText="Thành công!"; loadMasterData(); }catch(err){$('uploadStatus').innerText="Lỗi: "+err.message;} }; reader.readAsArrayBuffer(file); };
-    async function loadMasterData() { const { data } = await sb.from('master_shop_list').select('*').order('area', {ascending: true}); $('shopCount').innerText = `${data?.length || 0} Shop`; $('masterBody').innerHTML = (data||[]).map(r => `<tr class="hover:bg-slate-50 border-b"><td class="p-4 font-bold text-orange-600 text-xs uppercase">${r.area || '-'}</td><td class="p-4 text-xs font-mono text-slate-500">${r.svn_code || '-'}</td><td class="p-4 font-bold text-sm">${r.shop_code}</td><td class="p-4 text-sm font-bold text-slate-700">${r.shop_name}</td><td class="p-4 text-xs">${r.province || '-'}</td><td class="p-4 text-xs font-bold">${r.sale_name||'-'}</td><td class="p-4 text-center flex justify-center gap-2"><button onclick='openShopEdit(${JSON.stringify(r)})' class="text-blue-500 hover:bg-blue-50 p-2 rounded"><i class="fa-solid fa-pen"></i></button><button onclick="deleteShop('${r.shop_code}')" class="text-red-500 hover:bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button></td></tr>`).join(''); }
+    $('excelFile').onchange = (e) => { const file=e.target.files[0]; if(!file)return; if(!confirm("XÓA CŨ & NẠP MỚI?")) return;
+    $('uploadStatus').innerText="Đang xử lý..."; const reader=new FileReader(); reader.onload=async(e)=>{ try{ const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); const jsonData=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const getVal=(row,...kws)=>{const keys=Object.keys(row);for(const k of keys){if(kws.some(kw=>k.toLowerCase().trim()===kw.toLowerCase()))return row[k];}return null;}; const dbData=jsonData.map(row=>({area:getVal(row,'khu vực'),svn_code:getVal(row,'mã khách hàng'),shop_code:getVal(row,'mã dvn'),shop_name:getVal(row,'tên đại lý'),director_name:getVal(row,'giám đốc'),sale_name:getVal(row,'sale phụ trách'),province:getVal(row,'tỉnh/thành'),shop_type:getVal(row,'loại hình')})).filter(x=>x.shop_code);
+    await sb.from('master_shop_list').delete().neq('shop_code','PLACEHOLDER'); await sb.from('master_shop_list').insert(dbData); $('uploadStatus').innerText="Thành công!"; loadMasterData(); }catch(err){$('uploadStatus').innerText="Lỗi: "+err.message;} }; reader.readAsArrayBuffer(file); };
+    async function loadMasterData() { const { data } = await sb.from('master_shop_list').select('*').order('area', {ascending: true}); $('shopCount').innerText = `${data?.length || 0} Shop`;
+    $('masterBody').innerHTML = (data||[]).map(r => `<tr class="hover:bg-slate-50 border-b"><td class="p-4 font-bold text-orange-600 text-xs uppercase">${r.area || '-'}</td><td class="p-4 text-xs font-mono text-slate-500">${r.svn_code || '-'}</td><td class="p-4 font-bold text-sm">${r.shop_code}</td><td class="p-4 text-sm font-bold text-slate-700">${r.shop_name}</td><td class="p-4 text-xs">${r.province || '-'}</td><td class="p-4 text-xs font-bold">${r.sale_name||'-'}</td><td class="p-4 text-center flex justify-center gap-2"><button onclick='openShopEdit(${JSON.stringify(r)})' class="text-blue-500 hover:bg-blue-50 p-2 rounded"><i class="fa-solid fa-pen"></i></button><button onclick="deleteShop('${r.shop_code}')" class="text-red-500 hover:bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+    }
     window.deleteShop = async (code) => { if(confirm(`Xóa Shop ${code}?`)) { await sb.from('master_shop_list').delete().eq('shop_code', code); loadMasterData(); } }
-    window.openShopEdit = (s) => { $('edit_s_code').value = s.shop_code; $('edit_s_name').value = s.shop_name || ''; $('edit_s_area').value = s.area || ''; $('edit_s_svn').value = s.svn_code || ''; $('edit_s_province').value = s.province || ''; $('edit_s_sale').value = s.sale_name || ''; toggleModal('shopEditModal'); }
-    window.submitShopEdit = async () => { const payload = { shop_name: $('edit_s_name').value, area: $('edit_s_area').value, svn_code: $('edit_s_svn').value, province: $('edit_s_province').value, sale_name: $('edit_s_sale').value }; const { error } = await sb.from('master_shop_list').update(payload).eq('shop_code', $('edit_s_code').value); if(error) alert("Lỗi: " + error.message); else { toggleModal('shopEditModal'); loadMasterData(); } }
-    $('priceFile').onchange = (e) => { const file = e.target.files[0]; if(!file) return; $('priceStatus').innerText = "Đang phân tích file..."; const reader = new FileReader(); reader.onload = async (e) => { try { const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'}); const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); const getVal = (row, ...kws) => { const keys = Object.keys(row); for(const k of keys) if(kws.some(kw => k.toLowerCase().includes(kw))) return row[k]; return null; }; const dbData = jsonData.map(row => ({ report_month: formatMonth(getVal(row, 'tháng', 'month', 'date')), model: getVal(row, 'model', 'loại xe', 'tên xe'), import_price: getVal(row, 'giá nhập', 'cost', 'import') || 0, selling_price: getVal(row, 'giá bán', 'price', 'sell') || 0 })).filter(x => x.report_month && x.model); if(dbData.length === 0) { $('priceStatus').innerText = "File trống!"; return; } const monthsInFile = [...new Set(dbData.map(item => item.report_month))]; if(!confirm(`Xóa giá cũ tháng ${monthsInFile.join(', ')} và nạp mới?`)) { $('priceStatus').innerText = "Đã hủy."; return; } for (const m of monthsInFile) { await sb.from('monthly_product_prices').delete().eq('report_month', m); } const { error } = await sb.from('monthly_product_prices').insert(dbData); if(error) $('priceStatus').innerText = "Lỗi: " + error.message; else { $('priceStatus').innerText = "✅ Thành công!"; loadPriceHistory(); } } catch(err) { $('priceStatus').innerText = "Lỗi file: " + err.message; } }; reader.readAsArrayBuffer(file); };
-    function formatMonth(raw) { if(!raw) return ""; if (!isNaN(raw) || (typeof raw === 'string' && raw.length <= 2)) { let m = parseInt(raw); if (m > 0 && m <= 12) { const y = new Date().getFullYear(); return `${y}-${String(m).padStart(2, '0')}`; } } if(typeof raw === 'string') return raw.trim(); return raw; }
-    async function loadPriceHistory() { const filterM = $('search_price_month').value; let q = sb.from('monthly_product_prices').select('*').order('report_month', {ascending:false}).order('model'); if(filterM) q = q.eq('report_month', filterM); const { data } = await q; if(data) $('priceBody').innerHTML = data.map(r => `<tr class="hover:bg-slate-50 border-b"><td class="p-4 font-bold text-slate-800">${r.report_month}</td><td class="p-4 font-bold text-slate-600">${r.model}</td><td class="p-4 text-right text-red-600 font-mono">${fmn(r.import_price)}</td><td class="p-4 text-right text-blue-600 font-mono">${fmn(r.selling_price)}</td><td class="p-4 text-center"><button onclick="openPriceEdit('${r.report_month}', '${r.model}', ${r.import_price}, ${r.selling_price})" class="text-blue-500 bg-blue-50 p-2 rounded"><i class="fa-solid fa-pen"></i></button> <button onclick="deletePrice('${r.report_month}', '${r.model}')" class="text-red-500 bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button></td></tr>`).join(''); }
-    let currentEditPrice = {}; window.openPriceEdit = (m, mo, c, p) => { currentEditPrice={month:m, model:mo}; $('edit_p_key').value=`${m}-${mo}`; $('edit_p_cost').value=c; $('edit_p_price').value=p; toggleModal('priceEditModal'); }; window.submitPriceEdit = async () => { await sb.from('monthly_product_prices').update({ import_price: parseFloat($('edit_p_cost').value)||0, selling_price: parseFloat($('edit_p_price').value)||0 }).match({ report_month: currentEditPrice.month, model: currentEditPrice.model }); toggleModal('priceEditModal'); loadPriceHistory(); }
+    window.openShopEdit = (s) => { $('edit_s_code').value = s.shop_code; $('edit_s_name').value = s.shop_name || '';
+    $('edit_s_area').value = s.area || ''; $('edit_s_svn').value = s.svn_code || ''; $('edit_s_province').value = s.province || ''; $('edit_s_sale').value = s.sale_name || ''; toggleModal('shopEditModal'); }
+    window.submitShopEdit = async () => { const payload = { shop_name: $('edit_s_name').value, area: $('edit_s_area').value, svn_code: $('edit_s_svn').value, province: $('edit_s_province').value, sale_name: $('edit_s_sale').value };
+    const { error } = await sb.from('master_shop_list').update(payload).eq('shop_code', $('edit_s_code').value); if(error) alert("Lỗi: " + error.message); else { toggleModal('shopEditModal'); loadMasterData(); } }
+    $('priceFile').onchange = (e) => { const file = e.target.files[0]; if(!file) return;
+    $('priceStatus').innerText = "Đang phân tích file..."; const reader = new FileReader();
+    reader.onload = async (e) => { try { const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'}); const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+    const getVal = (row, ...kws) => { const keys = Object.keys(row); for(const k of keys) if(kws.some(kw => k.toLowerCase().includes(kw))) return row[k];
+    return null; }; const dbData = jsonData.map(row => ({ report_month: formatMonth(getVal(row, 'tháng', 'month', 'date')), model: getVal(row, 'model', 'loại xe', 'tên xe'), import_price: getVal(row, 'giá nhập', 'cost', 'import') || 0, selling_price: getVal(row, 'giá bán', 'price', 'sell') || 0 })).filter(x => x.report_month && x.model);
+    if(dbData.length === 0) { $('priceStatus').innerText = "File trống!"; return; } const monthsInFile = [...new Set(dbData.map(item => item.report_month))];
+    if(!confirm(`Xóa giá cũ tháng ${monthsInFile.join(', ')} và nạp mới?`)) { $('priceStatus').innerText = "Đã hủy."; return;
+    } for (const m of monthsInFile) { await sb.from('monthly_product_prices').delete().eq('report_month', m); } const { error } = await sb.from('monthly_product_prices').insert(dbData);
+    if(error) $('priceStatus').innerText = "Lỗi: " + error.message; else { $('priceStatus').innerText = "✅ Thành công!"; loadPriceHistory();
+    } } catch(err) { $('priceStatus').innerText = "Lỗi file: " + err.message; } }; reader.readAsArrayBuffer(file); };
+    function formatMonth(raw) { if(!raw) return ""; if (!isNaN(raw) || (typeof raw === 'string' && raw.length <= 2)) { let m = parseInt(raw);
+    if (m > 0 && m <= 12) { const y = new Date().getFullYear(); return `${y}-${String(m).padStart(2, '0')}`; } } if(typeof raw === 'string') return raw.trim(); return raw; }
+    async function loadPriceHistory() { const filterM = $('search_price_month').value; let q = sb.from('monthly_product_prices').select('*').order('report_month', {ascending:false}).order('model');
+    if(filterM) q = q.eq('report_month', filterM); const { data } = await q;
+    if(data) $('priceBody').innerHTML = data.map(r => `<tr class="hover:bg-slate-50 border-b"><td class="p-4 font-bold text-slate-800">${r.report_month}</td><td class="p-4 font-bold text-slate-600">${r.model}</td><td class="p-4 text-right text-red-600 font-mono">${fmn(r.import_price)}</td><td class="p-4 text-right text-blue-600 font-mono">${fmn(r.selling_price)}</td><td class="p-4 text-center"><button onclick="openPriceEdit('${r.report_month}', '${r.model}', ${r.import_price}, ${r.selling_price})" class="text-blue-500 bg-blue-50 p-2 rounded"><i class="fa-solid fa-pen"></i></button> <button onclick="deletePrice('${r.report_month}', '${r.model}')" class="text-red-500 bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+    }
+    let currentEditPrice = {}; window.openPriceEdit = (m, mo, c, p) => { currentEditPrice={month:m, model:mo}; $('edit_p_key').value=`${m}-${mo}`; $('edit_p_cost').value=c;
+    $('edit_p_price').value=p; toggleModal('priceEditModal'); }; window.submitPriceEdit = async () => { await sb.from('monthly_product_prices').update({ import_price: parseFloat($('edit_p_cost').value)||0, selling_price: parseFloat($('edit_p_price').value)||0 }).match({ report_month: currentEditPrice.month, model: currentEditPrice.model });
+    toggleModal('priceEditModal'); loadPriceHistory(); }
     window.deletePrice = async (m, mo) => { if(confirm(`Xóa giá?`)) { await sb.from('monthly_product_prices').delete().match({ report_month: m, model: mo }); loadPriceHistory(); } }
 
     init();

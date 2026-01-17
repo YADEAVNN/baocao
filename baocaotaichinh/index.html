@@ -2,8 +2,9 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>YADEA Sales Portal V14 (Mobile Optimized)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>YADEA Sales Portal V14 (UI Fixed)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -30,7 +31,7 @@
     
     .form-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
     
-    /* MOBILE OPTIMIZATION: Tăng size font và padding để dễ bấm trên điện thoại */
+    /* MOBILE OPTIMIZATION */
     .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
     .form-input:focus { border-color: #FF4500; box-shadow: 0 0 0 3px rgba(255,69,0,0.1); }
     .form-input[readonly] { background-color: #f3f4f6; color: #64748b; cursor: not-allowed; }
@@ -89,7 +90,6 @@
     </div>
 
     <aside id="sidebarMobile" class="fixed inset-y-0 left-0 w-64 bg-[#111827] flex-shrink-0 flex flex-col border-r border-gray-800 z-50 shadow-xl transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 pt-14 md:pt-0">
-        
         <div class="md:hidden absolute top-3 right-3">
              <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white p-2">
                 <i class="fa-solid fa-xmark text-xl"></i>
@@ -144,18 +144,9 @@
                             <div><label class="form-label">Tháng Báo Cáo</label><input type="month" id="report_month" required class="form-input font-bold bg-slate-50"></div>
                             
                             <div class="p-3 bg-blue-50/50 border border-blue-100 rounded-lg space-y-3">
-                                <div>
-                                    <label class="form-label text-blue-700">1. Tỉnh / Thành Phố</label>
-                                    <select id="f_province" class="form-input font-bold text-slate-700 bg-white" onchange="updateSVNOptions()"><option value="">-- Chọn Tỉnh --</option></select>
-                                </div>
-                                <div>
-                                    <label class="form-label text-blue-700">2. Mã SVN (Lọc phụ)</label>
-                                    <select id="f_svn" class="form-input font-bold text-slate-700 bg-white" onchange="updateDVNOptions()" disabled><option value="">-- Tất cả SVN --</option></select>
-                                </div>
-                                <div>
-                                    <label class="form-label text-blue-700">3. Cửa Hàng (Mã DVN)</label>
-                                    <select id="shop_code" required class="form-input font-bold text-blue-800 bg-white" disabled><option value="">-- Chọn Shop --</option></select>
-                                </div>
+                                <div><label class="form-label text-blue-700">1. Tỉnh / Thành Phố</label><select id="f_province" class="form-input font-bold text-slate-700 bg-white" onchange="updateSVNOptions()"><option value="">-- Chọn Tỉnh --</option></select></div>
+                                <div><label class="form-label text-blue-700">2. Mã SVN (Lọc phụ)</label><select id="f_svn" class="form-input font-bold text-slate-700 bg-white" onchange="updateDVNOptions()" disabled><option value="">-- Tất cả SVN --</option></select></div>
+                                <div><label class="form-label text-blue-700">3. Cửa Hàng (Mã DVN)</label><select id="shop_code" required class="form-input font-bold text-blue-800 bg-white" disabled><option value="">-- Chọn Shop --</option></select></div>
                             </div>
                             
                             <div id="shop_info_display" class="hidden p-3 bg-green-50 border border-green-200 rounded-lg"></div>
@@ -175,14 +166,14 @@
                         </div>
                     </div>
 
-                    <div class="xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-orange-200 h-full relative overflow-hidden">
+                    <div class="xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-orange-200 xl:h-full relative">
                         <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
                             <div><h3 class="text-lg font-black text-slate-800 uppercase flex items-center gap-2"><i class="fa-solid fa-list-ol text-orange-600"></i> Bảng Nhập (S.I) & Xuất (S.O)</h3><p class="text-xs text-gray-500">Chi tiết theo từng dòng xe.</p></div>
                             <button type="button" onclick="loadMonthlyModels()" class="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition"><i class="fa-solid fa-cloud-download mr-2"></i> Tải Bảng Giá Admin</button>
                         </div>
                         <div class="overflow-x-auto bg-slate-50 rounded-xl border border-gray-200 min-h-[300px]">
-                             <table class="w-full text-left text-sm whitespace-nowrap" id="salesDetailTable">
+                            <table class="w-full text-left text-sm whitespace-nowrap" id="salesDetailTable">
                                 <thead class="bg-slate-100 text-[10px] font-black text-gray-500 uppercase">
                                     <tr>
                                         <th class="p-3 align-middle min-w-[150px]">Model Xe</th>
@@ -207,7 +198,9 @@
                                 </tfoot>
                             </table>
                         </div>
-                        <div class="mt-8 flex justify-end"><button type="button" onclick="switchView('costs')" class="w-full md:w-auto bg-[#111827] text-white px-8 py-4 rounded-xl font-bold text-sm shadow-xl hover:bg-slate-800 transition flex items-center justify-center gap-2">Tiếp Tục: Nhập Chi Phí <i class="fa-solid fa-arrow-right"></i></button></div>
+                        <div class="mt-8 flex justify-end">
+                            <button type="button" onclick="switchView('costs')" class="w-full md:w-auto bg-[#111827] text-white px-8 py-4 rounded-xl font-bold text-sm shadow-xl hover:bg-slate-800 transition flex items-center justify-center gap-2">Tiếp Tục: Nhập Chi Phí <i class="fa-solid fa-arrow-right"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -312,7 +305,7 @@
             <div id="chart_kpi_cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
 
             <div id="shop-charts-container" class="space-y-6 hidden">
-                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-sm font-black text-slate-800 uppercase mb-6 border-b pb-4">💰 Sức Khỏe Tài Chính (Waterfall)</h4><div class="h-[350px] w-full"><canvas id="chartWaterfall"></canvas></div></div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-6 border-b pb-4"><h4 class="text-sm font-black text-slate-800 uppercase">📈 Phân Tích Điểm Hòa Vốn</h4><div class="text-right"><span class="block text-[10px] text-gray-400 uppercase font-bold">Điểm hòa vốn dự kiến</span><span id="txt_breakeven" class="text-xl font-black text-orange-600">--- xe</span></div></div><div class="h-[350px] w-full"><canvas id="chartBreakeven"></canvas></div></div>
                  </div>
@@ -330,7 +323,7 @@
             
             <div id="regional-charts-container" class="hidden space-y-8">
                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">Xếp Hạng Shop Trong Vùng</h4><div class="h-[300px]"><canvas id="chart_Reg_Rank"></canvas></div></div>
+                      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">Xếp Hạng Shop Trong Vùng</h4><div class="h-[300px]"><canvas id="chart_Reg_Rank"></canvas></div></div>
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">Hiệu Quả Marketing</h4><div class="h-[300px]"><canvas id="chart_Reg_Mkt"></canvas></div></div>
                  </div>
             </div>
@@ -366,7 +359,6 @@
     let currentUser = null; 
     let assignedShopCodes = []; 
     let fullChartInstances = {};
-
     // --- MOBILE SIDEBAR TOGGLE ---
     function toggleSidebar() {
         const sb = document.getElementById('sidebarMobile');
@@ -463,7 +455,6 @@
 
         assignedShopCodes = myShops.map(s => s.shop_code);
         globalAssignedShops = myShops;
-
         const provinces = [...new Set(myShops.map(s => s.province).filter(n => n))].sort();
         $('f_province').innerHTML = `<option value="">-- Chọn Tỉnh (${provinces.length}) --</option>` + provinces.map(p => `<option value="${p}">${p}</option>`).join('');
         if (myShops.length === 1) {
@@ -474,7 +465,8 @@
             updateDVNOptions();
             $('shop_code').value = s.shop_code;
             updateShopInfo();
-            $('f_province').disabled = true; $('f_svn').disabled = true; $('shop_code').disabled = true;
+            $('f_province').disabled = true; $('f_svn').disabled = true;
+            $('shop_code').disabled = true;
         }
     }
 
@@ -530,7 +522,8 @@
         if(!month) { alert("Vui lòng chọn Tháng Báo Cáo trước!"); return; }
         const { data, error } = await sb.from('monthly_product_prices').select('*').eq('report_month', month);
         if(error || !data || data.length === 0) { alert(`Chưa có bảng giá Admin tháng ${month}!`); currentAdminPrices = []; }
-        else { currentAdminPrices = data; if($('salesDetailBody').children.length === 0) addSaleRow(); alert(`Đã tải ${data.length} model.`); }
+        else { currentAdminPrices = data; if($('salesDetailBody').children.length === 0) addSaleRow();
+        alert(`Đã tải ${data.length} model.`); }
         renderModelOptionsAll();
     }
     function getModelOptionsHtml(selectedModel = "") {
@@ -542,7 +535,9 @@
     window.addSaleRow = (data = {}) => {
         const tr = document.createElement('tr');
         tr.className = "bg-white border-b border-gray-100 hover:bg-gray-50 transition";
-        tr.innerHTML = `<td class="p-2"><select class="model-select w-full bg-white border border-gray-200 rounded p-1.5 text-xs font-bold outline-none focus:border-orange-500" onchange="onModelChange(this)">${getModelOptionsHtml(data.model)}</select></td><td class="p-2 border-l border-orange-100"><input type="text" class="qty-si-input w-full text-center border border-orange-200 rounded p-1.5 text-xs font-bold text-orange-700 bg-orange-50" value="${data.qty_si || 0}" oninput="formatCurrency(this)"></td><td class="p-2 border-l border-blue-100"><input type="text" class="qty-so-input w-full text-center border border-blue-200 rounded p-1.5 text-xs font-bold text-blue-700 bg-blue-50" value="${data.qty_so || 0}" oninput="formatCurrency(this)"></td><td class="p-2"><input type="text" class="si-input w-full text-right text-gray-400 bg-transparent border-none text-xs" value="${fmn(data.si || 0)}" readonly></td><td class="p-2"><input type="text" class="so-input w-full text-right border border-gray-200 text-gray-700 rounded p-1.5 text-xs font-bold" value="${fmn(data.so || 0)}" oninput="formatCurrency(this)"></td><td class="p-2 text-right font-bold text-orange-600 bg-orange-50/50 text-xs total-si-row border-l border-orange-100">0</td><td class="p-2 text-right font-bold text-blue-600 bg-blue-50/50 text-xs total-so-row border-l border-blue-100">0</td><td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove(); calcAll();" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>`;
+        tr.innerHTML = `<td class="p-2"><select class="model-select w-full bg-white border border-gray-200 rounded p-1.5 text-xs font-bold outline-none focus:border-orange-500" onchange="onModelChange(this)">${getModelOptionsHtml(data.model)}</select></td><td class="p-2 border-l border-orange-100"><input type="text" class="qty-si-input w-full text-center border border-orange-200 rounded p-1.5 text-xs font-bold text-orange-700 bg-orange-50" value="${data.qty_si || 0}" oninput="formatCurrency(this)"></td><td class="p-2 border-l border-blue-100"><input type="text" class="qty-so-input w-full text-center border border-blue-200 rounded p-1.5 text-xs font-bold text-blue-700 bg-blue-50" value="${data.qty_so || 0}" oninput="formatCurrency(this)"></td><td class="p-2"><input type="text" class="si-input w-full text-right text-gray-400 bg-transparent border-none text-xs" value="${fmn(data.si || 0)}" readonly></td><td class="p-2"><input type="text" class="so-input w-full text-right border border-gray-200 text-gray-700 rounded p-1.5 text-xs font-bold" value="${fmn(data.so ||
+        0)}" oninput="formatCurrency(this)"></td><td class="p-2 text-right font-bold text-orange-600 bg-orange-50/50 text-xs total-si-row border-l border-orange-100">0</td><td class="p-2 text-right font-bold text-blue-600 bg-blue-50/50 text-xs total-so-row border-l border-blue-100">0</td><td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove();
+        calcAll();" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>`;
         $('salesDetailBody').appendChild(tr); if(data.model) calcRow(tr.querySelector('input')); 
     };
     window.onModelChange = (selectEl) => { const opt = selectEl.options[selectEl.selectedIndex]; const row = selectEl.closest('tr'); if(opt.value) { row.querySelector('.si-input').value = fmn(opt.getAttribute('data-si')); const soInput = row.querySelector('.so-input'); if(parseNumber(soInput.value) == 0) soInput.value = fmn(opt.getAttribute('data-so')); } calcRow(selectEl); };
@@ -551,7 +546,6 @@
     window.calcAll = () => { let totalRev = 0, totalImportVal = 0, totalSoldQty = 0;
     let totalCOGS_Real = 0; document.querySelectorAll('#salesDetailBody tr').forEach(tr => { const qtySI = parseNumber(tr.querySelector('.qty-si-input').value); const qtySO = parseNumber(tr.querySelector('.qty-so-input').value); const so = parseNumber(tr.querySelector('.so-input').value); const si = parseNumber(tr.querySelector('.si-input').value); totalImportVal += (qtySI * si); totalRev += (qtySO * so); totalCOGS_Real += (qtySO * si); totalSoldQty += qtySO; });
     if($('total_cal_import_val')) $('total_cal_import_val').innerText = fmn(totalImportVal); if($('total_cal_rev')) $('total_cal_rev').innerText = fmn(totalRev); $('actual_revenue').value = fmn(totalRev); $('cost_goods').value = fmn(totalCOGS_Real); $('sold_quantity').value = fmn(totalSoldQty); };
-    
     // --- HISTORY TAB ---
     async function loadSaleHistory() {
         if(assignedShopCodes.length === 0) return;
@@ -564,7 +558,9 @@
                    <button onclick="deleteReport('${r.report_id}')" class="text-red-500 hover:bg-red-100 p-2 rounded mx-1" title="Xóa"><i class="fa-solid fa-trash text-lg"></i></button>`
                 : `<span class="text-gray-300 p-2"><i class="fa-solid fa-lock"></i></span>`;
             const shopInfo = globalShopMap[r.shop_code] || {};
-            return `<tr class="hover:bg-gray-50 transition border-b"><td class="p-4 font-bold text-xs">${r.report_month}</td><td class="p-4 text-xs font-bold text-purple-600">${shopInfo.area || "---"}</td><td class="p-4 text-xs text-gray-500">${r.shop_code}</td><td class="p-4 text-xs font-bold text-slate-800 uppercase">${shopInfo.shop_name || "---"}</td><td class="p-4 text-xs font-black text-orange-600 text-center">${r.sold_quantity || 0}</td><td class="p-4 text-right font-mono font-bold text-blue-600 text-xs">${fmn(r.actual_revenue)}</td><td class="p-4 text-center">${statusBadge}</td><td class="p-4 text-center whitespace-nowrap">${actions}</td></tr>`;
+            return `<tr class="hover:bg-gray-50 transition border-b"><td class="p-4 font-bold text-xs">${r.report_month}</td><td class="p-4 text-xs font-bold text-purple-600">${shopInfo.area ||
+            "---"}</td><td class="p-4 text-xs text-gray-500">${r.shop_code}</td><td class="p-4 text-xs font-bold text-slate-800 uppercase">${shopInfo.shop_name || "---"}</td><td class="p-4 text-xs font-black text-orange-600 text-center">${r.sold_quantity ||
+            0}</td><td class="p-4 text-right font-mono font-bold text-blue-600 text-xs">${fmn(r.actual_revenue)}</td><td class="p-4 text-center">${statusBadge}</td><td class="p-4 text-center whitespace-nowrap">${actions}</td></tr>`;
         }).join('');
     }
 
@@ -607,7 +603,6 @@
             .eq('shop_code', selDVN)
             .eq('status', 'approved')
             .order('report_month', {ascending: true});
-
         if(!reports || reports.length === 0) { 
             $('shop-charts-container').classList.add('hidden');
             alert("Shop này chưa có báo cáo nào được duyệt!"); 
@@ -634,9 +629,12 @@
         $('chart_kpi_cards').innerHTML = `<div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-500 text-center"><p class="text-[10px] font-black uppercase">S.I (Nhập)</p><h4 class="text-3xl font-black text-blue-600">${totalSI}</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-green-500 text-center"><p class="text-[10px] font-black uppercase">S.O (Bán)</p><h4 class="text-3xl font-black text-green-600">${totalSO}</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 ${endStock<0?'border-red-500':'border-purple-500'} text-center"><p class="text-[10px] font-black uppercase">Tồn Cuối</p><h4 class="text-3xl font-black ${endStock<0?'text-red-600':'text-purple-600'}">${endStock}</h4></div>`;
         renderChart('bar', 'chartWaterfall', { labels: ['Doanh Thu', 'Giá Vốn', 'Vận Hành', 'Logistic', 'Marketing', 'Khác', 'LỢI NHUẬN'], datasets: [{ data: [k.rev, -k.cogs, -k.op, -k.log, -k.mkt, -k.other, k.net], backgroundColor: ['#3b82f6', '#ef4444', '#ef4444', '#ef4444', '#ef4444', '#ef4444', k.net>=0?'#16a34a':'#b91c1c'] }] }, {plugins:{legend:{display:false}}});
         if(totalSO > 0) { const fixed = k.op + k.mkt + k.other;
-        const varUnit = (k.cogs + k.log) / totalSO; const asp = k.rev / totalSO; const contrib = asp - varUnit;
-        const bep = contrib>0 ? Math.ceil(fixed/contrib) : 0; $('txt_breakeven').innerText = bep>0 ? `~${bep} xe` : "Lỗ gộp";
-        const maxQ = Math.max(totalSO*1.5, bep*1.5, 20); const pts=[], dRev=[], dCost=[]; for(let i=0; i<=maxQ; i+=Math.ceil(maxQ/10)) { pts.push(i); dRev.push(i*asp); dCost.push(fixed + i*varUnit);
+        const varUnit = (k.cogs + k.log) / totalSO;
+        const asp = k.rev / totalSO; const contrib = asp - varUnit;
+        const bep = contrib>0 ? Math.ceil(fixed/contrib) : 0;
+        $('txt_breakeven').innerText = bep>0 ? `~${bep} xe` : "Lỗ gộp";
+        const maxQ = Math.max(totalSO*1.5, bep*1.5, 20); const pts=[], dRev=[], dCost=[];
+        for(let i=0; i<=maxQ; i+=Math.ceil(maxQ/10)) { pts.push(i); dRev.push(i*asp); dCost.push(fixed + i*varUnit);
         } renderChart('line', 'chartBreakeven', {labels:pts, datasets:[{label:'Doanh Thu', data:dRev, borderColor:'#16a34a'}, {label:'Tổng Chi Phí', data:dCost, borderColor:'#ef4444'}]}, {plugins:{annotation:{annotations:{pt:{type:'point', xValue:bep, yValue:bep*asp, backgroundColor:'orange', radius:6}}}}});
         }
 
@@ -679,7 +677,8 @@
         $('btnSubmit').className = "w-full py-4 bg-orange-600 text-white font-black rounded-xl hover:bg-orange-700 shadow-xl text-sm uppercase flex flex-col items-center justify-center gap-1";
         const shop = globalShopMap[r.shop_code];
         if (shop) {
-            $('f_province').value = shop.province; updateSVNOptions();
+            $('f_province').value = shop.province;
+            updateSVNOptions();
             $('f_svn').value = shop.svn_code; updateDVNOptions();
             $('shop_code').value = r.shop_code; updateShopInfo();
         }
@@ -696,7 +695,8 @@
         await loadMonthlyModels();
         $('salesDetailBody').innerHTML = "";
         let details = [];
-        try{details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json || [];}catch(e){}
+        try{details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json ||
+        [];}catch(e){}
         if(details.length) { details.forEach(item => addSaleRow(item)); }
     }
 

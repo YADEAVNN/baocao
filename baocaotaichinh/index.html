@@ -1,1 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>YADEA FINANCE</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'Roboto', sans-serif; background-color: #F8FAFC; }
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Animation cho Modal */
+    .modal-enter { animation: modalIn 0.3s ease-out forwards; }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+    .nav-item { display: flex; align-items: center; padding: 12px 20px; color: #9ca3af; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
+    .nav-item:hover { background-color: #1f2937; color: white; }
+    .nav-item.active { background-color: #1f2937; color: #fff; border-left-color: #FF4500; }
+    .nav-item i { width: 20px; margin-right: 10px; text-align: center; }
+    .form-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+    .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
+    .form-input:focus { border-color: #FF4500; box-shadow: 0 0 0 3px rgba(255,69,0,0.1); }
+    .form-input[readonly] { background-color: #f3f4f6; color: #64748b; cursor: not-allowed; }
+    .form-input:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7; }
+    .sub-tab-btn { border-bottom: 2px solid transparent; color: #6b7280; font-weight: 600; padding: 10px 15px; transition: all 0.2s; white-space: nowrap; font-size: 13px; }
+    .sub-tab-btn:hover { color: #1f2937; background-color: #f3f4f6; border-radius: 8px 8px 0 0; }
+    .sub-tab-btn.active { color: #FF4500; border-bottom-color: #FF4500; background-color: white; border-radius: 8px 8px 0 0; }
+    .edit-mode-banner { background: #fff7ed; border: 1px solid #fdba74; color: #c2410c; padding: 12px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(253, 186, 116, 0.2); }
+  </style>
+</head>
+<body class="h-[100dvh] overflow-hidden flex text-slate-800">
+
+  <div id="authContainer" class="fixed inset-0 z-[60] bg-[#F3F4F6] flex items-center justify-center p-4">
+    <div class="bg-white rounded-[20px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-w-4xl w-full min-h-[550px] fade-in">
+      <div class="w-full md:w-5/12 bg-[#111827] flex flex-col items-center justify-center p-10 text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-blue-600/20"></div>
+        
+        <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-14 mb-6 relative z-10">
+        
+        <h2 class="text-3xl font-black text-white uppercase mb-2 relative z-10 tracking-tight">YADEA FINANCE</h2>
+        <p class="text-gray-400 text-xs font-medium relative z-10">Hệ Thống Quản Trị Tài Chính & Vận Hành</p>
+      </div>
+      
+      <div class="w-full md:w-7/12 p-10 flex flex-col justify-center">
+        <div id="loginFormSection" class="max-w-xs mx-auto w-full">
+          <h3 class="text-2xl font-black text-slate-800 mb-6">Đăng Nhập</h3>
+          <div class="space-y-4">
+            <input id="email" type="email" class="form-input bg-gray-50" placeholder="Email nhân viên">
+            <input id="password" type="password" class="form-input bg-gray-50" placeholder="Mật khẩu">
+            <button id="btnLogin" class="w-full bg-[#FF4500] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm uppercase tracking-wider">Truy cập</button>
+          </div>
+          <div class="mt-6 text-center text-xs text-gray-400">Chưa có tài khoản? <a href="#" id="goSignup" class="text-[#FF4500] font-bold hover:underline">Đăng ký ngay</a></div>
+        </div>
+        <div id="signupFormSection" class="hidden max-w-xs mx-auto w-full">
+            <h3 class="text-2xl font-black text-slate-800 mb-4">Đăng Ký Mới</h3>
+            <div class="space-y-3">
+                <input id="reg_name" type="text" class="form-input bg-gray-50" placeholder="Họ và Tên (Đúng chuẩn)">
+                <p class="text-[9px] text-gray-400 italic mb-1">* Nhập đúng tên để hệ thống tự gán Shop.</p>
+                <select id="reg_role" class="form-input bg-gray-50"><option value="Sale">Nhân viên Sale</option><option value="Giám Đốc">Giám Đốc Miền</option></select>
+                <input id="reg_email" type="email" class="form-input bg-gray-50" placeholder="Email">
+                <input id="reg_pass" type="password" class="form-input bg-gray-50" placeholder="Mật khẩu">
+                <button id="btnSignup" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl">Gửi Yêu Cầu</button>
+            </div>
+            <div class="mt-4 text-center text-xs"><a href="#" id="goLogin" class="text-gray-500 font-bold">← Quay lại đăng nhập</a></div>
+        </div>
+        <p id="msg" class="text-center text-xs font-bold mt-4 h-5 text-red-500"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainApp" class="hidden flex w-full h-full relative">
+    <div class="md:hidden fixed top-0 left-0 w-full h-14 bg-[#111827] z-40 flex items-center px-4 shadow-md justify-between">
+        <div class="flex items-center gap-2">
+            <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-6">
+            <span class="text-white font-bold text-xs uppercase tracking-wide">YADEA FINANCE</span>
+        </div>
+        <button onclick="toggleSidebar()" class="text-white text-2xl focus:outline-none p-2"><i class="fa-solid fa-bars"></i></button>
+    </div>
+
+    <aside id="sidebarMobile" class="fixed inset-y-0 left-0 w-64 bg-[#111827] flex-shrink-0 flex flex-col border-r border-gray-800 z-50 shadow-xl transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 pt-14 md:pt-0">
+        <div class="hidden md:flex h-16 items-center px-6 border-b border-gray-800 bg-[#1f2937]">
+            <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-8">
+        </div>
+        <div class="p-6 border-b border-gray-800"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-orange-600 flex items-center justify-center text-white font-bold text-sm shadow-lg" id="avatarLetter">U</div><div class="overflow-hidden"><h4 id="userDisplay" class="text-white text-sm font-bold truncate">User</h4><span id="roleDisplay" class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">SALE</span></div></div></div>
+        <nav class="flex-1 py-6 space-y-1">
+            <a onclick="switchView('charts')" id="nav-charts" class="nav-item active"><i class="fa-solid fa-chart-line text-green-500"></i> 1. Phân Tích Chiến Lược</a>
+            <a onclick="switchView('sales')" id="nav-sales" class="nav-item"><i class="fa-solid fa-boxes-stacked text-orange-500"></i> 2. Kho & Doanh Thu</a>
+            <a onclick="switchView('costs')" id="nav-costs" class="nav-item"><i class="fa-solid fa-file-invoice-dollar text-blue-500"></i> 3. Nhập Chi Phí (P&L)</a>
+            <a onclick="switchView('history')" id="nav-history" class="nav-item"><i class="fa-solid fa-clock-rotate-left text-purple-500"></i> 4. Lịch sử & Sửa</a>
+        </nav>
+        <div class="p-4 bg-[#0f1523] border-t border-gray-800"><button id="btnLogout" class="flex items-center justify-center w-full py-2.5 text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition border border-gray-700"><i class="fa-solid fa-right-from-bracket mr-2"></i> Đăng xuất</button></div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-[#F8FAFC] relative pt-20 md:pt-0">
+        <div id="view-charts" class="p-4 md:p-8 fade-in max-w-[1600px] mx-auto space-y-4">
+            <div class="flex justify-between items-end border-b border-gray-200 bg-white rounded-t-xl px-2 pt-2 sticky top-0 z-10 shadow-sm overflow-x-auto">
+                <div class="flex"><button onclick="switchChartTab('overview')" id="btn-tab-overview" class="sub-tab-btn active"><i class="fa-solid fa-globe mr-2"></i>TỔNG QUAN THỊ TRƯỜNG</button><button onclick="switchChartTab('detail')" id="btn-tab-detail" class="sub-tab-btn"><i class="fa-solid fa-store mr-2"></i>CHI TIẾT SHOP</button></div>
+            </div>
+            
+            <div id="chart-tab-overview" class="space-y-6">
+                <div class="bg-white p-6 rounded-b-xl rounded-r-xl shadow-sm border border-gray-100">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
+                         <div><h2 class="text-xl font-black text-slate-800 uppercase">THỊ TRƯỜNG CỦA TÔI</h2><p class="text-xs text-gray-500 mt-1">Dữ liệu tổng hợp từ tất cả các Shop được gán.</p></div>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200" id="overview_role_badge">DIRECTOR</span>
+                            <select id="ov_filter_province" onchange="filterOverview()" class="bg-white border border-blue-200 text-blue-800 text-xs font-bold py-2 px-2 rounded-lg shadow-sm outline-none cursor-pointer hover:border-blue-400 transition hidden md:block"><option value="">-- Tất cả Tỉnh --</option></select>
+                            <select id="ov_filter_sale" onchange="filterOverview()" class="bg-white border border-blue-200 text-blue-800 text-xs font-bold py-2 px-2 rounded-lg shadow-sm outline-none cursor-pointer hover:border-blue-400 transition hidden md:block"><option value="">-- Lọc theo Sale --</option></select>
+                            <div class="flex gap-2">
+                                <button id="btnExportPDF" onclick="exportPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-pdf"></i> Xuất PDF</button>
+                                <button onclick="exportDirectorExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="dashboard-capture-area">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-blue-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tổng Doanh Thu <span id="lbl_kpi_time">(12T)</span></p><h4 id="ov_rev" class="text-xl md:text-2xl font-black text-blue-600 mt-1">0</h4></div>
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-green-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tổng Lợi Nhuận</p><h4 id="ov_profit" class="text-xl md:text-2xl font-black text-green-600 mt-1">0</h4></div>
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-orange-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tổng Xe Bán</p><h4 id="ov_vol" class="text-xl md:text-2xl font-black text-orange-600 mt-1">0</h4></div>
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-purple-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tỷ Lệ Shop Có Lãi</p><h4 id="ov_rate" class="text-xl md:text-2xl font-black text-purple-600 mt-1">0%</h4></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4"><i class="fa-solid fa-crown text-yellow-500 mr-1"></i> Top Xe Bán Chạy Nhất (Toàn Vùng)</h4><div class="h-[300px]"><canvas id="chart_Ov_TopProducts"></canvas></div></div>
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4"><i class="fa-solid fa-warehouse text-purple-500 mr-1"></i> Sức Khỏe Tồn Kho (Tồn vs Bán)</h4><div class="h-[300px]"><canvas id="chart_Ov_StockHealth"></canvas></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B2. Xếp Hạng Shop (Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_B2_Rank"></canvas></div></div>
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B6. Phân Loại Shop (Doanh Thu vs Chi Phí)</h4><div class="h-[300px]"><canvas id="chart_B6_Scatter"></canvas></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B4. Xu Hướng Vùng (Doanh Thu/Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_B4_Trend"></canvas></div></div>
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B5. Hiệu Quả Marketing (Cost vs Rev)</h4><div class="h-[300px]"><canvas id="chart_B5_Mkt"></canvas></div></div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50"><h4 class="text-xs font-bold text-gray-500 uppercase">B3. Chi Tiết Hiệu Suất Từng Shop (Tháng hiện tại)</h4></div>
+                        <div class="overflow-x-auto max-h-[400px]">
+                            <table class="w-full text-xs text-left border-collapse whitespace-nowrap"><thead class="bg-white font-black text-slate-600 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-3 border-b">Shop Name</th><th class="p-3 border-b text-right">Doanh Thu</th><th class="p-3 border-b text-right">Net Profit</th><th class="p-3 border-b text-center">Margin %</th><th class="p-3 border-b text-center">SL Bán</th><th class="p-3 border-b text-center">MKT %</th></tr></thead><tbody id="body_B3_Heatmap" class="divide-y divide-gray-100"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chart-tab-detail" class="hidden space-y-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
+                     <div class="w-full md:flex-1 md:min-w-[200px]"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">Sale Phụ Trách</label><select id="chart_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-sm w-full" onchange="updateChartFilters('sale')"><option value="">-- Tất cả --</option></select></div>
+                     <div class="w-full md:flex-1 md:min-w-[150px]"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">Mã SVN</label><select id="chart_svn" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-sm w-full" onchange="updateChartFilters('svn')"><option value="">-- Tất cả --</option></select></div>
+                     <div class="w-full md:flex-1 md:min-w-[250px]"><label class="block text-[10px] font-bold text-purple-500 uppercase mb-1">Cửa Hàng (DVN)</label><select id="chart_dvn" class="bg-purple-50/50 border border-purple-100 text-purple-700 font-bold rounded-lg p-2 text-sm w-full" onchange="loadCharts()"><option value="">-- Chọn Shop --</option></select></div>
+                     <button onclick="loadCharts()" class="w-full md:w-auto bg-slate-900 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm uppercase"><i class="fa-solid fa-rotate"></i> Xem</button>
+                </div>
+                <div id="shop-charts-container" class="space-y-6 hidden">
+                     <div id="chart_kpi_cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-sm font-black text-slate-800 uppercase mb-6 border-b pb-4">💰 Sức Khỏe Tài Chính (Waterfall)</h4><div class="h-[350px] w-full"><canvas id="chartWaterfall"></canvas></div></div><div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-6 border-b pb-4"><h4 class="text-sm font-black text-slate-800 uppercase">📈 Phân Tích Điểm Hòa Vốn</h4><div class="text-right"><span class="block text-[10px] text-gray-400 uppercase font-bold">Điểm hòa vốn dự kiến</span><span id="txt_breakeven" class="text-xl font-black text-orange-600">--- xe</span></div></div><div class="h-[350px] w-full"><canvas id="chartBreakeven"></canvas></div></div></div>
+                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C2. Cơ Cấu Chi Phí Shop</h4><div class="h-[250px]"><canvas id="chart_C2_Donut"></canvas></div></div><div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C3. Xu Hướng Shop (12 Tháng)</h4><div class="h-[250px]"><canvas id="chart_C3_Trend"></canvas></div></div></div>
+                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C5. Top Model Bán Chạy</h4></div><div class="overflow-y-auto h-[300px]" id="div_C5_Model"></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C6. Nhập vs Bán Theo Model</h4><div class="h-[300px]"><canvas id="chart_C6_Stack"></canvas></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <form id="financeForm"> 
+            <div id="view-sales" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
+                <div class="flex justify-between items-end mb-6">
+                    <div><h1 id="entryTitle" class="text-xl md:text-2xl font-black text-slate-800 uppercase">2. Báo Cáo Nhập - Xuất</h1><p class="text-gray-500 text-xs mt-1">Bước 1: Khai báo địa điểm, tồn kho và sản lượng.</p></div>
+                    <button type="button" onclick="resetEntryForm()" id="btnCancelEdit" class="hidden bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 shadow-sm"><i class="fa-solid fa-xmark mr-1"></i>Hủy Sửa</button>
+                </div>
+                <div id="editBanner" class="hidden edit-mode-banner"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i class="fa-solid fa-pen"></i></div><div><h4 class="font-bold text-sm text-orange-800">Chế độ Chỉnh Sửa</h4><p class="text-xs text-orange-600">Đang cập nhật báo cáo cũ.</p></div></div><input type="hidden" id="editReportId"></div>
+                <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
+                    <div class="xl:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 h-full">
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100"><span class="text-lg text-slate-400 font-black">A.</span><h3 class="text-sm font-black text-slate-700 uppercase">Thông Tin Cơ Bản</h3></div>
+                        <div class="space-y-3">
+                            <div><label class="form-label">Tháng Báo Cáo</label><input type="month" id="report_month" required class="form-input font-bold bg-slate-50"></div>
+                            <div class="p-3 bg-blue-50/50 border border-blue-100 rounded-lg space-y-3">
+                                <div><label class="form-label text-blue-700">1. Tỉnh / Thành Phố</label><select id="f_province" class="form-input font-bold text-slate-700 bg-white" onchange="updateSVNOptions()"><option value="">-- Chọn Tỉnh --</option></select></div>
+                                <div><label class="form-label text-blue-700">2. Mã SVN (Lọc phụ)</label><select id="f_svn" class="form-input font-bold text-slate-700 bg-white" onchange="updateDVNOptions()" disabled><option value="">-- Tất cả SVN --</option></select></div>
+                                <div><label class="form-label text-blue-700">3. Cửa Hàng (Mã DVN)</label><select id="shop_code" required class="form-input font-bold text-blue-800 bg-white" disabled><option value="">-- Chọn Shop --</option></select></div>
+                            </div>
+                            <div id="shop_info_display" class="hidden p-3 bg-green-50 border border-green-200 rounded-lg"></div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                <label class="form-label text-purple-600">Tồn Đầu Kỳ (Khai báo)</label><input type="text" id="opening_stock" class="form-input font-bold text-purple-700 bg-purple-50" placeholder="0" oninput="formatCurrency(this)">
+                            </div>
+                            <div class="p-4 bg-orange-50 border border-orange-100 rounded-xl mt-4">
+                                 <div class="text-center"><label class="form-label text-orange-700 mb-1">TỔNG XE BÁN (S.O)</label><input type="text" id="sold_quantity" readonly class="w-full bg-transparent text-center text-3xl font-black text-orange-600 outline-none" placeholder="0"></div>
+                            </div>
+                            <div class="space-y-3 pt-4 border-t border-gray-100">
+                                 <div><label class="form-label text-blue-600">Doanh Thu (Từ Xe Bán)</label><input type="text" id="actual_revenue" readonly class="form-input text-blue-700 font-bold bg-blue-50 cursor-not-allowed" placeholder="0"></div>
+                                 <div><label class="form-label text-red-600">Giá Vốn (Từ Xe Bán)</label><input type="text" id="cost_goods" readonly class="form-input text-red-700 font-bold bg-red-50 cursor-not-allowed" placeholder="0"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-orange-200 xl:h-full relative">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+                            <div><h3 class="text-lg font-black text-slate-800 uppercase flex items-center gap-2"><i class="fa-solid fa-list-ol text-orange-600"></i> Bảng Nhập (S.I) & Xuất (S.O)</h3><p class="text-xs text-gray-500">Chi tiết theo từng dòng xe.</p></div>
+                            <button type="button" onclick="loadMonthlyModels()" class="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition"><i class="fa-solid fa-cloud-download mr-2"></i> Tải Bảng Giá Admin</button>
+                        </div>
+                        <div class="overflow-x-auto bg-slate-50 rounded-xl border border-gray-200 min-h-[300px]">
+                            <table class="w-full text-left text-sm whitespace-nowrap" id="salesDetailTable">
+                                <thead class="bg-slate-100 text-[10px] font-black text-gray-500 uppercase"><tr><th class="p-3 align-middle min-w-[150px]">Model Xe</th><th class="p-3 w-20 text-center align-middle bg-orange-50 text-orange-600 border-l border-orange-100">S.I (Nhập)</th><th class="p-3 w-20 text-center align-middle bg-blue-50 text-blue-600 border-l border-blue-100">S.O (Bán)</th><th class="p-3 text-right align-middle min-w-[100px]">Giá Vốn</th><th class="p-3 text-right align-middle min-w-[100px]">Giá Bán</th><th class="p-3 text-right align-middle bg-orange-50/50 min-w-[100px]">Tiền Nhập</th><th class="p-3 text-right align-middle bg-blue-50/50 min-w-[100px]">Tiền Bán</th><th class="p-3 text-center align-middle">Xóa</th></tr></thead>
+                                <tbody id="salesDetailBody" class="divide-y divide-gray-200"></tbody>
+                                <tfoot class="bg-gray-100 font-bold text-slate-700 text-xs"><tr><td colspan="8" class="p-2 text-center"><button type="button" onclick="addSaleRow()" class="text-orange-600 hover:text-orange-800 font-black uppercase py-2 flex items-center justify-center gap-1 w-full"><i class="fa-solid fa-plus-circle"></i> Thêm dòng xe</button></td></tr><tr class="bg-slate-800 text-white border-t border-slate-600"><td colspan="5" class="p-3 text-right uppercase">Tổng cộng:</td><td class="p-3 text-right text-orange-300 font-mono" id="total_cal_import_val">0</td><td class="p-3 text-right text-blue-300 font-mono" id="total_cal_rev">0</td><td></td></tr></tfoot>
+                            </table>
+                        </div>
+                        <div class="mt-8 flex justify-end"><button type="button" onclick="switchView('costs')" class="w-full md:w-auto bg-[#111827] text-white px-8 py-4 rounded-xl font-bold text-sm shadow-xl hover:bg-slate-800 transition flex items-center justify-center gap-2">Tiếp Tục: Nhập Chi Phí <i class="fa-solid fa-arrow-right"></i></button></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-costs" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
+                <div class="flex justify-between items-center mb-6"><div><h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase">3. Báo Cáo Chi Phí</h1><p class="text-gray-500 text-xs mt-1">Bước 2: Nhập các khoản chi phí vận hành.</p></div><button type="button" onclick="switchView('sales')" class="text-gray-500 font-bold text-xs hover:text-slate-800"><i class="fa-solid fa-arrow-left mr-1"></i> Quay lại Bước 1</button></div>
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6 flex flex-wrap gap-6 items-center shadow-sm">
+                    <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white"><i class="fa-solid fa-shop"></i></div><div><p class="text-[10px] uppercase font-bold text-blue-400">Đang báo cáo cho</p><h4 id="summary_shop_name" class="font-black text-slate-700">---</h4></div></div><div class="hidden md:block w-px h-10 bg-blue-200"></div><div><p class="text-[10px] uppercase font-bold text-blue-400">Doanh Thu (S.O)</p><h4 id="summary_rev" class="font-black text-blue-600 text-lg">0</h4></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-20">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100"><i class="fa-solid fa-gear text-gray-400"></i><h3 class="text-sm font-black text-slate-700 uppercase">I. Vận Hành & NS</h3></div>
+                        <div class="space-y-3">
+                            <div><label class="form-label">Khấu hao xây dựng</label><input type="text" id="cost_op_depreciation_build" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label">Khấu hao thiết bị</label><input type="text" id="cost_op_depreciation_equip" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label">Thuê mặt bằng</label><input type="text" id="cost_op_rent" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label">Lương cứng (Cố định)</label><input type="text" id="cost_op_salary" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label">Điện / Nước / Net</label><input type="text" id="cost_op_utility" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label">Bảo trì cửa hàng</label><input type="text" id="cost_op_maintain" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-red-500">Lãi vay</label><input type="text" id="cost_op_interest" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div class="pt-2 border-t border-dashed"><label class="form-label text-purple-600">Hoa hồng Sale</label><input type="text" id="cost_log_commission" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-purple-600">Thưởng KPI</label><input type="text" id="cost_log_kpi_bonus" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-purple-600">Chiết khấu</label><input type="text" id="cost_log_discount" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-green-600">Hỗ trợ Hãng (Thu nhập khác)</label><input type="text" id="revenue_support" class="form-input text-green-700 font-bold" placeholder="0" oninput="formatCurrency(this)"></div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50/50 p-5 rounded-2xl shadow-sm border border-blue-100">
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-blue-200"><i class="fa-solid fa-truck text-blue-500"></i><h3 class="text-sm font-black text-blue-700 uppercase">II. Logistic & Xe</h3></div>
+                        <div class="space-y-3">
+                            <div><label class="form-label text-blue-600">Vận chuyển xe</label><input type="text" id="cost_log_shipping" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-blue-600">Kiểm tra / Lắp ráp (PDI)</label><input type="text" id="cost_log_pdi" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-blue-600">Bảo hành / Bảo trì xe</label><input type="text" id="cost_log_warranty" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-blue-600">Nhân công kho</label><input type="text" id="cost_log_warehouse_labor" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-blue-600">Trưng bày / Bảo quản</label><input type="text" id="cost_log_display_storage" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-blue-600">Hỗ trợ Biển số</label><input type="text" id="cost_log_plate_support" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-blue-600">Phí bảo dưỡng Free</label><input type="text" id="cost_log_maintenance_free" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-blue-600">CSKH (SMS/Call)</label><input type="text" id="cost_log_cskh" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                        </div>
+                    </div>
+                    <div class="bg-orange-50/50 p-5 rounded-2xl shadow-sm border border-orange-100">
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-orange-200"><i class="fa-solid fa-bullhorn text-orange-500"></i><h3 class="text-sm font-black text-orange-700 uppercase">III. Marketing</h3></div>
+                        <div class="space-y-3">
+                            <div><label class="form-label text-orange-600">Ads Online (FB/TikTok)</label><input type="text" id="cost_op_ads_social" class="form-input bg-white" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Tờ rơi / Banner</label><input type="text" id="cost_op_offline_print" class="form-input bg-white" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Khuyến mãi / Quà tặng</label><input type="text" id="cost_op_promotion_gift" class="form-input bg-white" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Sự kiện tại Shop</label><input type="text" id="cost_op_event_store" class="form-input bg-white" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div class="pt-2 border-t border-orange-200 border-dashed"></div>
+                            <div><label class="form-label text-orange-600">Livestream</label><input type="text" id="cost_mkt_livestream" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">KOL / KOC</label><input type="text" id="cost_mkt_kol_koc" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Quảng cáo chung</label><input type="text" id="cost_mkt_pr_branding" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Roadshow</label><input type="text" id="cost_mkt_roadshow" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Lái thử xe</label><input type="text" id="cost_mkt_testdrive" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Trường học</label><input type="text" id="cost_mkt_school" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Bán hàng lưu động</label><input type="text" id="cost_mkt_mobile_sales" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Quảng trường</label><input type="text" id="cost_mkt_square" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Khai trương</label><input type="text" id="cost_mkt_opening" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                            <div><label class="form-label text-orange-600">Khác</label><input type="text" id="cost_mkt_other" class="form-input" placeholder="0" oninput="formatCurrency(this)"></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col h-full bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100"><i class="fa-solid fa-box-open text-gray-400"></i><h3 class="text-sm font-black text-slate-700 uppercase">IV. Khác</h3></div>
+                        <div class="space-y-4 flex-1"><div><label class="form-label">Chi phí Khác</label><input type="text" id="cost_other_general" class="form-input p-4 text-base bg-gray-50" placeholder="0" oninput="formatCurrency(this)"></div></div>
+                        <div class="mt-8 pt-6 border-t border-gray-100">
+                            <button type="submit" id="btnSubmit" class="w-full py-4 bg-[#FF4500] text-white font-black rounded-xl hover:bg-orange-600 transition-all transform hover:-translate-y-1 shadow-xl text-sm uppercase tracking-widest flex flex-col items-center justify-center gap-1"><i id="btnSubmitIcon" class="fa-solid fa-paper-plane text-xl"></i><span id="btnSubmitText">GỬI BÁO CÁO</span></button>
+                            <p id="formMsg" class="mt-4 text-center font-bold text-xs uppercase tracking-wide"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form> 
+
+        <div id="view-history" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <div><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">4. Quản Lý Báo Cáo</h2><p class="text-gray-500 text-xs mt-1">Lịch sử gửi báo cáo của bạn.</p></div>
+                <button onclick="loadSaleHistory()" class="bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm font-bold text-xs text-slate-600 hover:bg-gray-50"><i class="fa-solid fa-rotate mr-2"></i>Làm mới</button>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                   <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-[10px] font-bold text-gray-500 uppercase border-b border-gray-100"><tr><th class="p-4">Tháng</th><th class="p-4">Khu Vực</th><th class="p-4">Shop</th><th class="p-4">Sản Lượng</th><th class="p-4 text-right">Doanh Thu</th><th class="p-4 text-center">Trạng Thái</th><th class="p-4 text-center">Hành Động</th></tr></thead>
+                        <tbody id="historyBody" class="divide-y divide-gray-50 text-slate-700 font-medium"></tbody>
+                   </table>
+                </div>
+            </div>
+        </div>
+    </main>
+  </div>
+
+  <div id="pnlDetailModal" class="fixed inset-0 z-[70] bg-gray-900/50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden modal-enter transform transition-all">
+          <div class="bg-slate-50 border-b border-gray-200 p-5 flex justify-between items-center">
+               <div>
+                  <h3 class="text-xl font-black text-slate-800 uppercase flex items-center gap-2">
+                      <i class="fa-solid fa-file-invoice-dollar text-orange-600"></i> CHI TIẾT P&L
+                  </h3>
+                  <p id="modal_shop_name" class="text-sm text-gray-500 font-bold mt-1">---</p>
+               </div>
+               <button onclick="closePnlModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+          </div>
+          
+          <div class="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+                      <p class="text-[10px] font-bold text-blue-500 uppercase">Tổng Doanh Thu</p>
+                      <h4 id="modal_rev" class="text-2xl font-black text-blue-700">0</h4>
+                  </div>
+                  <div class="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
+                      <p class="text-[10px] font-bold text-red-500 uppercase">Giá Vốn (COGS)</p>
+                      <h4 id="modal_cogs" class="text-2xl font-black text-red-700">0</h4>
+                  </div>
+                  <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-center">
+                      <p class="text-[10px] font-bold text-green-500 uppercase">Lợi Nhuận Gộp</p>
+                      <h4 id="modal_gross" class="text-2xl font-black text-green-700">0</h4>
+                  </div>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                   <div class="p-3 bg-gray-50 rounded-lg">
+                      <p class="text-[10px] font-bold text-gray-400 uppercase">I. Vận Hành</p>
+                      <p id="modal_op" class="font-bold text-slate-700">0</p>
+                   </div>
+                   <div class="p-3 bg-gray-50 rounded-lg">
+                      <p class="text-[10px] font-bold text-gray-400 uppercase">II. Logistic</p>
+                      <p id="modal_log" class="font-bold text-slate-700">0</p>
+                   </div>
+                   <div class="p-3 bg-gray-50 rounded-lg">
+                      <p class="text-[10px] font-bold text-gray-400 uppercase">III. Marketing</p>
+                      <p id="modal_mkt" class="font-bold text-slate-700">0</p>
+                   </div>
+                   <div class="p-3 bg-gray-50 rounded-lg">
+                      <p class="text-[10px] font-bold text-gray-400 uppercase">IV. Khác</p>
+                      <p id="modal_other" class="font-bold text-slate-700">0</p>
+                   </div>
+              </div>
+
+              <div class="bg-slate-900 text-white p-6 rounded-xl flex justify-between items-center shadow-lg">
+                  <div>
+                      <p class="text-xs font-bold text-gray-400 uppercase">Tổng Chi Phí (I+II+III+IV)</p>
+                      <h4 id="modal_total_exp" class="text-xl font-bold">0</h4>
+                  </div>
+                  <div class="text-right">
+                       <p class="text-xs font-bold text-gray-400 uppercase">LỢI NHUẬN RÒNG (NET)</p>
+                       <h2 id="modal_net" class="text-3xl font-black text-green-400">0</h2>
+                  </div>
+              </div>
+          </div>
+
+          <div class="bg-gray-50 p-5 border-t border-gray-200 flex justify-end gap-3">
+              <button onclick="closePnlModal()" class="px-5 py-2.5 rounded-xl font-bold text-xs text-gray-600 hover:bg-gray-200 transition">Đóng lại</button>
+              <button id="btnModalApprove" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2 transition">
+                  <i class="fa-solid fa-check-circle"></i> DUYỆT BÁO CÁO
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    
+    // UI Update (Override)
+    window.updateShopInfoUI = (shopData) => {
+        if(shopData) {
+            $('shop_info_display').classList.remove('hidden');
+            $('shop_info_display').innerHTML = `
+                <div class="font-black text-sm uppercase text-green-800">${shopData.shop_name}</div>
+                <div class="flex justify-between items-center mt-1">
+                    <div class="text-[10px] text-green-600 font-bold">GD: ${shopData.director_name || '---'}</div>
+                    <div class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold border border-orange-200">Size: ${shopData.shop_type || 'N/A'}</div>
+                </div>
+            `;
+        } else {
+            $('shop_info_display').classList.add('hidden');
+        }
+    };
+
+    window.exportPDF = async () => {
+        const btn = document.getElementById('btnExportPDF');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tạo...';
+        btn.disabled = true;
+
+        try {
+            const element = document.getElementById('dashboard-capture-area');
+            const canvas = await html2canvas(element, { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' });
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+            const dateStr = new Date().toISOString().split('T')[0];
+            pdf.save(`Bao_Cao_Tong_Quan_${dateStr}.pdf`);
+        } catch (err) {
+            alert("Lỗi khi xuất PDF: " + err.message);
+        } finally {
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
+    };
+  </script>
+</body>
+</html>

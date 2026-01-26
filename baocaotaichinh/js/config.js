@@ -12,5 +12,6 @@ export const STATE = {
     assignedShopCodes: [],
     currentAdminPrices: [],  // Bảng giá admin tháng hiện tại
     cachedDirectorData: [],  // Dữ liệu báo cáo để xuất Excel
-    chartInstances: {}       // Lưu các biểu đồ để destroy khi vẽ lại
+    chartInstances: {},      // Lưu các biểu đồ để destroy khi vẽ lại
+    submittedShops: new Set() // 🔥 MỚI: Lưu danh sách shop đã nộp báo cáo tháng này
 };

@@ -2,7 +2,7 @@
 import { sb, STATE } from './config.js';
 import { fmn, calcKPI, safeVal } from './utils.js';
 
-// Đăng ký Plugin
+// Đăng ký Plugin Chart.js
 try {
     if (typeof Chart !== 'undefined') {
         if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
@@ -16,19 +16,16 @@ export function renderChart(type, id, data, options = {}) {
     if (!canvas) return; 
     
     const ctx = canvas.getContext('2d');
-    if (STATE.chartInstances[id]) STATE.chartInstances[id].destroy();
-
-    // Logic rút gọn tên thông minh
-    const smartTruncateCallback = function(value) {
-        const label = this.getLabelForValue(value);
-        if (typeof label === 'string' && label.length > 12) return label.substring(0, 10) + '...';
-        return label;
-    };
+    
+    // Hủy biểu đồ cũ nếu tồn tại để tránh vẽ chồng
+    if (STATE.chartInstances[id]) {
+        STATE.chartInstances[id].destroy();
+    }
 
     const defaultOptions = {
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: { top: 15, bottom: 5, left: 5, right: 10 } },
+        layout: { padding: { top: 25, bottom: 5, left: 5, right: 10 } },
         plugins: {
             legend: { 
                 position: 'bottom', 
@@ -37,6 +34,7 @@ export function renderChart(type, id, data, options = {}) {
             datalabels: {
                 color: '#fff',
                 font: { weight: 'bold', size: 10 },
+                // Mặc định chỉ hiện số cho biểu đồ tròn
                 formatter: (v) => (type === 'pie' || type === 'doughnut') ? (v > 0 ? fmn(v) : '') : '',
                 display: (context) => type === 'pie' || type === 'doughnut'
             },
@@ -44,35 +42,22 @@ export function renderChart(type, id, data, options = {}) {
                 backgroundColor: 'rgba(17, 24, 39, 0.95)',
                 padding: 12,
                 cornerRadius: 6,
-                titleFont: { size: 13, weight: 'bold' },
-                bodyFont: { size: 13 },
                 callbacks: { 
-                    title: (items) => {
-                        if(items[0].label && items[0].label.includes('...')) 
-                             return items[0].chart.data.labels[items[0].dataIndex]; // Lấy tên full từ mảng labels gốc
-                        return items[0].label;
-                    },
                     label: c => ` ${c.dataset.label}: ${fmn(c.raw.y || c.raw)}` 
                 } 
             },
             ...options.plugins
         },
         scales: {
-            x: {
-                grid: { display: false, drawBorder: false },
-                ticks: {
-                    maxRotation: 0, // 🔥 ÉP CHỮ KHÔNG NGHIÊNG
-                    minRotation: 0,
-                    autoSkip: true, 
-                    font: { size: 10, weight: '600' },
-                    callback: smartTruncateCallback // Rút gọn tên dài
-                },
-                ...options.scales?.x
+            x: { 
+                grid: { display: false }, 
+                ticks: { font: { size: 10, weight: '600' } }, 
+                ...options.scales?.x 
             },
-            y: {
-                grid: { color: '#f3f4f6', borderDash: [5, 5] },
-                beginAtZero: true,
-                ...options.scales?.y
+            y: { 
+                grid: { color: '#f3f4f6', borderDash: [5, 5] }, 
+                beginAtZero: true, 
+                ...options.scales?.y 
             },
             ...options.scales
         },
@@ -82,12 +67,16 @@ export function renderChart(type, id, data, options = {}) {
     STATE.chartInstances[id] = new Chart(ctx, { type, data, options: defaultOptions });
 }
 
-// --- 1. LOGIC TỔNG QUAN ---
+// ============================================================
+// PHẦN 1: TỔNG QUAN THỊ TRƯỜNG (TAB 1)
+// ============================================================
+
 let currentOverviewMonths = [];
 
 export async function loadOverviewDashboard() {
     if (STATE.assignedShopCodes.length === 0) return;
 
+    // Lấy 12 tháng gần nhất
     let monthsToFetch = [];
     let d = new Date();
     for (let i = 0; i < 12; i++) {
@@ -99,6 +88,7 @@ export async function loadOverviewDashboard() {
     monthsToFetch.reverse();
     currentOverviewMonths = monthsToFetch;
 
+    // Fetch dữ liệu báo cáo
     const { data: reports } = await sb.from('financial_reports')
         .select('*')
         .in('shop_code', STATE.assignedShopCodes)
@@ -107,7 +97,8 @@ export async function loadOverviewDashboard() {
         .order('report_month', { ascending: true });
 
     if (!reports || reports.length === 0) {
-        ['ov_rev', 'ov_profit', 'ov_vol', 'ov_rate'].forEach(id => {
+        // Reset về 0 nếu không có data
+        ['ov_rev', 'ov_profit', 'ov_vol', 'ov_rate', 'ov_si', 'ov_stock'].forEach(id => {
             if(document.getElementById(id)) document.getElementById(id).innerText = "0";
         });
         return;
@@ -115,11 +106,13 @@ export async function loadOverviewDashboard() {
 
     STATE.cachedDirectorData = reports; 
 
-    // --- POPULATE BỘ LỌC TỈNH & SALE ---
+    // --- POPULATE BỘ LỌC (Tỉnh, Sale, Tháng) ---
     const saleSet = new Set();
     const provSet = new Set();
+    const monthSet = new Set();
     
     reports.forEach(r => {
+        monthSet.add(r.report_month);
         const s = STATE.globalShopMap[r.shop_code];
         if(s) {
             if(s.sale_name) saleSet.add(s.sale_name);
@@ -127,7 +120,13 @@ export async function loadOverviewDashboard() {
         }
     });
 
-    // Lọc Tỉnh
+    const sortedMonths = [...monthSet].sort().reverse();
+    const filterMonth = document.getElementById('ov_filter_month');
+    if(filterMonth) {
+        filterMonth.innerHTML = sortedMonths.map(m => `<option value="${m}">${m}</option>`).join('');
+        if(sortedMonths.length > 0) filterMonth.value = sortedMonths[0]; 
+    }
+
     const provs = [...provSet].sort();
     const filterProv = document.getElementById('ov_filter_province');
     if(filterProv) {
@@ -135,7 +134,6 @@ export async function loadOverviewDashboard() {
             provs.map(p => `<option value="${p}">${p}</option>`).join('');
     }
 
-    // Lọc Sale
     const sales = [...saleSet].sort();
     const filterSale = document.getElementById('ov_filter_sale');
     if(filterSale) {
@@ -143,17 +141,18 @@ export async function loadOverviewDashboard() {
             sales.map(s => `<option value="${s}">${s}</option>`).join('');
     }
 
-    renderOverviewVisuals(reports, monthsToFetch);
+    // Render lần đầu
+    window.filterOverview();
 }
 
-// --- HÀM LỌC CHUNG (Unified Filter) ---
+// Hàm lọc chung cho Overview
 window.filterOverview = () => {
     const selSale = document.getElementById('ov_filter_sale').value;
     const selProv = document.getElementById('ov_filter_province').value;
+    const selMonth = document.getElementById('ov_filter_month').value;
     
     let filteredReports = STATE.cachedDirectorData;
 
-    // Lọc theo Tỉnh
     if (selProv) {
         filteredReports = filteredReports.filter(r => {
             const shop = STATE.globalShopMap[r.shop_code];
@@ -161,7 +160,6 @@ window.filterOverview = () => {
         });
     }
 
-    // Lọc theo Sale
     if (selSale) {
         filteredReports = filteredReports.filter(r => {
             const shop = STATE.globalShopMap[r.shop_code];
@@ -169,36 +167,44 @@ window.filterOverview = () => {
         });
     }
 
-    renderOverviewVisuals(filteredReports, currentOverviewMonths);
+    renderOverviewVisuals(filteredReports, currentOverviewMonths, selMonth);
 };
 
-function renderOverviewVisuals(reports, months) {
-    // KPI Cards Logic (Giữ nguyên)
-    let totRev = 0, totProfit = 0, totVol = 0;
-    reports.forEach(r => {
-        const k = calcKPI(r);
-        totRev += k.rev; totProfit += k.net; totVol += (r.sold_quantity || 0);
-    });
+function renderOverviewVisuals(reports, months, selectedMonth) {
+    // 1. KPI Cards
+    const currentReports = reports.filter(r => r.report_month === selectedMonth);
 
-    const availableMonths = [...new Set(reports.map(r => r.report_month))].sort();
-    const latestMonth = availableMonths[availableMonths.length - 1];
-    const currentReports = reports.filter(r => r.report_month === latestMonth);
+    let totRev = 0, totProfit = 0, totVol = 0, totSI = 0, totStock = 0;
     let profitableShops = 0;
-    currentReports.forEach(r => { if (calcKPI(r).net > 0) profitableShops++; });
 
-    document.getElementById('ov_rev').innerText = fmn(totRev);
-    document.getElementById('ov_profit').innerText = fmn(totProfit);
-    document.getElementById('ov_vol').innerText = fmn(totVol);
-    if(document.getElementById('lbl_kpi_time')) document.getElementById('lbl_kpi_time').innerText = "(12T)";
-    document.getElementById('ov_rate').innerText = currentReports.length ? Math.round((profitableShops / currentReports.length) * 100) + "%" : "0%";
+    currentReports.forEach(r => {
+        const k = calcKPI(r);
+        totRev += k.rev;
+        totProfit += k.net;
+        totVol += (r.sold_quantity || 0);
+        if (k.net > 0) profitableShops++;
 
-    // --- 🔥 B4 (FIXED): XU HƯỚNG VÙNG (COMBO CHART) ---
-    const trendRev = [], trendNet = [];
-    // Format label tháng ngắn gọn: "2025-02-01" -> "T2/25"
-    const niceLabels = months.map(m => {
-        const parts = m.split('-');
-        return `T${parseInt(parts[1])}/${parts[0].slice(2)}`;
+        let si = 0;
+        try {
+            const details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json || [];
+            details.forEach(d => si += (d.qty_si || 0));
+        } catch(e) {}
+        totSI += si;
+        
+        const stock = safeVal(r.opening_stock) + si - (r.sold_quantity || 0);
+        totStock += stock;
     });
+
+    if(document.getElementById('ov_rev')) document.getElementById('ov_rev').innerText = fmn(totRev);
+    if(document.getElementById('ov_profit')) document.getElementById('ov_profit').innerText = fmn(totProfit);
+    if(document.getElementById('ov_vol')) document.getElementById('ov_vol').innerText = fmn(totVol);
+    if(document.getElementById('ov_si')) document.getElementById('ov_si').innerText = fmn(totSI);
+    if(document.getElementById('ov_stock')) document.getElementById('ov_stock').innerText = fmn(totStock);
+    if(document.getElementById('ov_rate')) document.getElementById('ov_rate').innerText = `${profitableShops}/${currentReports.length}`;
+
+    // 2. Biểu đồ Xu hướng (B4)
+    const trendRev = [], trendNet = [];
+    const niceLabels = months.map(m => `T${parseInt(m.split('-')[1])}/${m.split('-')[0].slice(2)}`);
 
     months.forEach(m => {
         const monthlyReports = reports.filter(r => r.report_month === m);
@@ -208,70 +214,54 @@ function renderOverviewVisuals(reports, months) {
     });
 
     renderChart('bar', 'chart_B4_Trend', {
-        labels: niceLabels, // Dùng nhãn tháng ngắn
+        labels: niceLabels,
         datasets: [
-            { 
-                type: 'bar', // Cột cho Doanh Thu (Tạo độ lớn)
-                label: 'Tổng Doanh Thu', 
-                data: trendRev, 
-                backgroundColor: 'rgba(59, 130, 246, 0.7)', 
-                borderRadius: 4,
-                order: 2
-            },
-            { 
-                type: 'line', // Đường cho Lợi Nhuận (So sánh xu hướng)
-                label: 'Tổng Lợi Nhuận', 
-                data: trendNet, 
-                borderColor: '#10b981', 
-                backgroundColor: '#10b981', 
-                borderWidth: 2,
-                pointRadius: 4,
-                tension: 0.3,
-                order: 1 
-            }
+            { type: 'bar', label: 'Tổng Doanh Thu', data: trendRev, backgroundColor: 'rgba(59, 130, 246, 0.7)', borderRadius: 4, order: 2 },
+            { type: 'line', label: 'Tổng Lợi Nhuận', data: trendNet, borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 2, pointRadius: 4, tension: 0.3, order: 1 }
         ]
     });
 
+    // 3. Các biểu đồ chi tiết khác (Xếp hạng, MKT, Scatter...)
     const shopAgg = {};
-    reports.forEach(r => {
+    currentReports.forEach(r => {
         const sName = STATE.globalShopMap[r.shop_code]?.shop_name || r.shop_code;
         if (!shopAgg[r.shop_code]) shopAgg[r.shop_code] = { net: 0, rev: 0, mkt: 0, exp: 0, name: sName };
         const k = calcKPI(r);
         shopAgg[r.shop_code].net += k.net; shopAgg[r.shop_code].rev += k.rev;
         shopAgg[r.shop_code].mkt += k.mkt; shopAgg[r.shop_code].exp += k.totalExp;
     });
+    
+    const shopList = Object.values(shopAgg);
 
-    // B2: Xếp hạng (Bar Ngang)
-    const sortedShops = Object.values(shopAgg).sort((a, b) => b.net - a.net).slice(0, 10);
+    // B2: Xếp hạng
+    const sortedShops = [...shopList].sort((a, b) => b.net - a.net).slice(0, 10);
     renderChart('bar', 'chart_B2_Rank', {
         labels: sortedShops.map(s => s.name), 
         datasets: [{ 
-            label: 'Lợi Nhuận (12T)', 
+            label: 'Lợi Nhuận (Tháng)', 
             data: sortedShops.map(s => s.net), 
             backgroundColor: sortedShops.map(s => s.net >= 0 ? '#16a34a' : '#ef4444'),
             borderRadius: 4, barThickness: 15
         }]
     }, { indexAxis: 'y', plugins: { datalabels: { display: false } }, scales: { x: { grid: { display: true, borderDash: [2,2] } } } });
 
-    // --- 🔥 B5 (FIXED): MARKETING (CHỮ NGANG, CẮT TÊN) ---
-    const mktData = Object.values(shopAgg).sort((a, b) => b.mkt - a.mkt).slice(0, 10);
+    // B5: Marketing
+    const mktData = [...shopList].sort((a, b) => b.mkt - a.mkt).slice(0, 10);
     renderChart('bar', 'chart_B5_Mkt', {
-        labels: mktData.map(d => d.name), // Truyền tên full, để plugin tự cắt
+        labels: mktData.map(d => d.name),
         datasets: [
             { label: 'Chi phí MKT', data: mktData.map(d => d.mkt), backgroundColor: '#ef4444', borderRadius: 4, order: 2 }, 
             { type: 'line', label: 'Doanh thu', data: mktData.map(d => d.rev), borderColor: '#3b82f6', borderWidth: 2, pointBackgroundColor: 'white', order: 1, yAxisID: 'y1' }
         ]
     }, { 
         scales: { 
-            x: { 
-                ticks: { maxRotation: 0, minRotation: 0 } // Bắt buộc chữ ngang
-            },
+            x: { ticks: { maxRotation: 0, minRotation: 0 } },
             y: { display: true }, 
             y1: { display: true, position: 'right', grid: { drawOnChartArea: false } } 
         } 
     });
 
-    // B6: Ma trận (Giữ nguyên - Đã OK)
+    // B6: Scatter
     const scatterData = currentReports.map(r => {
         const k = calcKPI(r);
         const margin = k.rev > 0 ? (k.net / k.rev) * 100 : 0;
@@ -280,11 +270,11 @@ function renderOverviewVisuals(reports, months) {
     renderChart('scatter', 'chart_B6_Scatter', { 
         datasets:[{ label: 'Shop', data: scatterData, backgroundColor: ctx => (ctx.raw && ctx.raw.y>=0) ? '#16a34a' : '#dc2626', pointRadius: 6 }] 
     }, { 
-        plugins: { legend: {display:false}, datalabels:{display:false}, tooltip: { callbacks: { label: c=>c.raw.shop, afterLabel: c=>`DT: ${fmn(c.raw.x)} | MG: ${c.raw.y.toFixed(1)}%` } }, annotation: { annotations: { line1: { type:'line', yMin:0, yMax:0, borderColor:'#666', borderWidth:2, borderDash:[5,5] } } } },
+        plugins: { legend: {display:false}, datalabels:{display:false}, tooltip: { callbacks: { label: c=>c.raw.shop, afterLabel: c=>`DT: ${fmn(c.raw.x)} | MG: ${c.raw.y.toFixed(1)}%` } } },
         scales: { x: {title:{display:true,text:'Doanh Thu'}}, y: {title:{display:true,text:'Margin (%)'}} }
     });
 
-    // B3: Heatmap Table
+    // B3: Table
     document.getElementById('body_B3_Heatmap').innerHTML = currentReports.map(r => {
         const k = calcKPI(r);
         const margin = k.rev ? (k.net / k.rev) * 100 : 0;
@@ -295,7 +285,7 @@ function renderOverviewVisuals(reports, months) {
 
     // Top Model & Stock
     const modelAgg = {};
-    reports.forEach(r => {
+    currentReports.forEach(r => {
         let details = [];
         try { details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json || []; } catch (e) {}
         details.forEach(d => { const name = d.model || "Unknown"; if (!modelAgg[name]) modelAgg[name] = 0; modelAgg[name] += (d.qty_so || 0); });
@@ -322,7 +312,10 @@ function renderOverviewVisuals(reports, months) {
     });
 }
 
-// --- 2. CHI TIẾT SHOP (Giữ nguyên phần này) ---
+// ============================================================
+// PHẦN 2: CHI TIẾT SHOP (TAB 2)
+// ============================================================
+
 export async function loadCharts() {
     const selDVN = document.getElementById('chart_dvn').value;
     if (!selDVN) return;
@@ -358,4 +351,198 @@ function renderShopLevel(r, allReports) {
     renderChart('line', 'chart_C3_Trend', { labels: trendLabels, datasets: [{ label: 'Doanh Thu', data: trendRev, borderColor: '#2563eb' }, { label: 'Lợi Nhuận', data: trendNet, borderColor: '#16a34a' }] });
 
     if (details.length) { details.sort((a, b) => (b.qty_so || 0) - (a.qty_so || 0)); document.getElementById('div_C5_Model').innerHTML = `<table class="w-full text-xs text-left"><thead class="bg-gray-100 font-bold sticky top-0"><tr><th class="p-2">Model</th><th class="p-2 text-center">SL Bán</th><th class="p-2 text-right">Doanh Thu</th></tr></thead><tbody class="divide-y divide-gray-100">${details.map(d => `<tr class="hover:bg-gray-50"><td class="p-2 font-medium">${d.model}</td><td class="p-2 text-center font-bold text-blue-600">${d.qty_so||0}</td><td class="p-2 text-right font-mono text-gray-500">${fmn((d.qty_so||0)*(d.so||0))}</td></tr>`).join('')}</tbody></table>`; renderChart('bar', 'chart_C6_Stack', { labels: details.map(d => d.model), datasets: [ { label: 'Bán (S.O)', data: details.map(d => d.qty_so || 0), backgroundColor: '#3b82f6' }, { label: 'Nhập (S.I)', data: details.map(d => d.qty_si || 0), backgroundColor: '#f97316' } ] }, { scales: { x: { stacked: true }, y: { stacked: true } } }); } else { document.getElementById('div_C5_Model').innerHTML = "<p class='p-4 text-center text-gray-400 italic'>Chưa có dữ liệu chi tiết xe</p>"; }
+}
+
+// ============================================================
+// PHẦN 3: TIẾN ĐỘ TARGET & TĂNG TRƯỞNG (TAB 3 - MỚI)
+// ============================================================
+
+export async function loadTargetDashboard() {
+    // 1. Lấy Elements bộ lọc
+    const selYear = document.getElementById('tg_filter_year');
+    const selProv = document.getElementById('tg_filter_province');
+    const selSVN = document.getElementById('tg_filter_svn');
+    const selDVN = document.getElementById('tg_filter_dvn');
+
+    // 2. Điền dữ liệu vào bộ lọc (nếu chưa có)
+    if (selProv && selProv.options.length <= 1) {
+        const provs = [...new Set(STATE.globalAssignedShops.map(s => s.province).filter(n => n))].sort();
+        const svns = [...new Set(STATE.globalAssignedShops.map(s => s.svn_code).filter(n => n))].sort();
+        const shops = STATE.globalAssignedShops.sort((a,b) => a.shop_code.localeCompare(b.shop_code));
+
+        selProv.innerHTML = `<option value="">-- Tất cả Tỉnh --</option>` + provs.map(p => `<option value="${p}">${p}</option>`).join('');
+        selSVN.innerHTML = `<option value="">-- Tất cả SVN --</option>` + svns.map(s => `<option value="${s}">${s}</option>`).join('');
+        selDVN.innerHTML = `<option value="">-- Tất cả Shop --</option>` + shops.map(s => `<option value="${s.shop_code}">${s.shop_code} - ${s.shop_name}</option>`).join('');
+    }
+
+    // 3. Logic Lọc: Xác định danh sách Shop cần lấy dữ liệu
+    let targetShopCodes = [];
+    
+    // Ưu tiên: Shop > SVN > Tỉnh > Tất cả
+    if (selDVN.value) {
+        targetShopCodes = [selDVN.value];
+    } else {
+        let filtered = STATE.globalAssignedShops;
+        if (selProv.value) filtered = filtered.filter(s => s.province === selProv.value);
+        if (selSVN.value) filtered = filtered.filter(s => s.svn_code === selSVN.value);
+        targetShopCodes = filtered.map(s => s.shop_code);
+    }
+
+    if (targetShopCodes.length === 0) return;
+
+    // 4. Fetch Data theo Năm đã chọn
+    const year = selYear.value || new Date().getFullYear();
+    const startYear = `${year}-01-01`;
+    const endYear = `${year}-12-31`;
+
+    const [ { data: actualData }, { data: targetData } ] = await Promise.all([
+        sb.from('financial_reports')
+            .select('report_month, shop_code, sold_quantity, sales_detail_json')
+            .in('shop_code', targetShopCodes)
+            .gte('report_month', startYear)
+            .lte('report_month', endYear)
+            .eq('status', 'approved'),
+        sb.from('kpi_targets')
+            .select('*')
+            .in('reference_code', targetShopCodes)
+            .gte('target_month', `${year}-01`)
+            .lte('target_month', `${year}-12`)
+    ]);
+
+    // 5. Tổng hợp dữ liệu theo Tháng (1-12)
+    const aggregated = {}; 
+    const months = [];
+    for(let i=1; i<=12; i++) {
+        const mKey = `${year}-${String(i).padStart(2,'0')}`; // Ví dụ: "2026-01"
+        months.push(mKey);
+        aggregated[mKey] = { target_si: 0, target_so: 0, act_si: 0, act_so: 0 };
+    }
+
+    // Map Target vào tháng
+    if(targetData) targetData.forEach(t => {
+        if(aggregated[t.target_month]) {
+            aggregated[t.target_month].target_si += (t.target_si || 0);
+            aggregated[t.target_month].target_so += (t.target_so || 0);
+        }
+    });
+
+    // Map Actual vào tháng
+    if(actualData) actualData.forEach(r => {
+        const mKey = r.report_month.slice(0, 7);
+        if(aggregated[mKey]) {
+            let si = 0;
+            try {
+                const details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json || [];
+                details.forEach(d => si += (d.qty_si || 0));
+            } catch(e) {}
+            aggregated[mKey].act_si += si;
+            aggregated[mKey].act_so += (r.sold_quantity || 0);
+        }
+    });
+
+    // 6. Update KPI Cards (Tổng cả năm)
+    let sumT_SI = 0, sumA_SI = 0, sumT_SO = 0, sumA_SO = 0;
+    Object.values(aggregated).forEach(v => {
+        sumT_SI += v.target_si; sumA_SI += v.act_si;
+        sumT_SO += v.target_so; sumA_SO += v.act_so;
+    });
+
+    const pctSI = sumT_SI > 0 ? Math.round((sumA_SI / sumT_SI) * 100) : 0;
+    const pctSO = sumT_SO > 0 ? Math.round((sumA_SO / sumT_SO) * 100) : 0;
+
+    document.getElementById('tg_card_si_percent').innerText = `${pctSI}%`;
+    document.getElementById('tg_val_si_act').innerText = fmn(sumA_SI);
+    document.getElementById('tg_val_si_target').innerText = fmn(sumT_SI);
+    document.getElementById('tg_progress_si').style.width = `${Math.min(pctSI, 100)}%`;
+
+    document.getElementById('tg_card_so_percent').innerText = `${pctSO}%`;
+    document.getElementById('tg_val_so_act').innerText = fmn(sumA_SO);
+    document.getElementById('tg_val_so_target').innerText = fmn(sumT_SO);
+    document.getElementById('tg_progress_so').style.width = `${Math.min(pctSO, 100)}%`;
+
+    // 7. Chuẩn bị dữ liệu vẽ biểu đồ (Tăng trưởng)
+    const labels = months.map(m => `T${m.split('-')[1]}`);
+    
+    // Hàm tính Growth (%)
+    const getGrowthData = (dataArr) => {
+        return dataArr.map((val, idx) => {
+            if (idx === 0) return 0; // Tháng 1 chưa có tăng trưởng
+            const prev = dataArr[idx - 1];
+            return prev === 0 ? 0 : ((val - prev) / prev) * 100;
+        });
+    };
+
+    const dataActSI = months.map(m => aggregated[m].act_si);
+    const dataTgtSI = months.map(m => aggregated[m].target_si);
+    const dataGrowthSI = getGrowthData(dataActSI);
+
+    // --- CHART S.I (NHẬP) ---
+    renderChart('bar', 'chart_Target_SI', {
+        labels: labels,
+        datasets: [
+            { 
+                type: 'line', 
+                label: '% Tăng trưởng', 
+                data: dataActSI, // Đường nối đỉnh cột Actual
+                borderColor: '#16a34a', // Màu xanh lá
+                borderWidth: 2, 
+                tension: 0.3, 
+                pointRadius: 4, 
+                pointBackgroundColor: '#fff',
+                datalabels: {
+                    display: true, 
+                    align: 'top', 
+                    anchor: 'end',
+                    formatter: (value, ctx) => {
+                        const growth = dataGrowthSI[ctx.dataIndex];
+                        if (ctx.dataIndex === 0 || growth === 0) return '';
+                        const icon = growth > 0 ? '▲' : '▼';
+                        return `${icon} ${Math.abs(growth).toFixed(1)}%`;
+                    },
+                    color: (ctx) => dataGrowthSI[ctx.dataIndex] >= 0 ? '#16a34a' : '#ef4444',
+                    font: { size: 10, weight: 'bold' }
+                },
+                order: 1 // Vẽ đè lên cột
+            },
+            { label: 'Thực Tế', data: dataActSI, backgroundColor: '#f97316', order: 2 }, // Cam đậm
+            { label: 'Mục Tiêu', data: dataTgtSI, backgroundColor: '#ffedd5', order: 3 } // Cam nhạt
+        ]
+    }, { scales: { y: { beginAtZero: true } } });
+
+    // --- CHART S.O (BÁN) ---
+    const dataActSO = months.map(m => aggregated[m].act_so);
+    const dataTgtSO = months.map(m => aggregated[m].target_so);
+    const dataGrowthSO = getGrowthData(dataActSO);
+
+    renderChart('bar', 'chart_Target_SO', {
+        labels: labels,
+        datasets: [
+            { 
+                type: 'line', 
+                label: '% Tăng trưởng', 
+                data: dataActSO, 
+                borderColor: '#2563eb', // Màu xanh dương
+                borderWidth: 2, 
+                tension: 0.3, 
+                pointRadius: 4, 
+                pointBackgroundColor: '#fff',
+                datalabels: {
+                    display: true, 
+                    align: 'top', 
+                    anchor: 'end',
+                    formatter: (value, ctx) => {
+                        const growth = dataGrowthSO[ctx.dataIndex];
+                        if (ctx.dataIndex === 0 || growth === 0) return '';
+                        const icon = growth > 0 ? '▲' : '▼';
+                        return `${icon} ${Math.abs(growth).toFixed(1)}%`;
+                    },
+                    color: (ctx) => dataGrowthSO[ctx.dataIndex] >= 0 ? '#16a34a' : '#ef4444',
+                    font: { size: 10, weight: 'bold' }
+                },
+                order: 1
+            },
+            { label: 'Thực Tế', data: dataActSO, backgroundColor: '#3b82f6', order: 2 }, // Xanh đậm
+            { label: 'Mục Tiêu', data: dataTgtSO, backgroundColor: '#dbeafe', order: 3 } // Xanh nhạt
+        ]
+    });
 }

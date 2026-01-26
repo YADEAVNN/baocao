@@ -18,45 +18,47 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <style>
-    body { font-family: 'Roboto', sans-serif; background-color: #F8FAFC; }
+    /* Ép font chữ hệ thống */
+    body { font-family: 'Roboto', sans-serif !important; background-color: #F8FAFC; }
+    
     .fade-in { animation: fadeIn 0.4s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* Animation cho Modal */
     .modal-enter { animation: modalIn 0.3s ease-out forwards; }
     @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+    
     .nav-item { display: flex; align-items: center; padding: 12px 20px; color: #9ca3af; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
     .nav-item:hover { background-color: #1f2937; color: white; }
     .nav-item.active { background-color: #1f2937; color: #fff; border-left-color: #FF4500; }
     .nav-item i { width: 20px; margin-right: 10px; text-align: center; }
+    
     .form-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
     .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
     .form-input:focus { border-color: #FF4500; box-shadow: 0 0 0 3px rgba(255,69,0,0.1); }
     .form-input[readonly] { background-color: #f3f4f6; color: #64748b; cursor: not-allowed; }
     .form-input:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7; }
+    
     .sub-tab-btn { border-bottom: 2px solid transparent; color: #6b7280; font-weight: 600; padding: 10px 15px; transition: all 0.2s; white-space: nowrap; font-size: 13px; }
     .sub-tab-btn:hover { color: #1f2937; background-color: #f3f4f6; border-radius: 8px 8px 0 0; }
     .sub-tab-btn.active { color: #FF4500; border-bottom-color: #FF4500; background-color: white; border-radius: 8px 8px 0 0; }
+    
     .edit-mode-banner { background: #fff7ed; border: 1px solid #fdba74; color: #c2410c; padding: 12px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(253, 186, 116, 0.2); }
   </style>
 </head>
-<body class="h-[100dvh] overflow-hidden flex text-slate-800">
+<body class="h-[100dvh] overflow-hidden flex text-slate-800 font-sans">
 
   <div id="authContainer" class="fixed inset-0 z-[60] bg-[#F3F4F6] flex items-center justify-center p-4">
     <div class="bg-white rounded-[20px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-w-4xl w-full min-h-[550px] fade-in">
       <div class="w-full md:w-5/12 bg-[#111827] flex flex-col items-center justify-center p-10 text-center relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-blue-600/20"></div>
-        
         <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-14 mb-6 relative z-10">
-        
         <h2 class="text-3xl font-black text-white uppercase mb-2 relative z-10 tracking-tight">YADEA FINANCE</h2>
         <p class="text-gray-400 text-xs font-medium relative z-10">Hệ Thống Quản Trị Tài Chính & Vận Hành</p>
       </div>
-      
       <div class="w-full md:w-7/12 p-10 flex flex-col justify-center">
         <div id="loginFormSection" class="max-w-xs mx-auto w-full">
           <h3 class="text-2xl font-black text-slate-800 mb-6">Đăng Nhập</h3>
@@ -100,25 +102,32 @@
         <div class="p-6 border-b border-gray-800"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-orange-600 flex items-center justify-center text-white font-bold text-sm shadow-lg" id="avatarLetter">U</div><div class="overflow-hidden"><h4 id="userDisplay" class="text-white text-sm font-bold truncate">User</h4><span id="roleDisplay" class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">SALE</span></div></div></div>
         <nav class="flex-1 py-6 space-y-1">
             <a onclick="switchView('charts')" id="nav-charts" class="nav-item active"><i class="fa-solid fa-chart-line text-green-500"></i> 1. Phân Tích Chiến Lược</a>
-            <a onclick="switchView('sales')" id="nav-sales" class="nav-item"><i class="fa-solid fa-boxes-stacked text-orange-500"></i> 2. Kho & Doanh Thu</a>
-            <a onclick="switchView('costs')" id="nav-costs" class="nav-item"><i class="fa-solid fa-file-invoice-dollar text-blue-500"></i> 3. Nhập Chi Phí (P&L)</a>
-            <a onclick="switchView('history')" id="nav-history" class="nav-item"><i class="fa-solid fa-clock-rotate-left text-purple-500"></i> 4. Lịch sử & Sửa</a>
+            <a onclick="switchView('targets')" id="nav-targets" class="nav-item"><i class="fa-solid fa-bullseye text-red-500"></i> 2. Thiết Lập Target</a>
+            <a onclick="switchView('sales')" id="nav-sales" class="nav-item"><i class="fa-solid fa-boxes-stacked text-orange-500"></i> 3. Kho & Doanh Thu</a>
+            <a onclick="switchView('costs')" id="nav-costs" class="nav-item"><i class="fa-solid fa-file-invoice-dollar text-blue-500"></i> 4. Nhập Chi Phí (P&L)</a>
+            <a onclick="switchView('history')" id="nav-history" class="nav-item"><i class="fa-solid fa-clock-rotate-left text-purple-500"></i> 5. Lịch sử & Sửa</a>
         </nav>
         <div class="p-4 bg-[#0f1523] border-t border-gray-800"><button id="btnLogout" class="flex items-center justify-center w-full py-2.5 text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition border border-gray-700"><i class="fa-solid fa-right-from-bracket mr-2"></i> Đăng xuất</button></div>
     </aside>
 
     <main class="flex-1 overflow-y-auto bg-[#F8FAFC] relative pt-20 md:pt-0">
+        
         <div id="view-charts" class="p-4 md:p-8 fade-in max-w-[1600px] mx-auto space-y-4">
             <div class="flex justify-between items-end border-b border-gray-200 bg-white rounded-t-xl px-2 pt-2 sticky top-0 z-10 shadow-sm overflow-x-auto">
-                <div class="flex"><button onclick="switchChartTab('overview')" id="btn-tab-overview" class="sub-tab-btn active"><i class="fa-solid fa-globe mr-2"></i>TỔNG QUAN THỊ TRƯỜNG</button><button onclick="switchChartTab('detail')" id="btn-tab-detail" class="sub-tab-btn"><i class="fa-solid fa-store mr-2"></i>CHI TIẾT SHOP</button></div>
+                <div class="flex">
+                    <button onclick="switchChartTab('overview')" id="btn-tab-overview" class="sub-tab-btn active"><i class="fa-solid fa-globe mr-2"></i>TỔNG QUAN THỊ TRƯỜNG</button>
+                    <button onclick="switchChartTab('detail')" id="btn-tab-detail" class="sub-tab-btn"><i class="fa-solid fa-store mr-2"></i>CHI TIẾT SHOP</button>
+                    <button onclick="switchChartTab('target_prog')" id="btn-tab-target_prog" class="sub-tab-btn"><i class="fa-solid fa-crosshairs mr-2"></i>TIẾN ĐỘ TARGET</button>
+                </div>
             </div>
             
             <div id="chart-tab-overview" class="space-y-6">
                 <div class="bg-white p-6 rounded-b-xl rounded-r-xl shadow-sm border border-gray-100">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
                          <div><h2 class="text-xl font-black text-slate-800 uppercase">THỊ TRƯỜNG CỦA TÔI</h2><p class="text-xs text-gray-500 mt-1">Dữ liệu tổng hợp từ tất cả các Shop được gán.</p></div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200" id="overview_role_badge">DIRECTOR</span>
+                            <select id="ov_filter_month" onchange="filterOverview()" class="bg-white border border-blue-200 text-blue-800 text-xs font-bold py-2 px-2 rounded-lg shadow-sm outline-none cursor-pointer hover:border-blue-400 transition hidden md:block"><option value="">-- Chọn Tháng --</option></select>
                             <select id="ov_filter_province" onchange="filterOverview()" class="bg-white border border-blue-200 text-blue-800 text-xs font-bold py-2 px-2 rounded-lg shadow-sm outline-none cursor-pointer hover:border-blue-400 transition hidden md:block"><option value="">-- Tất cả Tỉnh --</option></select>
                             <select id="ov_filter_sale" onchange="filterOverview()" class="bg-white border border-blue-200 text-blue-800 text-xs font-bold py-2 px-2 rounded-lg shadow-sm outline-none cursor-pointer hover:border-blue-400 transition hidden md:block"><option value="">-- Lọc theo Sale --</option></select>
                             <div class="flex gap-2">
@@ -128,12 +137,20 @@
                         </div>
                     </div>
                     <div id="dashboard-capture-area">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-blue-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tổng Doanh Thu <span id="lbl_kpi_time">(12T)</span></p><h4 id="ov_rev" class="text-xl md:text-2xl font-black text-blue-600 mt-1">0</h4></div>
-                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-green-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tổng Lợi Nhuận</p><h4 id="ov_profit" class="text-xl md:text-2xl font-black text-green-600 mt-1">0</h4></div>
-                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-orange-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tổng Xe Bán</p><h4 id="ov_vol" class="text-xl md:text-2xl font-black text-orange-600 mt-1">0</h4></div>
-                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-purple-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tỷ Lệ Shop Có Lãi</p><h4 id="ov_rate" class="text-xl md:text-2xl font-black text-purple-600 mt-1">0%</h4></div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tổng Nhập (SI)</p><h4 id="ov_si" class="text-xl md:text-2xl font-black text-indigo-600 mt-1">0</h4></div>
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-pink-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tồn Kho</p><h4 id="ov_stock" class="text-xl md:text-2xl font-black text-pink-600 mt-1">0</h4></div>
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-orange-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Tổng Xe Bán (S.O)</p><h4 id="ov_vol" class="text-xl md:text-2xl font-black text-orange-600 mt-1">0</h4></div>
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-blue-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Doanh Thu</p><h4 id="ov_rev" class="text-xl md:text-2xl font-black text-blue-600 mt-1">0</h4></div>
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-green-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Lợi Nhuận</p><h4 id="ov_profit" class="text-xl md:text-2xl font-black text-green-600 mt-1">0</h4></div>
+                            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-purple-500 shadow-sm"><p class="text-[10px] text-gray-500 font-bold uppercase">Shop Có Lãi</p><h4 id="ov_rate" class="text-xl md:text-2xl font-black text-purple-600 mt-1">0/0</h4></div>
                         </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B4. Xu Hướng Vùng (Doanh Thu/Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_B4_Trend"></canvas></div></div>
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B5. Hiệu Quả Marketing (Cost vs Rev)</h4><div class="h-[300px]"><canvas id="chart_B5_Mkt"></canvas></div></div>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4"><i class="fa-solid fa-crown text-yellow-500 mr-1"></i> Top Xe Bán Chạy Nhất (Toàn Vùng)</h4><div class="h-[300px]"><canvas id="chart_Ov_TopProducts"></canvas></div></div>
                             <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4"><i class="fa-solid fa-warehouse text-purple-500 mr-1"></i> Sức Khỏe Tồn Kho (Tồn vs Bán)</h4><div class="h-[300px]"><canvas id="chart_Ov_StockHealth"></canvas></div></div>
@@ -141,10 +158,6 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B2. Xếp Hạng Shop (Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_B2_Rank"></canvas></div></div>
                             <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B6. Phân Loại Shop (Doanh Thu vs Chi Phí)</h4><div class="h-[300px]"><canvas id="chart_B6_Scatter"></canvas></div></div>
-                        </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B4. Xu Hướng Vùng (Doanh Thu/Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_B4_Trend"></canvas></div></div>
-                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B5. Hiệu Quả Marketing (Cost vs Rev)</h4><div class="h-[300px]"><canvas id="chart_B5_Mkt"></canvas></div></div>
                         </div>
                     </div>
                     <div class="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
@@ -155,6 +168,7 @@
                     </div>
                 </div>
             </div>
+
             <div id="chart-tab-detail" class="hidden space-y-6">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
                      <div class="w-full md:flex-1 md:min-w-[200px]"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">Sale Phụ Trách</label><select id="chart_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-sm w-full" onchange="updateChartFilters('sale')"><option value="">-- Tất cả --</option></select></div>
@@ -169,12 +183,160 @@
                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C5. Top Model Bán Chạy</h4></div><div class="overflow-y-auto h-[300px]" id="div_C5_Model"></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C6. Nhập vs Bán Theo Model</h4><div class="h-[300px]"><canvas id="chart_C6_Stack"></canvas></div></div></div>
                 </div>
             </div>
+
+            <div id="chart-tab-target_prog" class="hidden space-y-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
+                    <div class="w-[100px]">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Năm</label>
+                        <select id="tg_filter_year" onchange="loadTargetDashboard()" class="bg-gray-50 border border-gray-200 text-slate-700 font-bold rounded-lg p-2 text-sm w-full">
+                            <option value="2026" selected>2026</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                     <div class="w-[120px]">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tháng (Lọc)</label>
+                        <select id="tg_filter_month" onchange="loadTargetDashboard()" class="bg-gray-50 border border-gray-200 text-slate-700 font-bold rounded-lg p-2 text-sm w-full">
+                            <option value="">-- Cả Năm --</option>
+                            <option value="01">Tháng 01</option><option value="02">Tháng 02</option><option value="03">Tháng 03</option>
+                            <option value="04">Tháng 04</option><option value="05">Tháng 05</option><option value="06">Tháng 06</option>
+                            <option value="07">Tháng 07</option><option value="08">Tháng 08</option><option value="09">Tháng 09</option>
+                            <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+                        </select>
+                    </div>
+
+                    <div class="flex-1 min-w-[150px]">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tỉnh / Thành</label>
+                        <select id="tg_filter_province" onchange="loadTargetDashboard()" class="w-full bg-white border border-gray-200 text-slate-700 font-bold rounded-lg p-2 outline-none">
+                            <option value="">-- Tất cả Tỉnh --</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Mã SVN</label>
+                        <select id="tg_filter_svn" onchange="loadTargetDashboard()" class="w-full bg-white border border-gray-200 text-slate-700 font-bold rounded-lg p-2 outline-none">
+                            <option value="">-- Tất cả SVN --</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[250px] flex items-end gap-2">
+                         <div class="flex-1">
+                             <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Cửa Hàng (Shop)</label>
+                             <select id="tg_filter_dvn" class="w-full bg-white border border-gray-200 text-slate-700 font-bold rounded-lg p-2 outline-none">
+                                <option value="">-- Tất cả Shop --</option>
+                            </select>
+                         </div>
+                         <button onclick="loadTargetDashboard()" class="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-600 transition"><i class="fa-solid fa-filter"></i> Lọc</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-l-4 border-l-orange-500 border-gray-200 relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-4">
+                            <div><h4 class="text-xs font-black text-gray-500 uppercase">Tiến độ Nhập (S.I) - Năm nay</h4><h2 id="tg_card_si_percent" class="text-4xl font-black text-orange-600 mt-2">0%</h2></div>
+                            <div class="p-3 bg-orange-100 rounded-xl text-orange-600"><i class="fa-solid fa-truck-ramp-box text-2xl"></i></div>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2 mb-4"><div id="tg_progress_si" class="bg-orange-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                        <div class="flex justify-between text-xs font-bold text-gray-500"><span>Thực tế: <strong id="tg_val_si_act" class="text-slate-800">0</strong></span><span>Mục tiêu: <strong id="tg_val_si_target" class="text-slate-800">0</strong></span></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-l-4 border-l-blue-500 border-gray-200 relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-4">
+                            <div><h4 class="text-xs font-black text-gray-500 uppercase">Tiến độ Bán (S.O) - Năm nay</h4><h2 id="tg_card_so_percent" class="text-4xl font-black text-blue-600 mt-2">0%</h2></div>
+                            <div class="p-3 bg-blue-100 rounded-xl text-blue-600"><i class="fa-solid fa-hand-holding-dollar text-2xl"></i></div>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2 mb-4"><div id="tg_progress_so" class="bg-blue-600 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                        <div class="flex justify-between text-xs font-bold text-gray-500"><span>Thực tế: <strong id="tg_val_so_act" class="text-slate-800">0</strong></span><span>Mục tiêu: <strong id="tg_val_so_target" class="text-slate-800">0</strong></span></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                        <h4 class="text-xs font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-column text-orange-500"></i> So sánh S.I (Nhập) & Tăng trưởng</h4>
+                        <div class="h-[300px]"><canvas id="chart_Target_SI"></canvas></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                        <h4 class="text-xs font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> So sánh S.O (Bán) & Tăng trưởng</h4>
+                        <div class="h-[300px]"><canvas id="chart_Target_SO"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-targets" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase">2. Thiết Lập Target</h1>
+                    <p class="text-gray-500 text-xs mt-1">Quản lý mục tiêu S.I và S.O theo tháng.</p>
+                </div>
+                <div class="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Tháng:</label>
+                    <input type="month" id="target_month_picker" class="font-bold text-slate-700 bg-transparent outline-none text-sm cursor-pointer" onchange="loadTargetView()">
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-t-2xl border-b border-gray-100 flex flex-wrap gap-3 items-end shadow-sm">
+                <div class="flex-1 min-w-[150px]">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Chế độ xem</label>
+                    <select id="target_view_mode" onchange="loadTargetView()" class="w-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold rounded-lg p-2.5 outline-none focus:border-blue-500">
+                        <option value="BY_SALE">Theo Nhân Viên Sale</option>
+                        <option value="BY_SHOP">Theo Cửa Hàng (Chi tiết)</option>
+                    </select>
+                </div>
+
+                <div class="flex-1 min-w-[150px]">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tỉnh / Thành Phố</label>
+                    <select id="filter_target_province" onchange="applyTargetFilters()" class="w-full bg-gray-50 border border-gray-200 text-slate-700 text-xs font-bold rounded-lg p-2.5 outline-none focus:border-blue-500">
+                        <option value="">-- Tất cả --</option>
+                    </select>
+                </div>
+                <div class="flex-1 min-w-[120px]">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Mã SVN</label>
+                    <select id="filter_target_svn" onchange="applyTargetFilters()" class="w-full bg-gray-50 border border-gray-200 text-slate-700 text-xs font-bold rounded-lg p-2.5 outline-none focus:border-blue-500">
+                        <option value="">-- Tất cả --</option>
+                    </select>
+                </div>
+                <div class="flex-1 min-w-[180px]">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tìm Shop (DVN/Tên)</label>
+                    <input type="text" id="filter_target_search" onkeyup="applyTargetFilters()" placeholder="Nhập tên hoặc mã..." class="w-full bg-gray-50 border border-gray-200 text-slate-700 text-xs font-bold rounded-lg p-2.5 outline-none focus:border-blue-500">
+                </div>
+                 <div class="flex-1 min-w-[150px]">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Trạng Thái Nhập</label>
+                    <select id="filter_target_status" onchange="applyTargetFilters()" class="w-full bg-gray-50 border border-gray-200 text-slate-700 text-xs font-bold rounded-lg p-2.5 outline-none focus:border-blue-500">
+                        <option value="">-- Tất cả --</option>
+                        <option value="done" class="text-green-600 font-bold">✅ Đã nhập Target</option>
+                        <option value="pending" class="text-orange-600 font-bold">⏳ Chưa nhập</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-b-2xl shadow-sm border border-gray-200 border-t-0 overflow-hidden">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="text-sm font-black text-slate-700 uppercase" id="target_table_title">Danh sách mục tiêu</h3>
+                    <button onclick="saveTargets()" id="btnSaveTargets" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-600 transition shadow-lg flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu Target
+                    </button>
+                </div>
+                <div class="overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-left text-sm whitespace-nowrap relative">
+                        <thead class="bg-slate-100 text-[10px] font-black text-gray-500 uppercase sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="p-4 w-[250px]">Đối Tượng</th>
+                                <th class="p-4 text-center w-[150px] bg-orange-50 text-orange-600 border-l border-orange-100">Target S.I (Nhập)</th>
+                                <th class="p-4 text-center w-[150px] bg-blue-50 text-blue-600 border-l border-blue-100">Target S.O (Bán)</th>
+                                <th class="p-4 w-[300px]">Tiến Độ Thực Tế (Actual)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="targetTableBody" class="divide-y divide-gray-50 text-slate-700 font-medium"></tbody>
+                    </table>
+                    <div id="targetEmptyState" class="hidden p-8 text-center text-gray-400 italic text-xs">Không tìm thấy dữ liệu phù hợp với bộ lọc.</div>
+                </div>
+                <div class="p-3 bg-gray-50 border-t border-gray-200 text-[10px] font-bold text-gray-500 text-right">
+                    Hiển thị: <span id="target_count_display">0</span> shop
+                </div>
+            </div>
         </div>
 
         <form id="financeForm"> 
             <div id="view-sales" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
                 <div class="flex justify-between items-end mb-6">
-                    <div><h1 id="entryTitle" class="text-xl md:text-2xl font-black text-slate-800 uppercase">2. Báo Cáo Nhập - Xuất</h1><p class="text-gray-500 text-xs mt-1">Bước 1: Khai báo địa điểm, tồn kho và sản lượng.</p></div>
+                    <div><h1 id="entryTitle" class="text-xl md:text-2xl font-black text-slate-800 uppercase">3. Báo Cáo Nhập - Xuất</h1><p class="text-gray-500 text-xs mt-1">Bước 1: Khai báo địa điểm, tồn kho và sản lượng.</p></div>
                     <button type="button" onclick="resetEntryForm()" id="btnCancelEdit" class="hidden bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 shadow-sm"><i class="fa-solid fa-xmark mr-1"></i>Hủy Sửa</button>
                 </div>
                 <div id="editBanner" class="hidden edit-mode-banner"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i class="fa-solid fa-pen"></i></div><div><h4 class="font-bold text-sm text-orange-800">Chế độ Chỉnh Sửa</h4><p class="text-xs text-orange-600">Đang cập nhật báo cáo cũ.</p></div></div><input type="hidden" id="editReportId"></div>
@@ -186,7 +348,12 @@
                             <div class="p-3 bg-blue-50/50 border border-blue-100 rounded-lg space-y-3">
                                 <div><label class="form-label text-blue-700">1. Tỉnh / Thành Phố</label><select id="f_province" class="form-input font-bold text-slate-700 bg-white" onchange="updateSVNOptions()"><option value="">-- Chọn Tỉnh --</option></select></div>
                                 <div><label class="form-label text-blue-700">2. Mã SVN (Lọc phụ)</label><select id="f_svn" class="form-input font-bold text-slate-700 bg-white" onchange="updateDVNOptions()" disabled><option value="">-- Tất cả SVN --</option></select></div>
-                                <div><label class="form-label text-blue-700">3. Cửa Hàng (Mã DVN)</label><select id="shop_code" required class="form-input font-bold text-blue-800 bg-white" disabled><option value="">-- Chọn Shop --</option></select></div>
+                                <div>
+                                    <label class="form-label text-blue-700">3. Cửa Hàng (Mã DVN)</label>
+                                    <select id="shop_code" required class="form-input font-bold text-blue-800 bg-white" onchange="ui_updateShopInfo()" disabled>
+                                        <option value="">-- Chọn Shop --</option>
+                                    </select>
+                                </div>
                             </div>
                             <div id="shop_info_display" class="hidden p-3 bg-green-50 border border-green-200 rounded-lg"></div>
                             
@@ -221,7 +388,7 @@
             </div>
 
             <div id="view-costs" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
-                <div class="flex justify-between items-center mb-6"><div><h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase">3. Báo Cáo Chi Phí</h1><p class="text-gray-500 text-xs mt-1">Bước 2: Nhập các khoản chi phí vận hành.</p></div><button type="button" onclick="switchView('sales')" class="text-gray-500 font-bold text-xs hover:text-slate-800"><i class="fa-solid fa-arrow-left mr-1"></i> Quay lại Bước 1</button></div>
+                <div class="flex justify-between items-center mb-6"><div><h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase">4. Báo Cáo Chi Phí</h1><p class="text-gray-500 text-xs mt-1">Bước 2: Nhập các khoản chi phí vận hành.</p></div><button type="button" onclick="switchView('sales')" class="text-gray-500 font-bold text-xs hover:text-slate-800"><i class="fa-solid fa-arrow-left mr-1"></i> Quay lại Bước 1</button></div>
                 <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6 flex flex-wrap gap-6 items-center shadow-sm">
                     <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white"><i class="fa-solid fa-shop"></i></div><div><p class="text-[10px] uppercase font-bold text-blue-400">Đang báo cáo cho</p><h4 id="summary_shop_name" class="font-black text-slate-700">---</h4></div></div><div class="hidden md:block w-px h-10 bg-blue-200"></div><div><p class="text-[10px] uppercase font-bold text-blue-400">Doanh Thu (S.O)</p><h4 id="summary_rev" class="font-black text-blue-600 text-lg">0</h4></div>
                 </div>
@@ -289,7 +456,7 @@
 
         <div id="view-history" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <div><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">4. Quản Lý Báo Cáo</h2><p class="text-gray-500 text-xs mt-1">Lịch sử gửi báo cáo của bạn.</p></div>
+                <div><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">5. Quản Lý Báo Cáo</h2><p class="text-gray-500 text-xs mt-1">Lịch sử gửi báo cáo của bạn.</p></div>
                 <button onclick="loadSaleHistory()" class="bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm font-bold text-xs text-slate-600 hover:bg-gray-50"><i class="fa-solid fa-rotate mr-2"></i>Làm mới</button>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -374,24 +541,7 @@
 
   <script type="module" src="./js/main.js"></script>
   <script>
-    const $ = id => document.getElementById(id);
-    
-    // UI Update (Override)
-    window.updateShopInfoUI = (shopData) => {
-        if(shopData) {
-            $('shop_info_display').classList.remove('hidden');
-            $('shop_info_display').innerHTML = `
-                <div class="font-black text-sm uppercase text-green-800">${shopData.shop_name}</div>
-                <div class="flex justify-between items-center mt-1">
-                    <div class="text-[10px] text-green-600 font-bold">GD: ${shopData.director_name || '---'}</div>
-                    <div class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold border border-orange-200">Size: ${shopData.shop_type || 'N/A'}</div>
-                </div>
-            `;
-        } else {
-            $('shop_info_display').classList.add('hidden');
-        }
-    };
-
+    // PDF Export Logic
     window.exportPDF = async () => {
         const btn = document.getElementById('btnExportPDF');
         const oldText = btn.innerHTML;

@@ -1,6 +1,6 @@
 // js/api.js
 import { sb, STATE } from './config.js';
-import { ui_showMsg, ui_renderModelOptionsAll, ui_addSaleRow, ui_updateShopInfo, ui_renderHistoryTable, ui_updateSVNOptions, ui_updateDVNOptions } from './ui.js';
+import { ui_showMsg, ui_renderModelOptionsAll, ui_addSaleRow, ui_updateShopInfo, ui_renderHistoryTable, ui_updateSVNOptions, ui_updateDVNOptions, updateChartFilters } from './ui.js';
 import { loadOverviewDashboard } from './charts.js';
 
 // --- AUTH & INIT ---
@@ -23,25 +23,17 @@ export async function api_signup(email, password, role, name) {
 // 🔥 HÀM ĐĂNG XUẤT ĐÃ SỬA LỖI (FIXED)
 export async function api_logout() {
     try {
-        // Thử đăng xuất trên server Supabase
         await sb.auth.signOut();
     } catch (err) {
         console.error("Lỗi khi đăng xuất (Supabase):", err);
     } finally {
-        // BẮT BUỘC thực hiện các bước sau để xóa phiên làm việc cục bộ
         console.log("Đang xóa session và reload...");
-        
-        // 1. Xóa sạch bộ nhớ đệm trình duyệt
         localStorage.clear();
         sessionStorage.clear();
-        
-        // 2. Chuyển giao diện về màn hình đăng nhập ngay lập tức (tránh độ trễ)
         const mainApp = document.getElementById('mainApp');
         const authContainer = document.getElementById('authContainer');
         if (mainApp) mainApp.classList.add('hidden');
         if (authContainer) authContainer.classList.remove('hidden');
-
-        // 3. Ép tải lại trang để reset toàn bộ biến STATE và cache JS
         window.location.reload();
     }
 }
@@ -50,9 +42,27 @@ export async function api_checkSession() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return null;
     
-    // Lấy thông tin Profile mở rộng (Role, Tên...)
     const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
     return profile;
+}
+
+// --- 🔥 MỚI: KIỂM TRA SHOP ĐÃ NỘP BÁO CÁO CHƯA ---
+export async function api_checkSubmittedShops(monthStr) {
+    if (!monthStr) return;
+    // Tìm tất cả báo cáo trong tháng này (bất kể trạng thái submitted hay approved)
+    const { data, error } = await sb.from('financial_reports')
+        .select('shop_code')
+        .eq('report_month', monthStr + '-01');
+    
+    if (data) {
+        STATE.submittedShops = new Set(data.map(r => r.shop_code));
+        // Cập nhật lại giao diện dropdown sau khi có dữ liệu mới
+        // Lưu ý: updateChartFilters cần được export từ ui.js hoặc gắn vào window nếu import vòng
+        if(typeof updateChartFilters === 'function') {
+             updateChartFilters('refresh'); 
+        }
+        ui_updateDVNOptions();
+    }
 }
 
 // --- DATA LOADING ---
@@ -60,13 +70,11 @@ export async function api_loadShopsAndLock(profile) {
     const { data: allShops } = await sb.from('master_shop_list').select('*');
     if (!allShops) return;
 
-    // Lưu vào Map để tra cứu nhanh (shop_code -> shop_name, area...)
     allShops.forEach(s => STATE.globalShopMap[s.shop_code] = s);
 
     let myShops = [];
     const myName = profile.full_name ? profile.full_name.trim().toLowerCase() : "";
 
-    // Phân quyền danh sách Shop
     if (profile.role === 'Admin') { 
         myShops = allShops; 
     } else if (profile.role === 'Giám Đốc') { 
@@ -78,14 +86,12 @@ export async function api_loadShopsAndLock(profile) {
     STATE.globalAssignedShops = myShops;
     STATE.assignedShopCodes = myShops.map(s => s.shop_code);
 
-    // Điền dữ liệu vào ô chọn Tỉnh (f_province)
     const provinces = [...new Set(myShops.map(s => s.province).filter(n => n))].sort();
     const provinceSelect = document.getElementById('f_province');
     if (provinceSelect) {
         provinceSelect.innerHTML = `<option value="">-- Chọn Tỉnh (${provinces.length}) --</option>` + provinces.map(p => `<option value="${p}">${p}</option>`).join('');
     }
 
-    // Tự động chọn nếu chỉ có 1 Shop
     if (myShops.length === 1) {
         const s = myShops[0];
         const elProv = document.getElementById('f_province');
@@ -112,7 +118,6 @@ export async function api_loadMonthlyModels() {
     } else {
         STATE.currentAdminPrices = data;
         const tbody = document.getElementById('salesDetailBody');
-        // Nếu bảng trống thì thêm sẵn 1 dòng
         if (tbody && tbody.children.length === 0) ui_addSaleRow();
         alert(`Đã tải ${data.length} model xe cho tháng ${month}.`);
     }
@@ -122,7 +127,6 @@ export async function api_loadMonthlyModels() {
 export async function api_loadSaleHistory() {
     if (STATE.assignedShopCodes.length === 0) return;
     
-    // Lấy lịch sử báo cáo của các Shop được phân quyền
     const { data: reports } = await sb.from('financial_reports')
         .select('*')
         .in('shop_code', STATE.assignedShopCodes)
@@ -135,10 +139,8 @@ export async function api_loadSaleHistory() {
 export async function api_submitReport(payload, editId) {
     let res;
     if (editId) {
-        // Cập nhật báo cáo cũ
         res = await sb.from('financial_reports').update(payload).eq('report_id', editId);
     } else {
-        // Tạo mới
         res = await sb.from('financial_reports').insert([payload]);
     }
     return res;
@@ -153,7 +155,6 @@ export async function api_getReportById(id) {
     return await sb.from('financial_reports').select('*').eq('report_id', id).single();
 }
 
-// Hàm duyệt báo cáo (Dành cho Giám Đốc/Admin)
 export async function api_approveReport(id) {
     const { error } = await sb.from('financial_reports')
         .update({ status: 'approved' })
@@ -161,4 +162,32 @@ export async function api_approveReport(id) {
     
     if (error) throw error;
     return true;
+}
+
+// --- TARGET API ---
+export async function api_upsertTargets(payloads) {
+    const { data, error } = await sb.from('kpi_targets')
+        .upsert(payloads, { onConflict: 'target_month, scope, reference_code' });
+    if (error) throw error;
+    return data;
+}
+
+export async function api_getTargets(month, scope, references) {
+    const { data, error } = await sb.from('kpi_targets')
+        .select('*')
+        .eq('target_month', month)
+        .eq('scope', scope)
+        .in('reference_code', references);
+    if (error) return [];
+    return data;
+}
+
+export async function api_getActualPerformance(month, shopCodes) {
+    const { data, error } = await sb.from('financial_reports')
+        .select('shop_code, sold_quantity, sales_detail_json')
+        .eq('report_month', month + '-01')
+        .in('shop_code', shopCodes)
+        .eq('status', 'approved'); 
+    if (error) return [];
+    return data;
 }

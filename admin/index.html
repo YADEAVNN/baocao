@@ -1,1 +1,346 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>YADEA Admin Portal V26 (Modular)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/geodata/vietnamLow.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+  
+  <style>
+    body { font-family: 'Roboto', sans-serif; }
+    .sidebar-link { transition: all 0.2s; border-left: 4px solid transparent; }
+    .sidebar-link:hover, .sidebar-link.active { background-color: #1f2937; border-left-color: #FF4500; color: white; }
+    .animate-fade { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .modal { transition: opacity 0.25s ease; }
+    body.modal-active { overflow: hidden; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    
+    .sub-tab-btn { border-bottom: 2px solid transparent; color: #6b7280; font-weight: 600; padding: 10px 20px; transition: all 0.2s; white-space: nowrap; }
+    .sub-tab-btn:hover { color: #1f2937; background-color: #f3f4f6; border-radius: 8px 8px 0 0; }
+    .sub-tab-btn.active { color: #FF4500; border-bottom-color: #FF4500; background-color: white; border-radius: 8px 8px 0 0; }
+
+    select, input { font-size: 16px !important; } 
+  </style>
+</head>
+
+<body class="bg-[#F3F4F6] min-h-screen flex flex-col md:flex-row text-slate-800 font-sans">
+
+  <div id="loginSection" class="fixed inset-0 z-[100] bg-[#F2F4F8] flex items-center justify-center p-4">
+    <div class="bg-white rounded-[30px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-w-4xl w-full min-h-[550px] animate-fade">
+      <div class="w-full md:w-1/2 bg-slate-900 relative flex flex-col items-center justify-center p-12 text-center overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-orange-500 to-red-600"></div>
+        <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-16 w-auto object-contain brightness-0 invert mb-6 relative z-10">
+        <h2 class="text-white text-2xl font-black uppercase mb-2 tracking-tight relative z-10">CỔNG QUẢN TRỊ V26</h2>
+        <p class="text-gray-400 text-sm font-medium relative z-10">34 Provinces Mapping</p>
+      </div>
+      <div class="w-full md:w-1/2 p-10 flex flex-col justify-center bg-white">
+        <h3 class="text-2xl font-black text-slate-800 mb-2">Đăng Nhập Admin</h3>
+        <input id="adm_email" type="email" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4 focus:border-orange-500" placeholder="Email Quản Trị">
+        <input id="adm_pass" type="password" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4 focus:border-orange-500" placeholder="Mật khẩu">
+        <button id="btnLogin" class="w-full bg-[#FF4500] text-white font-bold py-4 rounded-xl shadow-lg uppercase text-xs tracking-widest hover:bg-orange-600 transition">Truy cập Dashboard</button>
+        <p id="loginMsg" class="mt-4 text-center text-xs font-bold text-red-500"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[60]">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('detailModal')"></div>
+    <div class="modal-container bg-white w-full md:w-11/12 md:max-w-5xl mx-auto rounded-none md:rounded-2xl shadow-2xl z-50 overflow-y-auto h-full md:h-auto md:max-h-[90vh] animate-fade transform scale-100 md:scale-95 transition-transform duration-300 flex flex-col">
+       <div class="flex justify-between items-center pb-4 px-6 pt-6 border-b border-gray-100 bg-white sticky top-0 z-20 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="bg-orange-100 text-orange-600 w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"><i class="fa-solid fa-file-invoice-dollar text-xl"></i></div>
+            <div><p class="text-xl md:text-2xl font-black text-slate-800">CHI TIẾT P&L</p><div class="flex gap-2 text-xs font-bold uppercase mt-1 flex-wrap"><span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200" id="modalProvince">---</span><span class="text-gray-500 flex items-center gap-1"><i class="fa-solid fa-store"></i> <span id="modalShopName">---</span></span></div></div>
+        </div>
+        <button class="bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 w-10 h-10 rounded-full transition flex items-center justify-center" onclick="toggleModal('detailModal')"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <div class="px-4 md:px-6 py-6 bg-[#F8FAFC] overflow-y-auto flex-1">
+        <div class="grid grid-cols-3 gap-4 mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+            <div class="text-center border-r border-gray-100"><p class="text-[10px] uppercase font-bold text-gray-400">Tồn Đầu</p><p class="text-lg font-black text-slate-700" id="modalOpenStock">0</p></div>
+            <div class="text-center border-r border-gray-100"><p class="text-[10px] uppercase font-bold text-gray-400">Nhập - Bán</p><p class="text-lg font-black text-slate-700" id="modalNetFlow">0</p></div>
+            <div class="text-center"><p class="text-[10px] uppercase font-bold text-blue-500">Tồn Cuối</p><p class="text-xl font-black text-blue-600" id="modalEndStock">0</p></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <h4 class="text-sm font-black text-slate-800 uppercase mb-4 flex items-center gap-2"><span class="bg-blue-500 w-1 h-4 rounded-full"></span> 1. Chi Tiết Nhập / Xuất Kho</h4>
+            <div class="overflow-x-auto rounded-lg border border-gray-100">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-50 text-[10px] font-black text-gray-500 uppercase tracking-wider"><tr><th class="p-3">Model Xe</th><th class="p-3 text-center bg-orange-50 text-orange-600 border-l border-orange-100">S.I (Nhập)</th><th class="p-3 text-center bg-blue-50 text-blue-600 border-l border-blue-100">S.O (Bán)</th><th class="p-3 text-right">Giá Vốn</th><th class="p-3 text-right">Giá Bán</th><th class="p-3 text-right bg-blue-50 text-blue-700">Thành Tiền (S.O)</th></tr></thead>
+                    <tbody id="modalDetailBody" class="divide-y divide-gray-100 text-slate-700 font-medium bg-white"></tbody>
+                    <tfoot class="bg-slate-100 font-bold text-xs text-slate-800"><tr><td colspan="5" class="p-3 text-right uppercase">Tổng Doanh Thu Xe:</td><td class="p-3 text-right text-blue-600 font-mono text-sm" id="modalTotalRev">0</td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-sm font-black text-slate-800 uppercase mb-6 flex items-center gap-2"><span class="bg-green-500 w-1 h-4 rounded-full"></span> 2. Tóm Tắt Tài Chính (P&L Theo Nhóm)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100"><p class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Tổng Doanh Thu (+Hỗ trợ)</p><p class="text-2xl font-black text-blue-600 mt-1" id="modalMainRev">0</p></div>
+                <div class="p-4 bg-red-50 rounded-xl border border-red-100"><p class="text-[10px] font-black text-red-400 uppercase tracking-widest">Giá Vốn Hàng Bán (COGS)</p><p class="text-2xl font-black text-red-600 mt-1" id="modalMainCOGS">0</p></div>
+                <div class="p-4 bg-green-50 rounded-xl border border-green-100"><p class="text-[10px] font-black text-green-400 uppercase tracking-widest">Lợi Nhuận Gộp</p><p class="text-2xl font-black text-green-600 mt-1" id="modalMainGross">0</p></div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pt-6 border-t border-dashed border-gray-200">
+                <div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">I. Vận Hành & NS</p><p class="text-sm font-black text-slate-700" id="modalCostOp">0</p></div>
+                <div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">II. Logistic & Xe</p><p class="text-sm font-black text-slate-700" id="modalCostLog">0</p></div>
+                <div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">III. Marketing</p><p class="text-sm font-black text-slate-700" id="modalCostMkt">0</p></div>
+                <div class="text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">IV. Khác</p><p class="text-sm font-black text-slate-700" id="modalCostOther">0</p></div>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center bg-slate-800 text-white p-5 rounded-xl shadow-lg gap-4">
+                <div class="mb-2 md:mb-0 w-full md:w-auto"><p class="text-xs font-bold text-slate-400 uppercase">Tổng Chi Phí (I + II + III + IV)</p><p class="text-xl font-mono font-bold" id="modalTotalExpense">0</p></div>
+                <div class="text-right w-full md:w-auto"><p class="text-xs font-bold text-slate-400 uppercase">Lợi Nhuận Ròng (Net Profit)</p><p class="text-3xl font-black text-green-400" id="modalNetProfit">0</p></div>
+            </div>
+        </div>
+      </div>
+      <div class="flex justify-end pt-4 px-6 pb-6 bg-white border-t border-gray-100 gap-3 sticky bottom-0 z-20 shrink-0">
+          <button onclick="toggleModal('detailModal')" class="flex-1 md:flex-none px-6 py-3 bg-gray-100 rounded-xl text-gray-600 text-sm font-bold hover:bg-gray-200 transition">Đóng lại</button>
+          <button id="btnModalApprove" class="flex-1 md:flex-none px-8 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition transform hover:-translate-y-0.5"><i class="fa-solid fa-check-circle mr-2"></i> DUYỆT BÁO CÁO</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="priceEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-sm mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Giá</h3><div class="space-y-4"><div><input id="edit_p_key" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly></div><div><label class="text-xs font-bold text-red-500">Giá Nhập</label><input id="edit_p_cost" type="number" class="w-full border p-3 rounded"></div><div><label class="text-xs font-bold text-blue-500">Giá Bán</label><input id="edit_p_price" type="number" class="w-full border p-3 rounded"></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('priceEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitPriceEdit()" class="flex-1 py-3 bg-orange-600 text-white rounded font-bold">Lưu</button></div></div></div>
+  
+  <div id="shopEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Shop</h3><div class="space-y-3"><input id="edit_s_code" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly><input id="edit_s_name" class="w-full border p-3 rounded text-sm" placeholder="Tên"><input id="edit_s_area" class="w-full border p-3 rounded text-sm" placeholder="Khu vực"><input id="edit_s_svn" class="w-full border p-3 rounded text-sm" placeholder="SVN"><input id="edit_s_province" class="w-full border p-3 rounded text-sm" placeholder="Tỉnh"><input id="edit_s_sale" class="w-full border p-3 rounded text-sm" placeholder="Sale"></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('shopEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitShopEdit()" class="flex-1 py-3 bg-blue-600 text-white rounded font-bold">Lưu</button></div></div></div>
+
+  <div id="userEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    <div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 animate-fade p-6">
+        <h3 class="text-xl font-black text-slate-800 mb-4">Sửa Thông Tin & Quyền</h3>
+        <input type="hidden" id="edit_u_id">
+        <div class="space-y-4">
+            <div><label class="text-[10px] uppercase font-bold text-gray-500">Email (Không đổi)</label><input id="edit_u_email" type="text" class="w-full bg-gray-100 border p-3 rounded text-xs font-bold text-gray-500" readonly></div>
+            <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <label class="text-[10px] uppercase font-bold text-blue-700">Họ và Tên (Phải khớp Master Data)</label>
+                <input id="edit_u_name" type="text" class="w-full border p-2 rounded text-sm font-bold text-slate-800 bg-white mt-1 focus:border-blue-500 outline-none" placeholder="Nhập đúng tên trong file Excel...">
+                <p class="text-[9px] text-blue-500 mt-1 italic">* Hệ thống sẽ tự động tìm Khu Vực dựa trên tên này.</p>
+            </div>
+            <div><label class="text-[10px] uppercase font-bold text-slate-700">Vai Trò</label>
+                <select id="edit_u_role" class="w-full border p-3 rounded text-sm font-bold bg-white text-slate-800"><option value="Sale">Sale</option><option value="Giám Đốc">Giám Đốc</option><option value="Admin">Admin</option></select>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button onclick="toggleModal('userEditModal')" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-lg text-xs">Hủy</button>
+            <button onclick="submitUserEdit()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg text-xs shadow-lg hover:bg-blue-700">Cập Nhật</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="mainApp" class="hidden flex-1 flex flex-col md:flex-row h-full w-full">
+      
+      <div class="md:hidden flex-shrink-0 h-16 bg-[#111827] flex items-center justify-between px-4 z-40 shadow-lg sticky top-0">
+          <div class="flex items-center gap-2">
+              <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-6 brightness-0 invert">
+              <span class="text-white font-bold text-sm tracking-widest">ADMIN PORTAL</span>
+          </div>
+          <button onclick="toggleSidebar()" class="text-white text-2xl p-2 focus:outline-none"><i class="fa-solid fa-bars"></i></button>
+      </div>
+
+      <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-[#111827] text-gray-400 flex flex-col z-50 shadow-2xl border-r border-gray-800 transition-transform duration-300 transform -translate-x-full md:translate-x-0 md:relative">
+         <div class="md:hidden absolute top-4 right-4">
+             <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+
+        <div class="h-20 flex items-center justify-center bg-[#1F2937] border-b border-gray-700">
+          <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-8 brightness-0 invert">
+        </div>
+        <div class="p-6 border-b border-gray-800 flex items-center gap-3 bg-[#111827]">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-bold shadow-lg text-sm" id="avtUser">A</div>
+          <div class="overflow-hidden">
+              <h4 id="sidebarName" class="text-white text-sm font-bold truncate">Admin</h4>
+              <div class="text-[10px] text-green-500 font-bold">Online</div>
+          </div>
+        </div>
+        <nav class="flex-1 mt-6 space-y-1 px-2 overflow-y-auto">
+          <a onclick="switchTab('dashboard')" id="tab-dashboard" class="sidebar-link active flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-clock-rotate-left text-blue-400 mr-3 w-5 text-center"></i> Lịch sử nhập</a>
+          <a onclick="switchTab('analytics-full')" id="tab-analytics-full" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-line text-yellow-400 mr-3 w-5 text-center"></i> Biểu đồ phân tích</a>
+          
+          <a onclick="switchTab('heatmap')" id="tab-heatmap" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-earth-asia text-teal-400 mr-3 w-5 text-center"></i> Bản Đồ Nhiệt 3D</a>
+
+          <a onclick="switchTab('users')" id="tab-users" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-users text-purple-400 mr-3 w-5 text-center"></i> Quản lý User</a>
+          <a onclick="switchTab('master')" id="tab-master" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-database text-green-400 mr-3 w-5 text-center"></i> Dữ Liệu Đại Lý</a>
+          <a onclick="switchTab('pricing')" id="tab-pricing" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-tags text-orange-400 mr-3 w-5 text-center"></i> Thiết Lập Giá</a>
+        </nav>
+        <div class="p-4 border-t border-gray-800 bg-[#0f1523]">
+          <button id="btnLogout" class="flex items-center justify-center gap-2 text-gray-300 hover:text-white w-full py-2.5 font-bold text-xs"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+        </div>
+       </aside>
+
+      <main id="mainContent" class="flex-1 p-4 md:p-8 overflow-x-hidden pb-20">
+      
+        <div id="view-dashboard" class="space-y-6 animate-fade">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 gap-4">
+            <h2 class="text-2xl font-black text-slate-800">Lịch Sử Nhập Liệu</h2>
+            <div class="flex gap-2 w-full md:w-auto">
+               <input id="f_month" type="month" class="bg-slate-50 border p-2 rounded-lg text-sm font-bold flex-1 md:w-auto">
+              <button onclick="loadDashboard()" class="bg-[#FF4500] text-white w-12 md:w-10 h-10 rounded-lg shadow hover:bg-orange-600"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+          </div>
+          
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row flex-wrap gap-4 items-end">
+              <div class="w-full md:flex-1 md:min-w-[200px]"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">Giám Đốc</label><select id="dash_director" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-3 text-sm w-full" onchange="updateDashChain('director')"><option value="">-- Tất cả --</option></select></div>
+              <div class="w-full md:flex-1 md:min-w-[150px]"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">Sale Phụ Trách</label><select id="dash_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-3 text-sm w-full" onchange="updateDashChain('sale')"><option value="">-- Tất cả --</option></select></div>
+              <div class="w-full md:flex-1 md:min-w-[120px]"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">Mã SVN</label><select id="dash_svn" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-3 text-sm w-full" onchange="updateDashChain('svn')"><option value="">-- Tất cả --</option></select></div>
+              <div class="w-full md:flex-1 md:min-w-[250px]"><label class="block text-[10px] font-bold text-purple-500 uppercase mb-1">Mã DVN (Shop)</label><select id="dash_dvn" class="bg-purple-50/50 border border-purple-100 text-purple-700 font-bold rounded-lg p-3 text-sm w-full" onchange="filterDashboardData()"><option value="">-- Tất cả --</option></select></div>
+              <div class="w-full md:flex-1 md:min-w-[150px]"><label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">Trạng Thái</label><select id="dash_status" class="bg-orange-50 border border-orange-200 text-orange-800 font-bold rounded-lg p-3 text-sm w-full" onchange="filterDashboardData()"><option value="">-- Tất cả --</option><option value="submitted">Chờ Duyệt</option><option value="approved">Đã Duyệt</option></select></div>
+               <button onclick="resetDashFilters()" class="w-full md:w-auto bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-3 rounded-xl transition" title="Reset"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Doanh Thu</p><h3 id="kpi_rev" class="text-2xl font-black text-blue-600 mt-2">0</h3></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Lợi Nhuận</p><h3 id="kpi_profit" class="text-2xl font-black text-green-600 mt-2">0</h3></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border"><p class="text-[10px] font-black text-gray-400 uppercase">Số Lượng Shop</p><h3 id="submittedCount" class="text-2xl font-black text-orange-500 mt-2">0</h3></div>
+          </div>
+          
+          <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+            <div class="p-4 border-b font-bold text-sm bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                 <div class="flex items-center gap-2"><i class="fa-solid fa-list text-slate-400"></i> <span class="text-slate-700">Danh sách báo cáo</span></div>
+                <div class="flex gap-2 w-full md:w-auto"><button onclick="toggleLossFilter()" id="btnLossFilter" class="w-full md:w-auto bg-white border border-red-200 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Xem Shop Báo Động (Lỗ)</button></div>
+            </div>
+            <div class="overflow-x-auto">
+                 <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-50 font-bold text-gray-500 uppercase text-xs"><tr><th class="p-3">Tháng</th><th class="p-3">Shop</th><th class="p-3 text-center">SL Bán</th><th class="p-3 text-right">Doanh Thu</th><th class="p-3 text-right bg-green-50 text-green-700 cursor-pointer hover:bg-green-100 transition" onclick="sortPendingByProfit()" title="Sắp xếp">Lợi Nhuận <i class="fa-solid fa-sort"></i></th><th class="p-3 text-center bg-green-50 text-green-700">% Lãi</th><th class="p-3 text-center">Trạng Thái</th><th class="p-3 text-center">Xem</th><th class="p-3 text-center">Hành Động</th></tr></thead>
+                    <tbody id="pendingBody" class="divide-y text-slate-700"></tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-analytics-full" class="hidden space-y-4 animate-fade">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 sticky top-0 z-30">
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col md:flex-row flex-wrap gap-4 items-end">
+                        <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tháng & Xu Hướng</label><div class="flex gap-2"><input type="month" id="ana_month" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-sm flex-1 md:w-32"><select id="ana_trend_range" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-sm"><option value="3">3T</option><option value="6" selected>6T</option><option value="12">12T</option></select></div></div>
+                        <div class="w-full md:w-auto pl-0 md:pl-3 border-l-0 md:border-l border-gray-200 flex flex-col md:flex-row flex-wrap gap-3">
+                            <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">1. Giám Đốc</label><select id="ana_director" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-sm w-full md:w-40" onchange="updateFilterChain('director')"><option value="">-- Tất cả --</option></select></div>
+                            <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">2. Sale Phụ Trách</label><select id="ana_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-sm w-full md:w-36" onchange="updateFilterChain('sale')"><option value="">-- Tất cả --</option></select></div>
+                            <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">3. Mã SVN</label><select id="ana_svn" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-sm w-full md:w-32" onchange="updateFilterChain('svn')"><option value="">-- Tất cả --</option></select></div>
+                            <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-purple-500 uppercase mb-1">4. Mã DVN (Shop)</label><select id="ana_dvn" class="bg-purple-50/50 border border-purple-100 text-purple-700 font-bold rounded-lg p-2 text-sm w-full md:w-64"><option value="">-- Tất cả --</option></select></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <button onclick="resetFilters()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-2.5 rounded-xl transition"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+                        <button onclick="exportAnalyticsExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center gap-2 text-sm uppercase flex-1 md:flex-none justify-center"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                        <button onclick="loadAnalyticsFull()" class="bg-slate-900 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition flex items-center gap-2 text-sm uppercase flex-1 md:flex-none justify-center"><i class="fa-solid fa-bolt"></i> Tải Dashboard</button>
+                    </div>
+                </div>
+            </div>
+            <div id="ana_loading" class="hidden text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-5xl text-orange-500"></i><p class="mt-4 font-bold text-gray-500 uppercase tracking-widest">Đang phân tích dữ liệu...</p></div>
+          
+            <div id="ana_content" class="hidden">
+                <div class="flex border-b border-gray-200 mb-6 bg-white rounded-t-2xl px-4 pt-2 overflow-x-auto"><button onclick="switchSubTab('national')" id="btn-tab-national" class="sub-tab-btn active"><i class="fa-solid fa-globe mr-2"></i>1. TỔNG QUAN</button><button onclick="switchSubTab('regional')" id="btn-tab-regional" class="sub-tab-btn"><i class="fa-solid fa-map-location-dot mr-2"></i>2. PHÂN TÍCH VÙNG</button><button onclick="switchSubTab('shop')" id="btn-tab-shop" class="sub-tab-btn"><i class="fa-solid fa-store mr-2"></i>3. CHI TIẾT SHOP</button></div>
+                
+                <div id="ana-tab-national" class="space-y-8 pb-20">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4"><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Doanh Thu</p><h4 id="nat_rev" class="text-xl md:text-2xl font-black text-blue-600 mt-1">0</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-green-500"><p class="text-[10px] font-black text-gray-400 uppercase">Tổng Lợi Nhuận</p><h4 id="nat_profit" class="text-xl md:text-2xl font-black text-green-600 mt-1">0</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-purple-500"><p class="text-[10px] font-black text-gray-400 uppercase">% Shop Có Lãi</p><h4 id="nat_pct" class="text-xl md:text-2xl font-black text-purple-600 mt-1">0%</h4></div><div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-red-500"><p class="text-[10px] font-black text-gray-400 uppercase">Shop Dưới Hòa Vốn</p><h4 id="nat_risk" class="text-xl md:text-2xl font-black text-red-500 mt-1">0</h4></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A2. Xu Hướng Doanh Thu & Lợi Nhuận</h4><div class="h-[300px]"><canvas id="chart_A2_Trend"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A3. Cơ Cấu Chi Phí Hệ Thống</h4><div class="h-[300px]"><canvas id="chart_A3_Cost"></canvas></div></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A4. Top 10 Shop Lợi Nhuận Cao Nhất</h4><div class="h-[300px]"><canvas id="chart_A4_Top10"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">A6. Bản Đồ Hiệu Suất (Theo Tỉnh)</h4><div class="h-[300px]"><canvas id="chart_A6_Map"></canvas></div></div></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-red-200 relative overflow-hidden"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-red-600 uppercase">A5. Danh Sách Cảnh Báo Rủi Ro (Lỗ > 2 tháng)</h4></div><div class="overflow-y-auto h-[300px]"><table class="w-full text-xs text-left" id="table_A5_Risk"><thead class="bg-red-50 text-red-700 font-bold sticky top-0"><tr><th class="p-2">Shop (DVN)</th><th class="p-2">Tên Shop</th><th class="p-2 text-center">Số tháng lỗ</th><th class="p-2 text-right">Tổng lỗ (VNĐ)</th></tr></thead><tbody id="body_A5_Risk"></tbody></table></div></div>
+                </div>
+                <div id="ana-tab-regional" class="hidden space-y-8 pb-20">
+                    <div class="flex items-center gap-2 mb-2 p-2 bg-blue-50 text-blue-800 rounded-lg inline-flex border border-blue-100"><span class="bg-blue-600 text-white px-2 rounded text-xs font-bold">VÙNG</span><span id="lbl_Director_Name" class="text-xs font-bold uppercase ml-1">---</span></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B2. Xếp Hạng Shop Trong Vùng (Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_B2_Rank"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B6. Phân Loại Shop (Doanh Thu vs Chi Phí)</h4><div class="h-[300px]"><canvas id="chart_B6_Scatter"></canvas></div></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B4. Xu Hướng Vùng (3/6/12 Tháng)</h4><div class="h-[300px]"><canvas id="chart_B4_Trend"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">B5. Hiệu Quả Marketing (Chi phí vs Doanh thu)</h4><div class="h-[300px]"><canvas id="chart_B5_Mkt"></canvas></div></div></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 overflow-hidden"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">B3. Heatmap Hiệu Suất Vùng (Shop x KPI)</h4></div><div class="overflow-x-auto max-h-[400px]"><table class="w-full text-xs text-left border-collapse whitespace-nowrap" id="table_B3_Heatmap"><thead class="bg-slate-100 font-black text-slate-600 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-3 border">Shop Name</th><th class="p-3 border text-right">Doanh Thu</th><th class="p-3 border text-right">Net Profit</th><th class="p-3 border text-center">Margin %</th><th class="p-3 border text-center">SL Bán</th><th class="p-3 border text-center">MKT %</th></tr></thead><tbody id="body_B3_Heatmap" class="divide-y divide-gray-100"></tbody></table></div></div>
+                </div>
+                <div id="ana-tab-shop" class="hidden space-y-8 pb-20">
+                    <div class="flex items-center gap-2 mb-2 p-2 bg-purple-50 text-purple-800 rounded-lg inline-flex border border-purple-100"><span class="bg-purple-600 text-white px-2 rounded text-xs font-bold">SHOP</span><span id="lbl_Shop_Name" class="text-xs font-bold uppercase ml-1">---</span></div>
+                    <div id="shop_kpi_inventory" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"></div>
+                    <div id="shop_analysis_content">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C1. P&L Waterfall (Dòng Thác Lợi Nhuận)</h4><div class="h-[300px]"><canvas id="chart_C1_Waterfall"></canvas></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C4. Điểm Hòa Vốn (Break-even)</h4><span id="txt_C4_BEP" class="text-xs font-black text-orange-600 bg-orange-100 px-2 py-1 rounded"></span></div><div class="h-[300px]"><canvas id="chart_C4_BEP"></canvas></div></div></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C2. Cơ Cấu Chi Phí Shop</h4><div class="h-[200px]"><canvas id="chart_C2_Donut"></canvas></div></div><div class="col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C3. Xu Hướng Shop (6 Tháng)</h4><div class="h-[200px]"><canvas id="chart_C3_Trend"></canvas></div></div></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C5. Top Model Bán Chạy (Theo SL)</h4></div><div class="overflow-y-auto h-[300px]" id="div_C5_Model"></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C6. Nhập (S.I) vs Bán (S.O) Theo Model</h4><div class="h-[300px]"><canvas id="chart_C6_Stack"></canvas></div></div></div>
+                    </div>
+                    <div id="shop_analysis_empty" class="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-300"><i class="fa-solid fa-shop text-4xl text-gray-300 mb-2"></i><p class="text-gray-500 font-bold">Hãy chọn Mã DVN ở bộ lọc trên cùng để xem chi tiết Shop.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-heatmap" class="hidden space-y-6 animate-fade h-full flex flex-col">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800">BẢN ĐỒ LỢI NHUẬN VÙNG (34 Tỉnh Mới)</h2>
+                    <p class="text-xs text-gray-500 mt-1">Dữ liệu tự động gộp theo quy hoạch 34 tỉnh thành.</p>
+                </div>
+                <div class="flex gap-4 text-xs font-bold">
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-[#ff6600]"></span> Lãi (Profit)</div>
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-[#666666]"></span> Lỗ (Loss)</div>
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-[#e5e7eb]"></span> Chưa có dữ liệu</div>
+                </div>
+            </div>
+            
+            <div class="bg-[#1a1a1a] rounded-2xl shadow-lg border border-gray-800 flex-1 relative overflow-hidden min-h-[600px]">
+                <div id="chartdiv" class="w-full h-full absolute inset-0"></div>
+            </div>
+        </div>
+
+        <div id="view-users" class="hidden space-y-6 animate-fade">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><h2 class="text-2xl font-black text-slate-800">Quản Lý Nhân Sự</h2><button onclick="loadUsers()" class="w-full md:w-auto bg-slate-100 px-4 py-2 rounded font-bold text-xs hover:bg-slate-200">Làm mới</button></div>
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="overflow-x-auto">
+                   <table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-[10px] font-bold text-gray-500 uppercase"><tr><th class="p-4">Nhân Sự</th><th class="p-4">Khu Vực (Auto)</th><th class="p-4">Vai Trò</th><th class="p-4 text-center">Trạng Thái</th><th class="p-4 text-center">Hành Động</th></tr></thead><tbody id="userTableBody"></tbody></table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="view-master" class="hidden space-y-6 animate-fade">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border text-center">
+                <h2 class="text-2xl font-black text-slate-800">Dữ Liệu Đại Lý</h2>
+                <div class="mt-4 flex gap-3 justify-center">
+                    <label class="cursor-pointer bg-slate-900 text-white font-bold py-3 px-6 rounded-xl shadow-lg inline-block hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-upload mr-2"></i> Tải lên danh sách Mới
+                        <input type="file" id="excelFile" class="hidden" accept=".xlsx,.csv">
+                    </label>
+                    <button onclick="exportMasterData()" class="bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-green-700 transition">
+                        <i class="fa-solid fa-file-excel mr-2"></i> Xuất Excel Hiện Tại
+                    </button>
+                </div>
+                <p id="uploadStatus" class="mt-4 text-xs font-bold text-blue-500"></p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="p-4 border-b font-bold text-sm bg-gray-50 flex justify-between items-center"><span>Danh sách Shop</span><span id="shopCount" class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">0 Shop</span></div>
+                <div class="overflow-x-auto max-h-[600px]"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-100 sticky top-0 z-10"><tr class="text-[10px] font-black text-gray-500 uppercase"><th class="p-4">Khu Vực</th><th class="p-4">Mã SVN</th><th class="p-4">Mã DVN</th><th class="p-4">Tên Đại Lý</th><th class="p-4">Tỉnh/Thành</th><th class="p-4">Sale Phụ Trách</th><th class="p-4 text-center">Tác Vụ</th></tr></thead><tbody id="masterBody" class="divide-y divide-gray-100 font-medium text-slate-700"></tbody></table></div>
+            </div>
+        </div>
+    
+        <div id="view-pricing" class="hidden space-y-6 animate-fade">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-orange-100 text-center">
+                <h2 class="text-2xl font-black text-slate-800">Thiết Lập Giá</h2>
+                <div class="mt-4 flex gap-3 justify-center">
+                    <label class="cursor-pointer bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg inline-block">
+                        <i class="fa-solid fa-file-invoice-dollar mr-2"></i> Upload Bảng Giá
+                        <input type="file" id="priceFile" class="hidden" accept=".xlsx,.xls,.csv">
+                    </label>
+                    <button onclick="exportPriceData()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg">
+                        <i class="fa-solid fa-download mr-2"></i> Xuất Bảng Giá
+                    </button>
+                </div>
+                <p id="priceStatus" class="mt-4 text-xs font-bold text-blue-500"></p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="p-4 bg-gray-50 border-b flex justify-between items-center"><h3 class="font-bold text-slate-700 text-sm">Lịch sử giá</h3><div class="flex items-center gap-2"><input type="month" id="search_price_month" class="bg-white border p-1.5 rounded text-xs font-bold outline-none" onchange="loadPriceHistory()"><button onclick="document.getElementById('search_price_month').value='';loadPriceHistory()" class="text-gray-400 hover:text-red-500 text-xs"><i class="fa-solid fa-xmark"></i></button></div></div>
+                <div class="overflow-x-auto"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-100"><tr class="text-[10px] font-black text-gray-500 uppercase"><th class="p-4">Tháng</th><th class="p-4">Model</th><th class="p-4 text-right">Giá Nhập</th><th class="p-4 text-right">Giá Bán</th><th class="p-4 text-center">Tác Vụ</th></tr></thead><tbody id="priceBody" class="divide-y divide-gray-100"></tbody></table></div>
+            </div>
+        </div>
+
+      </main>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+
+</body>
+</html>

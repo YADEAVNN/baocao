@@ -1,1 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=0" />
+  <title>YADEA E-LEARNING</title>
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* --- GIỮ NGUYÊN CSS CŨ --- */
+    body { font-family: 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #f1f1f1; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    
+    /* Common Styles */
+    .sidebar-item.active { background: linear-gradient(90deg, #ea580c 0%, #f97316 100%); color: white; font-weight: 500; box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.4); }
+    .nav-mobile-btn.active { color: #ea580c; } .nav-mobile-btn.active i { transform: translateY(-2px); }
+    .lesson-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+    .fade-anim { transition: opacity 0.5s ease-in-out; }
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 100; } 
+    .toast { transform: translateX(100%); transition: transform 0.3s ease-out; } .toast.show { transform: translateX(0); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    /* --- CSS CHAT BOX --- */
+    .msg-bubble { max-width: 80%; padding: 8px 12px; border-radius: 15px; margin-bottom: 6px; font-size: 13px; line-height: 1.4; word-wrap: break-word; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .msg-sent { background: linear-gradient(135deg, #ea580c, #f97316); color: white; align-self: flex-end; border-bottom-right-radius: 2px; margin-left: auto; }
+    .msg-received { background: #ffffff; color: #374151; border: 1px solid #e5e7eb; align-self: flex-start; border-bottom-left-radius: 2px; margin-right: auto; }
+    #chatMessages { display: flex; flex-direction: column; padding: 16px; background-color: #f9fafb; }
+
+    /* --- CSS MARQUEE --- */
+    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; min-width: 100%; }
+
+    /* --- CSS QUIZ PAGINATION --- */
+    .quiz-nav-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e7eb; background-color: white; color: #374151; font-weight: bold; font-size: 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .quiz-nav-btn:hover { border-color: #f97316; color: #f97316; }
+    .quiz-nav-btn.active { border: 2px solid #f97316; color: #f97316; transform: scale(1.1); }
+    .quiz-nav-btn.answered { background: linear-gradient(135deg, #ea580c 0%, #f97316 100%) !important; color: white !important; border: none !important; box-shadow: 0 2px 5px rgba(234, 88, 12, 0.4); }
+
+    /* --- CSS MOBILE NAV SCROLL --- */
+    .mobile-nav-container { overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch; display: flex; }
+    .mobile-nav-container::-webkit-scrollbar { display: none; }
+    .nav-mobile-btn { min-width: 75px; flex-shrink: 0; }
+
+    /* --- STYLE VÒNG QUAY --- */
+    #luckyWheelView { background: linear-gradient(135deg, #ff9a9e 0%, #ff6b6b 100%); display: flex; flex-direction: column; justify-content: flex-start; padding-top: 2rem; overflow-y: auto; height: 100%; }
+    #luckyWheelView.hidden { display: none !important; }
+    .deco-shape { position: absolute; background: rgba(255,255,255,0.15); border-radius: 50%; pointer-events: none; }
+    .wheel-title-festive { font-family: 'Arial Black', 'Arial', sans-serif; font-weight: 900; color: #fef08a; text-transform: uppercase; line-height: 1.0; text-align: center; white-space: nowrap; font-size: clamp(24px, 5vw, 55px); text-shadow: 3px 3px 0px #b91c1c, 0 5px 10px rgba(0,0,0,0.3); -webkit-text-stroke: 1.5px #ef4444; margin-bottom: 0.5rem; }
+    #wheel-container { position: relative; width: 320px; height: 320px; border-radius: 50%; border: 12px solid #ef4444; box-shadow: 0 0 0 6px #fcd34d, 0 20px 50px rgba(0,0,0,0.5); background: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto; z-index: 10; flex-shrink: 0; }
+    @media (min-width: 768px) { #wheel-container { width: 450px; height: 450px; border-width: 16px; } }
+    #wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); position: relative; overflow: hidden; border: 4px solid #fff; }
+    .gold-dot-ring { position: absolute; inset: -18px; pointer-events: none; z-index: 20; }
+    .gold-dot { position: absolute; width: 12px; height: 12px; background: #fff; border-radius: 50%; box-shadow: 0 0 5px #fcd34d; animation: led-blink 0.8s infinite alternate; }
+    @keyframes led-blink { 0% { opacity: 0.6; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 10px #fbbf24; } }
+    .spin-btn-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 40; width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fcd34d, #b45309); border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .spin-btn-center::after { content: ''; position: absolute; right: -26px; top: 50%; transform: translateY(-50%); border-left: 30px solid #b45309; border-top: 14px solid transparent; border-bottom: 14px solid transparent; filter: drop-shadow(2px 0 2px rgba(0,0,0,0.2)); }
+    .spin-btn-center:active { transform: translate(-50%, -50%) scale(0.95); }
+    .wheel-label-container { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .wheel-label { position: absolute; top: 50%; left: 50%; width: 100px; height: 200px; margin-left: -50px; margin-top: -100px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-weight: 800; font-size: 11px; line-height: 1.1; padding-top: 0; }
+    .wheel-label i { font-size: 20px; margin-bottom: 8px; }
+    @media (min-width: 768px) { .wheel-label { width: 140px; height: 250px; margin-left: -70px; margin-top: -125px; font-size: 16px; } .wheel-label i { font-size: 32px; } }
+    
+    .chat-btn-float { position: fixed; bottom: 80px; right: 20px; width: 60px; height: 60px; background: #f97316; border-radius: 50%; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; cursor: pointer; transition: transform 0.2s; z-index: 40; }
+    .chat-box-container { position: fixed; bottom: 100px; right: 20px; width: 350px; height: 500px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 41; display: flex; flex-direction: column; overflow: hidden; transform-origin: bottom right; transition: all 0.3s ease; opacity: 0; pointer-events: none; transform: scale(0.8); border: 1px solid #e5e7eb; }
+    .chat-box-container.open { opacity: 1; pointer-events: auto; transform: scale(1); bottom: 150px; }
+    @media (min-width: 768px) { .chat-box-container.open { bottom: 90px; } .chat-btn-float { bottom: 30px; } }
+  </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden text-gray-700">
+
+  <div id="toast-container" class="flex flex-col gap-2"></div>
+
+  <header class="bg-white border-b border-gray-200 h-16 flex-shrink-0 z-30 relative">
+    <div class="max-w-[1600px] mx-auto h-full px-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-7 w-auto object-contain">
+        <div class="hidden sm:block">
+          <h1 class="font-bold text-gray-800 text-base leading-tight">YADEA E-LEARNING</h1>
+          <p class="text-[10px] text-gray-500 font-medium tracking-wider uppercase">Training Center</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button onclick="switchPage('mygifts', this)" class="hidden md:flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-full border border-red-100 font-bold text-xs hover:bg-red-100 transition">
+            <i class="fa-solid fa-gift"></i> Quà của tôi
+        </button>
+
+        <div class="hidden md:flex items-center gap-4 text-right cursor-pointer hover:bg-gray-50 p-1 pr-3 rounded-full transition" onclick="openProfileModal()">
+            <div class="flex items-center gap-3 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
+                <div class="text-center"><div class="text-[10px] text-gray-400 uppercase font-bold">Điểm</div><div class="text-sm font-bold text-orange-600" id="userPoints">0</div></div>
+                <div class="w-[1px] h-6 bg-gray-200"></div>
+                <div class="text-center"><div class="text-[10px] text-gray-400 uppercase font-bold">Danh hiệu</div><div class="text-xs font-bold text-yellow-500" id="userStars">...</div></div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right"><div id="userName" class="text-sm font-bold text-gray-800">Khách</div><div id="userDvn" class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full inline-block"></div></div>
+                <img id="headerAvatar" src="https://ui-avatars.com/api/?name=User&background=random" class="w-10 h-10 rounded-full object-cover border border-gray-200">
+            </div>
+        </div>
+        
+        <div class="md:hidden flex items-center gap-2">
+             <div class="flex items-center gap-2 mr-1 cursor-pointer" onclick="openProfileModal()">
+                 <img id="headerAvatarMobile" src="https://ui-avatars.com/api/?name=User&background=random" class="w-8 h-8 rounded-full object-cover border border-gray-200">
+                 <div class="text-xs font-bold text-orange-600" id="userPointsMobile">0 pts</div>
+             </div>
+            <button id="logoutBtn" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+        </div>
+        <button id="logoutBtnDesktop" class="hidden md:flex w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition text-gray-600" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex-1 flex max-w-[1600px] mx-auto w-full overflow-hidden">
+    <aside class="hidden md:flex w-64 flex-col bg-[#111827] text-gray-300 flex-shrink-0 h-full p-6">
+      <h2 class="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">Danh mục đào tạo</h2>
+     
+      <nav class="space-y-2">
+        <button class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-sm" data-category="all" onclick="switchPage('all', this)"><i class="fa-solid fa-layer-group w-5 text-center"></i> Tất cả bài học</button>
+        <button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-sm" data-category="video" onclick="switchPage('video', this)"><i class="fa-solid fa-circle-play w-5 text-center"></i> Học qua Video</button>
+        
+        <div class="relative">
+            <button id="btnProductParent" onclick="toggleSubMenu('product-submenu', this)" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl transition text-sm group" data-category="product">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-motorcycle w-5 text-center"></i> <span>Kiến thức sản phẩm</span></div>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300"></i>
+            </button>
+            <div id="product-submenu" class="hidden flex-col mt-1 space-y-1 pl-4 border-l-2 border-gray-700 ml-6 overflow-hidden transition-all duration-300 bg-[#1f2937] rounded-lg py-2">
+                <button onclick="filterSubCategory('product', '2025')" class="w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition flex items-center gap-2">Sản phẩm 2025</button>
+                <button onclick="filterSubCategory('product', '2026')" class="w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition flex items-center gap-2">Sản phẩm 2026</button>
+                <button onclick="filterSubCategory('product', 'xe-dien')" class="w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition flex items-center gap-2">Xe máy điện</button>
+                <button onclick="filterSubCategory('product', 'xe-dap-dien')" class="w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition flex items-center gap-2">Xe đạp điện</button>
+                <div class="border-t border-gray-600 my-1"></div>
+                <button onclick="filterSubCategory('product', '')" class="w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition font-bold">Xem tất cả</button>
+            </div>
+        </div>
+
+        <button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-sm" data-category="culture" onclick="switchPage('culture', this)"><i class="fa-solid fa-landmark w-5 text-center"></i> Văn hoá & Quy định</button>
+        <button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-sm" data-category="skill" onclick="switchPage('skill', this)"><i class="fa-solid fa-graduation-cap w-5 text-center"></i> Kỹ năng bán hàng</button>
+        <button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-sm" data-category="luckywheel" onclick="switchLuckyWheelView()"><i class="fa-solid fa-dharmachakra w-5 text-center"></i> Vòng quay may mắn <span id="spinBadge" class="hidden bg-red-600 text-white text-[10px] px-1.5 rounded-full ml-auto font-bold">0</span></button>
+        <button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-sm" data-category="mygifts" onclick="switchPage('mygifts', this)"><i class="fa-solid fa-gift w-5 text-center text-red-500"></i> Quà của tôi</button>
+        <div class="pt-4 mt-4 border-t border-gray-700"><button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-sm" data-category="results" onclick="switchPage('results', this)"><i class="fa-solid fa-chart-line w-5 text-center"></i> Kết quả học tập</button></div>
+      </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-white md:bg-gray-50 pb-20 md:pb-0">
+      <div id="systemMarquee" class="hidden bg-yellow-50 text-yellow-800 px-4 py-2 text-xs md:text-sm font-bold border-b border-yellow-100 overflow-hidden whitespace-nowrap relative z-30">
+        <i class="fa-solid fa-bullhorn mr-2 text-orange-500"></i> 
+          <div class="inline-block w-full overflow-hidden align-bottom">
+              <span id="marqueeText" class="animate-marquee">...</span>
+          </div>
+      </div>
+
+      <div id="mobileFilterBar" class="md:hidden hidden flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3 overflow-x-auto hide-scroll gap-3 sticky top-0 z-20">
+          <button onclick="applyMobileSubFilter('', this)" class="chip-btn active whitespace-nowrap px-4 py-1.5 rounded-full bg-gray-50 text-xs font-bold text-gray-500">Tất cả</button>
+          <button onclick="applyMobileSubFilter('2025', this)" class="chip-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-gray-50 text-xs font-bold text-gray-500">✨ 2025</button>
+          <button onclick="applyMobileSubFilter('2026', this)" class="chip-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-gray-50 text-xs font-bold text-gray-500">🔥 2026</button>
+          <button onclick="applyMobileSubFilter('xe-dien', this)" class="chip-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-gray-50 text-xs font-bold text-gray-500">🛵 Xe máy điện</button>
+          <button onclick="applyMobileSubFilter('xe-dap-dien', this)" class="chip-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-gray-50 text-xs font-bold text-gray-500">🚲 Xe đạp điện</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth" id="mainScroll">
+        <section id="heroSection" class="bg-white rounded-3xl p-1 shadow-sm border border-gray-200">
+           <div class="relative rounded-[20px] overflow-hidden bg-gray-900 text-white min-h-[200px] md:min-h-[280px] flex items-end group">
+              <img id="heroImage" src="" class="absolute inset-0 w-full h-full object-cover opacity-60 fade-anim transition-transform duration-[20000ms] ease-linear group-hover:scale-110">
+              <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
+              <div class="relative z-10 p-6 md:p-8 w-full md:w-2/3">
+                 <span id="heroBadge" class="bg-orange-500 text-[10px] font-bold px-2 py-1 rounded mb-2 inline-block uppercase tracking-wider fade-anim">NỔI BẬT</span>
+                 <h2 id="heroTitle" class="text-2xl md:text-3xl font-bold mb-2 fade-anim">Loading...</h2>
+                 <p id="heroDesc" class="text-gray-300 text-sm mb-4 line-clamp-2 fade-anim">...</p>
+                 <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="heroStartBtn" class="bg-white text-gray-900 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-100 transition shadow-lg"><i class="fa-solid fa-play text-orange-500 mr-2"></i> Học ngay</button>
+                    <input id="searchInput" type="text" placeholder="Tìm bài học..." class="bg-gray-800/60 border border-gray-600 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 transition w-full sm:max-w-xs placeholder-gray-400 backdrop-blur-sm">
+                </div>
+              </div>
+              <div id="heroDots" class="absolute bottom-6 right-6 flex gap-2 z-20"></div>
+           </div>
+        </section>
+
+        <section id="listView">
+            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2 text-lg"><span class="w-1.5 h-6 bg-orange-500 rounded-full"></span> Danh sách bài học (<span id="lessonCount">0</span>)</h3>
+            <div id="lessonList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 md:gap-6"></div>
+        </section>
+
+        <section id="detailView" class="hidden flex flex-col gap-6 pb-20">
+            <div class="flex justify-between items-center">
+                <button id="backToListBtn" class="flex items-center gap-2 text-sm text-gray-500 hover:text-orange-600 w-fit transition pl-1"><i class="fa-solid fa-arrow-left"></i> <span>Quay lại</span></button>
+              <div id="studyTimerBox" class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                    <i class="fa-solid fa-stopwatch text-orange-500 animate-pulse"></i>
+                    <div class="text-xs"><span class="text-gray-400 block font-bold" style="font-size: 10px;">THỜI GIAN</span><span id="studyTimeDisplay" class="font-mono font-bold text-gray-800">00:00</span> / <span id="studyTargetDisplay">00:00</span></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-4 md:p-5 border-b bg-gray-50 flex justify-between items-center"><div><h2 id="detailTitle" class="font-bold text-lg md:text-xl text-gray-900"></h2><p id="detailInfo" class="text-xs text-gray-500 mt-1 font-medium"></p></div></div>
+                <div id="lessonViewer" class="aspect-video bg-black flex items-center justify-center text-gray-500 text-sm">Loading...</div>
+                <div class="p-5 text-sm text-gray-600 bg-white border-t leading-relaxed" id="detailDesc"></div>
+             </div>
+            <div id="startQuizBtnContainer" class="flex justify-center py-6">
+                <button onclick="startQuiz()" class="bg-gray-900 hover:bg-black text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg flex items-center gap-3 transition transform active:scale-95"><span>BẮT ĐẦU LÀM BÀI</span> <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+            <div id="quizSectionContainer" class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hidden">
+                <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 py-3 md:px-6 md:py-4 flex justify-between items-center">
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-file-pen text-lg"></i><span class="font-bold text-sm md:text-base uppercase tracking-wide">Bài kiểm tra</span></div>
+                    <div class="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-lg border border-white/10"><i class="fa-regular fa-clock text-xs"></i><span id="quizTimerDisplay" class="font-mono font-bold text-sm">00:00</span></div>
+                </div>
+                <div class="p-4 md:p-8 min-h-[250px] flex flex-col justify-center bg-white"><div id="quizContent" class="max-w-4xl mx-auto w-full"></div></div>
+                <div class="bg-gray-50 border-t border-gray-200 p-4 md:p-6">
+                    <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div class="flex flex-wrap gap-2 justify-center" id="quizPagination"></div>
+                        <button id="submitQuizBtn" class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold text-sm shadow-lg shadow-red-600/20 transition transform active:scale-95 flex items-center justify-center gap-2"><span>NỘP BÀI</span> <i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                    <div id="quizResult" class="mt-6 text-center hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="resultView" class="hidden flex flex-col gap-6 h-full">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 border-b pb-4">KẾT QUẢ HỌC TẬP</h2>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                <div class="overflow-x-auto"><table class="w-full text-left border-collapse min-w-[600px]"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-4 font-semibold border-b">Khóa học</th><th class="p-4 font-semibold border-b text-center">Điểm số</th><th class="p-4 font-semibold border-b text-center">Thời gian</th><th class="p-4 font-semibold border-b text-center">Ngày thi</th><th class="p-4 font-semibold border-b text-center">Kết quả</th></tr></thead><tbody id="myResultTable" class="text-sm text-gray-700 divide-y divide-gray-100"></tbody></table></div>
+                <div id="emptyResult" class="hidden p-10 text-center text-gray-400">Bạn chưa hoàn thành bài thi nào.</div>
+            </div>
+        </section>
+
+        <section id="myGiftsView" class="hidden flex flex-col gap-6 h-full pb-20">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 border-b pb-4 flex items-center gap-3">
+                <i class="fa-solid fa-gift text-orange-600"></i> QUÀ CỦA TÔI
+            </h2>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                            <tr>
+                                <th class="p-4 font-semibold border-b">Ngày trúng</th>
+                                <th class="p-4 font-semibold border-b">Phần quà</th>
+                                <th class="p-4 font-semibold border-b text-center">Trạng thái</th>
+                                <th class="p-4 font-semibold border-b text-right">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myGiftsTable" class="text-sm text-gray-700 divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+                <div id="emptyGifts" class="hidden p-10 text-center text-gray-400 italic">Bạn chưa trúng phần quà nào.</div>
+            </div>
+        </section>
+
+        <section id="luckyWheelView" class="hidden">
+            <div class="deco-shape w-40 h-40 top-10 left-[-20px]"></div>
+            <div class="deco-shape w-60 h-60 bottom-10 right-[-30px]"></div>
+            <div class="z-20 text-center mb-6 relative w-full px-4 pt-4 flex-shrink-0">
+                <h1 class="wheel-title-festive">VÒNG QUAY MAY MẮN</h1>
+                <div class="mt-4 flex justify-center">
+                    <div class="inline-flex items-center gap-3 bg-white/90 backdrop-blur px-5 py-2 rounded-full shadow border border-yellow-300">
+                        <span class="text-xs font-bold text-red-600 uppercase tracking-wide">Lượt quay khả dụng:</span>
+                        <span id="availableSpinsText" class="text-xl font-black text-orange-600">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="relative z-10 scale-95 md:scale-100 mb-10 flex-shrink-0">
+                <div id="wheel-container">
+                    <div id="goldDotsContainer" class="gold-dot-ring"></div>
+                    <div id="wheel">
+                        <div id="wheelLabels" class="wheel-label-container"></div>
+                    </div>
+                    <button id="spinBtn" onclick="spinNow()" class="spin-btn-center group">
+                        <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center border-2 border-yellow-200 shadow-inner">
+                            <span class="font-black text-[10px] md:text-xs text-red-700 uppercase">QUAY</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <audio id="tickSound" src="https://www.soundjay.com/buttons/sounds/button-20.mp3" preload="auto"></audio>
+            <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-01.mp3" preload="auto"></audio>
+        </section>
+      </div>
+    </main>
+
+    <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex items-center px-2 py-2 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] mobile-nav-container">
+        <button class="nav-mobile-btn active flex flex-col items-center gap-1 text-gray-400 transition py-1" onclick="switchPage('all', this)">
+            <i class="fa-solid fa-house text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-center">Home</span>
+        </button>
+        <button class="nav-mobile-btn flex flex-col items-center gap-1 text-gray-400 transition py-1" onclick="switchPage('video', this)">
+            <i class="fa-solid fa-circle-play text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-center">Video</span>
+        </button>
+        <button class="nav-mobile-btn flex flex-col items-center gap-1 text-gray-400 transition py-1" onclick="switchPage('product', this)">
+            <i class="fa-solid fa-motorcycle text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-center">Sản phẩm</span>
+        </button>
+        <button class="nav-mobile-btn flex flex-col items-center gap-1 text-gray-400 transition py-1" onclick="switchPage('culture', this)">
+            <i class="fa-solid fa-landmark text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-center">Văn hoá</span>
+        </button>
+        <button class="nav-mobile-btn flex flex-col items-center gap-1 text-gray-400 transition py-1" onclick="switchPage('skill', this)">
+            <i class="fa-solid fa-graduation-cap text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-center">Kỹ năng</span>
+        </button>
+        <button class="nav-mobile-btn flex flex-col items-center gap-1 text-gray-400 transition py-1" onclick="switchLuckyWheelView()">
+            <div class="relative">
+                <i class="fa-solid fa-dharmachakra text-lg mb-0.5"></i>
+                <span id="spinBadgeMobile" class="hidden absolute -top-1 -right-2 bg-red-600 text-white text-[8px] px-1 rounded-full font-bold">0</span>
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-center">Vòng quay</span>
+        </button>
+        <button class="nav-mobile-btn flex flex-col items-center gap-1 text-gray-400 transition py-1" onclick="switchPage('mygifts', this)">
+            <i class="fa-solid fa-gift text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-center">Quà tặng</span>
+        </button>
+        <button class="nav-mobile-btn flex flex-col items-center gap-1 text-gray-400 transition py-1" onclick="switchPage('results', this)">
+            <i class="fa-solid fa-chart-pie text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold uppercase tracking-wide text-center">Kết quả</span>
+        </button>
+    </nav>
+  </div>
+
+  <button id="chatBtn" onclick="toggleChat()" class="chat-btn-float hidden"><i class="fa-solid fa-comments"></i><div id="chatUnreadDot" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border border-white"></div></button>
+  <div id="chatBox" class="chat-box-container"><div class="h-14 bg-gradient-to-r from-orange-600 to-red-600 text-white flex items-center justify-between px-4 flex-shrink-0"><div class="font-bold flex items-center gap-2"><i class="fa-solid fa-headset"></i> Hỗ trợ Admin</div><button onclick="toggleChat()" class="opacity-80 hover:opacity-100"><i class="fa-solid fa-xmark text-lg"></i></button></div><div id="chatMessages" class="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col"><div class="text-center text-xs text-gray-400 my-4">Bắt đầu cuộc trò chuyện</div></div><div class="p-3 border-t bg-white flex gap-2 items-center relative"><button onclick="document.getElementById('emojiPickerUser').classList.toggle('hidden')" class="w-10 h-10 rounded-full text-gray-400 hover:text-orange-600 hover:bg-gray-100 transition flex-shrink-0 flex items-center justify-center"><i class="fa-regular fa-face-smile text-xl"></i></button><div id="emojiPickerUser" class="hidden absolute bottom-16 left-2 bg-white border border-gray-200 shadow-xl rounded-xl p-2 w-64 grid grid-cols-6 gap-1 z-50 animate-fade-in"></div><input id="chatInput" type="text" class="flex-1 border rounded-full px-4 py-2 text-sm outline-none focus:border-orange-500 bg-gray-50 h-10" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') sendChatMsg()"><button onclick="sendChatMsg()" class="w-10 h-10 rounded-full bg-orange-600 text-white flex items-center justify-center hover:bg-orange-700 shadow flex-shrink-0"><i class="fa-solid fa-paper-plane text-xs"></i></button></div></div>
+  <div id="profileModal" class="hidden fixed inset-0 bg-gray-900/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl animate-fade-in"><div class="h-24 bg-gradient-to-r from-orange-500 to-red-600 relative"><button onclick="document.getElementById('profileModal').classList.add('hidden')" class="absolute top-3 right-3 text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="px-6 pb-6 -mt-12 text-center"><div class="relative inline-block avatar-upload cursor-pointer group" onclick="document.getElementById('avatarInput').click()"><img id="profileAvatarPreview" src="" class="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-white"><div class="avatar-overlay absolute inset-0 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-camera"></i></div><input type="file" id="avatarInput" hidden accept="image/*" onchange="handleImageUpload(this)"></div><h3 class="font-bold text-lg mt-2 text-gray-800" id="profileNameDisplay">User Name</h3><p class="text-xs text-gray-500 uppercase font-bold" id="profileDvnDisplay">DVN CODE</p><div class="mt-6 space-y-4 text-left"><div><label class="text-xs font-bold text-gray-500 ml-1">Họ và tên</label><input id="profName" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-orange-500 outline-none"></div><div class="grid grid-cols-2 gap-3"><div><label class="text-xs font-bold text-gray-500 ml-1">Ngày sinh</label><input id="profDob" type="date" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1">Số điện thoại</label><input id="profPhone" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"></div></div><div><label class="text-xs font-bold text-gray-500 ml-1">Sở thích</label><input id="profInterest" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="Ví dụ: Đọc sách, Đá bóng..."></div></div><button onclick="saveProfile()" class="w-full mt-6 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg">Cập nhật hồ sơ</button></div></div></div>
+  
+  <div id="authOverlay" class="fixed inset-0 bg-gray-100 z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-y-auto max-h-full flex flex-col md:flex-row">
+          <div class="hidden md:flex md:w-5/12 bg-white flex-col items-center justify-center p-8 border-r border-gray-100 text-center">
+              <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="w-24 md:w-32 mb-6 object-contain">
+              <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">YADEA E-LEARNING</h2>
+              <p class="text-sm text-gray-500">Electrify Your Life</p>
+          </div>
+          <div class="w-full md:w-7/12 p-6 md:p-12 flex flex-col justify-center">
+              <div class="md:hidden flex flex-col items-center mb-6 border-b pb-4">
+                  <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-8 mb-2">
+                  <h3 class="font-bold text-gray-800">YADEA E-LEARNING</h3>
+              </div>
+              <div class="mb-6"><h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-1">Welcome</h3><p class="text-sm text-gray-500">Vui lòng đăng nhập để tiếp tục.</p></div>
+              <div class="space-y-4">
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Email</label><input id="loginEmail" type="email" class="login-input w-full rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 border border-gray-200 focus:border-orange-500" placeholder="Enter your email"></div>
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Password</label><input id="loginPassword" type="password" class="login-input w-full rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 border border-gray-200 focus:border-orange-500" placeholder="Enter your password"></div>
+                  <button id="loginBtn" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 shadow-lg shadow-orange-500/20 transition transform active:scale-95 text-sm uppercase tracking-wide">Sign In</button>
+                  <p id="loginError" class="text-center text-xs text-red-500 font-medium h-4 mt-2"></p>
+                  <div class="flex justify-between items-center text-xs pt-2"><button class="text-orange-600 font-medium hover:underline">Quên mật khẩu?</button><button id="openRegister" class="text-gray-500 hover:text-gray-800">Đăng ký tài khoản mới</button></div>
+              </div>
+              <div id="registerBox" class="hidden mt-6 pt-6 border-t border-dashed border-gray-200 space-y-3">
+                  <p class="text-xs font-bold text-gray-800 uppercase text-center mb-2">Đăng ký thành viên</p>
+                  <div class="grid grid-cols-2 gap-3"><input id="regName" placeholder="Họ tên" class="login-input w-full rounded-lg px-3 py-2 text-xs outline-none bg-gray-50 border border-gray-200"><input id="regDvn" placeholder="Mã DVN" class="login-input w-full rounded-lg px-3 py-2 text-xs outline-none bg-gray-50 border border-gray-200"></div>
+                  <select id="regRole" class="login-input w-full rounded-lg px-3 py-2 text-xs outline-none text-gray-600 cursor-pointer bg-gray-50 border border-gray-200"><option value="" disabled selected>-- Chọn chức vụ / Vai trò --</option><option value="learner">Nhân Viên Cửa Hàng</option><option value="sale">Nhân viên Kinh doanh (Sale)</option><option value="director">Giám đốc Khu vực (Director)</option></select>
+                  <input id="regEmail" placeholder="Email đăng ký" class="login-input w-full rounded-lg px-3 py-2 text-xs outline-none bg-gray-50 border border-gray-200">
+                  <input id="regPassword" type="password" placeholder="Mật khẩu" class="login-input w-full rounded-lg px-3 py-2 text-xs outline-none bg-gray-50 border border-gray-200">
+                  <button id="registerBtn" class="w-full bg-gray-800 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-black">Gửi yêu cầu duyệt</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div id="winnerInfoModal" class="hidden fixed inset-0 bg-black/80 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-fade-in relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-yellow-400 to-orange-500 z-0"></div><div class="relative z-10 text-center -mt-2"><div class="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center shadow-lg mb-4"><i class="fa-solid fa-gift text-4xl text-orange-600 animate-bounce"></i></div><h3 class="font-black text-2xl text-gray-800 uppercase italic">Chúc Mừng!</h3><p class="text-sm text-gray-500 mb-6">Bạn đã trúng: <b id="winPrizeName" class="text-orange-600 text-lg">...</b></p><div class="space-y-3 text-left"><p class="text-xs font-bold text-gray-400 uppercase">Thông tin nhận quà:</p><input id="shipName" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-orange-500 outline-none font-bold" placeholder="Họ và tên người nhận"><input id="shipPhone" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-orange-500 outline-none font-bold" placeholder="Số điện thoại liên hệ"><textarea id="shipAddress" rows="2" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-orange-500 outline-none font-bold" placeholder="Địa chỉ chính xác (Số nhà, đường...)"></textarea></div><button onclick="submitPrizeInfo()" class="w-full mt-6 bg-gradient-to-r from-orange-600 to-red-600 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] transition-transform">XÁC NHẬN NHẬN QUÀ</button></div></div></div>
+
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>

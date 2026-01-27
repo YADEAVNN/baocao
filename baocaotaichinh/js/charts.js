@@ -2,7 +2,7 @@
 import { sb, STATE } from './config.js';
 import { fmn, calcKPI, safeVal } from './utils.js';
 
-// Đăng ký Plugin Chart.js
+// Đăng ký Plugin Chart.js (Kiểm tra kỹ để tránh lỗi undefined)
 try {
     if (typeof Chart !== 'undefined') {
         if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
@@ -10,14 +10,14 @@ try {
     }
 } catch (e) { console.warn("Lỗi đăng ký Plugin Chart:", e); }
 
-// --- HÀM RENDER CHART CHUNG ---
+// --- HÀM RENDER CHART CHUNG (HELPER) ---
 export function renderChart(type, id, data, options = {}) {
     const canvas = document.getElementById(id);
     if (!canvas) return; 
     
     const ctx = canvas.getContext('2d');
     
-    // Hủy biểu đồ cũ nếu tồn tại để tránh vẽ chồng
+    // Hủy biểu đồ cũ nếu tồn tại để tránh vẽ chồng (memory leak)
     if (STATE.chartInstances[id]) {
         STATE.chartInstances[id].destroy();
     }
@@ -34,7 +34,7 @@ export function renderChart(type, id, data, options = {}) {
             datalabels: {
                 color: '#fff',
                 font: { weight: 'bold', size: 10 },
-                // Mặc định chỉ hiện số cho biểu đồ tròn
+                // Mặc định chỉ hiện số cho biểu đồ tròn (Pie/Doughnut)
                 formatter: (v) => (type === 'pie' || type === 'doughnut') ? (v > 0 ? fmn(v) : '') : '',
                 display: (context) => type === 'pie' || type === 'doughnut'
             },
@@ -76,7 +76,7 @@ let currentOverviewMonths = [];
 export async function loadOverviewDashboard() {
     if (STATE.assignedShopCodes.length === 0) return;
 
-    // Lấy 12 tháng gần nhất
+    // Lấy 12 tháng gần nhất để vẽ biểu đồ xu hướng
     let monthsToFetch = [];
     let d = new Date();
     for (let i = 0; i < 12; i++) {
@@ -88,7 +88,7 @@ export async function loadOverviewDashboard() {
     monthsToFetch.reverse();
     currentOverviewMonths = monthsToFetch;
 
-    // Fetch dữ liệu báo cáo
+    // Fetch dữ liệu báo cáo từ Supabase
     const { data: reports } = await sb.from('financial_reports')
         .select('*')
         .in('shop_code', STATE.assignedShopCodes)
@@ -171,7 +171,7 @@ window.filterOverview = () => {
 };
 
 function renderOverviewVisuals(reports, months, selectedMonth) {
-    // 1. KPI Cards
+    // 1. KPI Cards (Chỉ tính cho tháng được chọn)
     const currentReports = reports.filter(r => r.report_month === selectedMonth);
 
     let totRev = 0, totProfit = 0, totVol = 0, totSI = 0, totStock = 0;
@@ -202,7 +202,7 @@ function renderOverviewVisuals(reports, months, selectedMonth) {
     if(document.getElementById('ov_stock')) document.getElementById('ov_stock').innerText = fmn(totStock);
     if(document.getElementById('ov_rate')) document.getElementById('ov_rate').innerText = `${profitableShops}/${currentReports.length}`;
 
-    // 2. Biểu đồ Xu hướng (B4)
+    // 2. Biểu đồ Xu hướng (B4 - Luôn hiển thị 12 tháng để thấy trend)
     const trendRev = [], trendNet = [];
     const niceLabels = months.map(m => `T${parseInt(m.split('-')[1])}/${m.split('-')[0].slice(2)}`);
 
@@ -274,7 +274,7 @@ function renderOverviewVisuals(reports, months, selectedMonth) {
         scales: { x: {title:{display:true,text:'Doanh Thu'}}, y: {title:{display:true,text:'Margin (%)'}} }
     });
 
-    // B3: Table
+    // B3: Table Heatmap
     document.getElementById('body_B3_Heatmap').innerHTML = currentReports.map(r => {
         const k = calcKPI(r);
         const margin = k.rev ? (k.net / k.rev) * 100 : 0;
@@ -358,13 +358,13 @@ function renderShopLevel(r, allReports) {
 // ============================================================
 
 export async function loadTargetDashboard() {
-    // 1. Lấy Elements bộ lọc
+    // 1. Lấy bộ lọc
     const selYear = document.getElementById('tg_filter_year');
     const selProv = document.getElementById('tg_filter_province');
     const selSVN = document.getElementById('tg_filter_svn');
     const selDVN = document.getElementById('tg_filter_dvn');
 
-    // 2. Điền dữ liệu vào bộ lọc (nếu chưa có)
+    // Populate Filters nếu chưa có
     if (selProv && selProv.options.length <= 1) {
         const provs = [...new Set(STATE.globalAssignedShops.map(s => s.province).filter(n => n))].sort();
         const svns = [...new Set(STATE.globalAssignedShops.map(s => s.svn_code).filter(n => n))].sort();
@@ -375,10 +375,8 @@ export async function loadTargetDashboard() {
         selDVN.innerHTML = `<option value="">-- Tất cả Shop --</option>` + shops.map(s => `<option value="${s.shop_code}">${s.shop_code} - ${s.shop_name}</option>`).join('');
     }
 
-    // 3. Logic Lọc: Xác định danh sách Shop cần lấy dữ liệu
+    // 2. Xác định danh sách Shop để lấy Actual
     let targetShopCodes = [];
-    
-    // Ưu tiên: Shop > SVN > Tỉnh > Tất cả
     if (selDVN.value) {
         targetShopCodes = [selDVN.value];
     } else {
@@ -387,46 +385,75 @@ export async function loadTargetDashboard() {
         if (selSVN.value) filtered = filtered.filter(s => s.svn_code === selSVN.value);
         targetShopCodes = filtered.map(s => s.shop_code);
     }
-
     if (targetShopCodes.length === 0) return;
 
-    // 4. Fetch Data theo Năm đã chọn
+    // 3. Chuẩn bị tham số
     const year = selYear.value || new Date().getFullYear();
     const startYear = `${year}-01-01`;
     const endYear = `${year}-12-31`;
+    const currentUser = STATE.currentUser;
 
+    // Xác định logic lấy Target dựa trên Role
+    let targetPromise;
+    
+    if (currentUser.role === 'Admin') {
+        // Admin: Xem hết
+        targetPromise = sb.from('kpi_targets')
+            .select('*')
+            .eq('scope', 'SALE_AGENT') 
+            .gte('target_month', `${year}-01`)
+            .lte('target_month', `${year}-12`);
+            
+    } else if (currentUser.role === 'Giám Đốc') {
+        // Giám Đốc: Xem Sale của mình
+        const mySales = [...new Set(STATE.globalAssignedShops.map(s => s.sale_name).filter(n => n))];
+        targetPromise = sb.from('kpi_targets')
+            .select('*')
+            .eq('scope', 'SALE_AGENT')
+            .in('reference_code', mySales) 
+            .gte('target_month', `${year}-01`)
+            .lte('target_month', `${year}-12`);
+
+    } else {
+        // Sale: Xem của mình
+        targetPromise = sb.from('kpi_targets')
+            .select('*')
+            .eq('scope', 'SALE_AGENT') 
+            .eq('reference_code', currentUser.full_name)
+            .gte('target_month', `${year}-01`)
+            .lte('target_month', `${year}-12`);
+    }
+
+    // 4. Gọi API
     const [ { data: actualData }, { data: targetData } ] = await Promise.all([
         sb.from('financial_reports')
-            .select('report_month, shop_code, sold_quantity, sales_detail_json')
+            .select('report_month, shop_code, sold_quantity, sales_detail_json, activity_quantity')
             .in('shop_code', targetShopCodes)
             .gte('report_month', startYear)
             .lte('report_month', endYear)
             .eq('status', 'approved'),
-        sb.from('kpi_targets')
-            .select('*')
-            .in('reference_code', targetShopCodes)
-            .gte('target_month', `${year}-01`)
-            .lte('target_month', `${year}-12`)
+        targetPromise
     ]);
 
-    // 5. Tổng hợp dữ liệu theo Tháng (1-12)
+    // 5. Tổng hợp dữ liệu (Aggregation) theo từng tháng
     const aggregated = {}; 
     const months = [];
     for(let i=1; i<=12; i++) {
-        const mKey = `${year}-${String(i).padStart(2,'0')}`; // Ví dụ: "2026-01"
+        const mKey = `${year}-${String(i).padStart(2,'0')}`; 
         months.push(mKey);
-        aggregated[mKey] = { target_si: 0, target_so: 0, act_si: 0, act_so: 0 };
+        aggregated[mKey] = { target_si: 0, target_so: 0, target_act: 0, act_si: 0, act_so: 0, act_act: 0 };
     }
 
-    // Map Target vào tháng
+    // Map Target vào từng tháng
     if(targetData) targetData.forEach(t => {
         if(aggregated[t.target_month]) {
             aggregated[t.target_month].target_si += (t.target_si || 0);
             aggregated[t.target_month].target_so += (t.target_so || 0);
+            aggregated[t.target_month].target_act += (t.target_activity || 0); // Đã thêm Target Act
         }
     });
 
-    // Map Actual vào tháng
+    // Map Actual vào từng tháng
     if(actualData) actualData.forEach(r => {
         const mKey = r.report_month.slice(0, 7);
         if(aggregated[mKey]) {
@@ -437,37 +464,61 @@ export async function loadTargetDashboard() {
             } catch(e) {}
             aggregated[mKey].act_si += si;
             aggregated[mKey].act_so += (r.sold_quantity || 0);
+            aggregated[mKey].act_act += (r.activity_quantity || 0); // Đã thêm Actual Act
         }
     });
 
-    // 6. Update KPI Cards (Tổng cả năm)
-    let sumT_SI = 0, sumA_SI = 0, sumT_SO = 0, sumA_SO = 0;
-    Object.values(aggregated).forEach(v => {
-        sumT_SI += v.target_si; sumA_SI += v.act_si;
-        sumT_SO += v.target_so; sumA_SO += v.act_so;
+    // 6. Tính toán KPI hiển thị Card (CÓ ÁP DỤNG BỘ LỌC THÁNG)
+    let sumT_SI = 0, sumA_SI = 0, sumT_SO = 0, sumA_SO = 0, sumT_Act = 0, sumA_Act = 0;
+    
+    // Lấy giá trị lọc tháng (ví dụ: "02" hoặc "")
+    const filterMonthVal = document.getElementById('tg_filter_month').value; 
+
+    Object.entries(aggregated).forEach(([key, v]) => {
+        const mPart = key.split('-')[1]; // Lấy phần tháng "01", "02" từ key "2026-01"
+
+        // 🔥 FIX QUAN TRỌNG: Chỉ cộng dồn nếu KHÔNG lọc tháng hoặc tháng trùng khớp
+        if (!filterMonthVal || filterMonthVal === mPart) {
+            sumT_SI += v.target_si; sumA_SI += v.act_si;
+            sumT_SO += v.target_so; sumA_SO += v.act_so;
+            sumT_Act += v.target_act; sumA_Act += v.act_act;
+        }
     });
 
+    // Tính % (Tránh chia cho 0)
     const pctSI = sumT_SI > 0 ? Math.round((sumA_SI / sumT_SI) * 100) : 0;
     const pctSO = sumT_SO > 0 ? Math.round((sumA_SO / sumT_SO) * 100) : 0;
+    const pctAct = sumT_Act > 0 ? Math.round((sumA_Act / sumT_Act) * 100) : 0;
 
+    // Update DOM: S.I
     document.getElementById('tg_card_si_percent').innerText = `${pctSI}%`;
     document.getElementById('tg_val_si_act').innerText = fmn(sumA_SI);
     document.getElementById('tg_val_si_target').innerText = fmn(sumT_SI);
     document.getElementById('tg_progress_si').style.width = `${Math.min(pctSI, 100)}%`;
 
+    // Update DOM: S.O
     document.getElementById('tg_card_so_percent').innerText = `${pctSO}%`;
     document.getElementById('tg_val_so_act').innerText = fmn(sumA_SO);
     document.getElementById('tg_val_so_target').innerText = fmn(sumT_SO);
     document.getElementById('tg_progress_so').style.width = `${Math.min(pctSO, 100)}%`;
 
-    // 7. Chuẩn bị dữ liệu vẽ biểu đồ (Tăng trưởng)
+    // Update DOM: Activity (Kiểm tra null đề phòng user chưa update HTML)
+    if(document.getElementById('tg_card_act_percent')) {
+        document.getElementById('tg_card_act_percent').innerText = `${pctAct}%`;
+        document.getElementById('tg_val_act_act').innerText = fmn(sumA_Act);
+        document.getElementById('tg_val_act_target').innerText = fmn(sumT_Act);
+        document.getElementById('tg_progress_act').style.width = `${Math.min(pctAct, 100)}%`;
+    }
+
+    // 7. Vẽ biểu đồ (Tăng trưởng - Luôn vẽ cả năm để thấy xu hướng)
     const labels = months.map(m => `T${m.split('-')[1]}`);
     
-    // Hàm tính Growth (%)
+    // Helper: Tính % tăng trưởng so với tháng trước
     const getGrowthData = (dataArr) => {
         return dataArr.map((val, idx) => {
             if (idx === 0) return 0; // Tháng 1 chưa có tăng trưởng
             const prev = dataArr[idx - 1];
+            // Nếu tháng trước = 0, coi như 0% để tránh chia cho 0
             return prev === 0 ? 0 : ((val - prev) / prev) * 100;
         });
     };
@@ -483,8 +534,8 @@ export async function loadTargetDashboard() {
             { 
                 type: 'line', 
                 label: '% Tăng trưởng', 
-                data: dataActSI, // Đường nối đỉnh cột Actual
-                borderColor: '#16a34a', // Màu xanh lá
+                data: dataActSI,
+                borderColor: '#16a34a', // Xanh lá
                 borderWidth: 2, 
                 tension: 0.3, 
                 pointRadius: 4, 
@@ -502,7 +553,7 @@ export async function loadTargetDashboard() {
                     color: (ctx) => dataGrowthSI[ctx.dataIndex] >= 0 ? '#16a34a' : '#ef4444',
                     font: { size: 10, weight: 'bold' }
                 },
-                order: 1 // Vẽ đè lên cột
+                order: 1
             },
             { label: 'Thực Tế', data: dataActSI, backgroundColor: '#f97316', order: 2 }, // Cam đậm
             { label: 'Mục Tiêu', data: dataTgtSI, backgroundColor: '#ffedd5', order: 3 } // Cam nhạt
@@ -521,7 +572,7 @@ export async function loadTargetDashboard() {
                 type: 'line', 
                 label: '% Tăng trưởng', 
                 data: dataActSO, 
-                borderColor: '#2563eb', // Màu xanh dương
+                borderColor: '#2563eb', // Xanh dương
                 borderWidth: 2, 
                 tension: 0.3, 
                 pointRadius: 4, 

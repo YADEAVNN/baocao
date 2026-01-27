@@ -14,10 +14,10 @@ import {
     api_upsertTargets,
     api_getTargets,
     api_getActualPerformance,
-    api_checkSubmittedShops // Import hàm kiểm tra tick xanh
+    api_checkSubmittedShops 
 } from './api.js';
 
-import { STATE } from './config.js';
+import { STATE, sb } from './config.js';
 
 import { 
     switchView, 
@@ -35,10 +35,8 @@ import {
     ui_renderModelOptionsAll
 } from './ui.js';
 
-// Import các hàm biểu đồ (Bao gồm loadTargetDashboard)
 import { loadCharts, loadOverviewDashboard, loadTargetDashboard } from './charts.js';
 import { parseNumber, fmn, calcKPI } from './utils.js';
-import { sb } from './config.js'; 
 
 // --- INIT APP ---
 async function init() {
@@ -72,9 +70,7 @@ async function init() {
         const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
         if(document.getElementById('report_month')) document.getElementById('report_month').value = currentMonthStr;
 
-        // 🔥 GỌI HÀM CHECK SUBMITTED NGAY KHI INIT ĐỂ HIỂN THỊ TICK XANH
         await api_checkSubmittedShops(currentMonthStr);
-
         await api_loadShopsAndLock(profile);
         
         if (!STATE.globalAssignedShops || STATE.globalAssignedShops.length === 0) {
@@ -186,12 +182,15 @@ if (financeForm) {
         });
 
         const currentMonth = document.getElementById('report_month').value + "-01";
+        const activityQty = parseNumber(document.getElementById('activity_quantity').value);
+
         const payload = {
             report_month: currentMonth,
             shop_code: shopCode,
             sales_detail_json: detailRows,
+            activity_quantity: activityQty,
             status: 'submitted',
-            ...['opening_stock', 'sold_quantity', 'actual_revenue', 'revenue_support', 'cost_goods', 'cost_op_depreciation_build', 'cost_op_depreciation_equip', 'cost_op_rent', 'cost_op_salary', 'cost_op_utility', 'cost_op_maintain', 'cost_op_interest', 'cost_log_commission', 'cost_log_kpi_bonus', 'cost_log_discount', 'cost_log_shipping', 'cost_log_pdi', 'cost_log_warranty', 'cost_log_warehouse_labor', 'cost_log_display_storage', 'cost_log_plate_support', 'cost_log_maintenance_free', 'cost_log_cskh', 'cost_op_ads_social', 'cost_op_offline_print', 'cost_op_promotion_gift', 'cost_op_event_store', 'cost_mkt_livestream', 'cost_mkt_kol_koc', 'cost_mkt_pr_branding', 'cost_mkt_roadshow', 'cost_mkt_testdrive', 'cost_mkt_school', 'cost_mkt_mobile_sales', 'cost_mkt_square', 'cost_mkt_opening', 'cost_mkt_other', 'cost_other_general'].reduce((acc, curr) => ({ ...acc, [curr]: val(curr) }), {})
+            ...['sold_quantity', 'actual_revenue', 'revenue_support', 'cost_goods', 'cost_op_depreciation_build', 'cost_op_depreciation_equip', 'cost_op_rent', 'cost_op_salary', 'cost_op_utility', 'cost_op_maintain', 'cost_op_interest', 'cost_log_commission', 'cost_log_kpi_bonus', 'cost_log_discount', 'cost_log_shipping', 'cost_log_pdi', 'cost_log_warranty', 'cost_log_warehouse_labor', 'cost_log_display_storage', 'cost_log_plate_support', 'cost_log_maintenance_free', 'cost_log_cskh', 'cost_op_ads_social', 'cost_op_offline_print', 'cost_op_promotion_gift', 'cost_op_event_store', 'cost_mkt_livestream', 'cost_mkt_kol_koc', 'cost_mkt_pr_branding', 'cost_mkt_roadshow', 'cost_mkt_testdrive', 'cost_mkt_school', 'cost_mkt_mobile_sales', 'cost_mkt_square', 'cost_mkt_opening', 'cost_mkt_other', 'cost_other_general'].reduce((acc, curr) => ({ ...acc, [curr]: val(curr) }), {})
         };
 
         const editId = document.getElementById('editReportId').value;
@@ -202,10 +201,7 @@ if (financeForm) {
             document.getElementById('btnSubmit').disabled = false;
         } else {
             document.getElementById('formMsg').innerText = "Thành công!";
-            
-            // 🔥 UPDATE LẠI TICK XANH SAU KHI NỘP THÀNH CÔNG
             await api_checkSubmittedShops(document.getElementById('report_month').value);
-
             window.resetEntryForm();
             setTimeout(() => { 
                 document.getElementById('btnSubmit').disabled = false; 
@@ -246,7 +242,8 @@ window.editReport = async (id) => {
     }
     if (r.report_month) document.getElementById('report_month').value = r.report_month.slice(0, 7);
     const setVal = (key, val) => { if (document.getElementById(key)) document.getElementById(key).value = fmn(val || 0); };
-    const fields = ['opening_stock', 'sold_quantity', 'actual_revenue', 'cost_goods', 'revenue_support', 'cost_op_depreciation_build', 'cost_op_depreciation_equip', 'cost_op_rent', 'cost_op_salary', 'cost_op_utility', 'cost_op_maintain', 'cost_op_interest', 'cost_log_commission', 'cost_log_kpi_bonus', 'cost_log_discount', 'cost_log_shipping', 'cost_log_pdi', 'cost_log_warranty', 'cost_log_warehouse_labor', 'cost_log_display_storage', 'cost_log_plate_support', 'cost_log_maintenance_free', 'cost_log_cskh', 'cost_op_ads_social', 'cost_op_offline_print', 'cost_op_promotion_gift', 'cost_op_event_store', 'cost_mkt_livestream', 'cost_mkt_kol_koc', 'cost_mkt_pr_branding', 'cost_mkt_roadshow', 'cost_mkt_testdrive', 'cost_mkt_school', 'cost_mkt_mobile_sales', 'cost_mkt_square', 'cost_mkt_opening', 'cost_mkt_other', 'cost_other_general'];
+    
+    const fields = ['activity_quantity', 'sold_quantity', 'actual_revenue', 'cost_goods', 'revenue_support', 'cost_op_depreciation_build', 'cost_op_depreciation_equip', 'cost_op_rent', 'cost_op_salary', 'cost_op_utility', 'cost_op_maintain', 'cost_op_interest', 'cost_log_commission', 'cost_log_kpi_bonus', 'cost_log_discount', 'cost_log_shipping', 'cost_log_pdi', 'cost_log_warranty', 'cost_log_warehouse_labor', 'cost_log_display_storage', 'cost_log_plate_support', 'cost_log_maintenance_free', 'cost_log_cskh', 'cost_op_ads_social', 'cost_op_offline_print', 'cost_op_promotion_gift', 'cost_op_event_store', 'cost_mkt_livestream', 'cost_mkt_kol_koc', 'cost_mkt_pr_branding', 'cost_mkt_roadshow', 'cost_mkt_testdrive', 'cost_mkt_school', 'cost_mkt_mobile_sales', 'cost_mkt_square', 'cost_mkt_opening', 'cost_mkt_other', 'cost_other_general'];
     fields.forEach(f => setVal(f, r[f]));
     await api_loadMonthlyModels();
     document.getElementById('salesDetailBody').innerHTML = "";
@@ -304,7 +301,7 @@ window.approveReport = async (id) => {
     }
 };
 
-// --- LOGIC TARGET & ALLOCATION CHECK ---
+// --- 🔥 LOGIC TARGET & ALLOCATION CHECK 🔥 ---
 let cachedTargetData = { items: [], targets: {}, actuals: {}, scope: '' };
 
 window.loadTargetView = async () => {
@@ -313,7 +310,7 @@ window.loadTargetView = async () => {
     
     ui_showMsg("Đang tải dữ liệu Target...", "blue");
     const tbody = document.getElementById('targetTableBody');
-    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs italic text-gray-400">Đang tải...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-xs italic text-gray-400">Đang tải...</td></tr>';
     document.getElementById('targetEmptyState').classList.add('hidden');
 
     try {
@@ -321,6 +318,45 @@ window.loadTargetView = async () => {
         const shops = STATE.globalAssignedShops || [];
         const viewMode = document.getElementById('target_view_mode')?.value || 'BY_SALE';
         
+        // --- 🔥 FIX: HIỂN THỊ TARGET CỦA SALE (NẾU LÀ SALE) ---
+        const oldBanner = document.getElementById('my-target-banner');
+        if(oldBanner) oldBanner.remove();
+
+        if (userRole !== 'Giám Đốc' && userRole !== 'Admin') {
+            // Lấy Target do Giám Đốc giao cho Sale này
+            const myName = STATE.currentUser.full_name;
+            const [myTarget] = await api_getTargets(month, 'SALE_AGENT', [myName]);
+
+            const t_si = myTarget ? myTarget.target_si : 0;
+            const t_so = myTarget ? myTarget.target_so : 0;
+            const t_act = myTarget ? myTarget.target_activity : 0;
+
+            const bannerHtml = `
+            <div id="my-target-banner" class="bg-[#1e1b4b] text-white p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center border border-indigo-900">
+                <div>
+                    <h3 class="font-black text-sm uppercase text-indigo-300"><i class="fa-solid fa-crosshairs text-orange-400 mr-2"></i>Mục tiêu của bạn</h3>
+                    <p class="text-[10px] text-gray-400">Tháng ${month} (Được giao bởi GĐ)</p>
+                </div>
+                <div class="flex gap-6 text-center">
+                    <div><div class="text-[9px] text-gray-400 uppercase font-bold">Target Nhập</div><div class="text-xl font-black text-orange-400">${fmn(t_si)}</div></div>
+                    <div class="w-px bg-indigo-800 h-8 self-center"></div>
+                    <div><div class="text-[9px] text-gray-400 uppercase font-bold">Target Bán</div><div class="text-xl font-black text-blue-400">${fmn(t_so)}</div></div>
+                    <div class="w-px bg-indigo-800 h-8 self-center"></div>
+                    <div><div class="text-[9px] text-gray-400 uppercase font-bold">Hoạt động</div><div class="text-xl font-black text-purple-400">${fmn(t_act)}</div></div>
+                </div>
+            </div>`;
+            
+            // Chèn banner vào trước bảng
+            const container = document.getElementById('view-targets');
+            const tableContainer = container.querySelector('.bg-white.rounded-b-2xl');
+            if(tableContainer) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = bannerHtml;
+                tableContainer.parentNode.insertBefore(tempDiv.firstChild, tableContainer);
+            }
+        }
+        // -----------------------------------------------------------
+
         let scope = ''; 
         let listItems = []; 
         let allocatedMap = {}; 
@@ -344,7 +380,8 @@ window.loadTargetView = async () => {
                 
                 const sumSi = relevantTargets.reduce((sum, t) => sum + (t.target_si || 0), 0);
                 const sumSo = relevantTargets.reduce((sum, t) => sum + (t.target_so || 0), 0);
-                allocatedMap[saleName] = { si: sumSi, so: sumSo };
+                const sumAct = relevantTargets.reduce((sum, t) => sum + (t.target_activity || 0), 0); 
+                allocatedMap[saleName] = { si: sumSi, so: sumSo, act: sumAct };
             });
 
         } else {
@@ -364,10 +401,13 @@ window.loadTargetView = async () => {
         const refCodes = listItems.map(i => i.code);
         const allRelatedShopCodes = shops.map(s => s.shop_code);
         
-        const [existingTargets, actualReports] = await Promise.all([
-            api_getTargets(month, scope, refCodes), 
-            api_getActualPerformance(month, allRelatedShopCodes)
-        ]);
+        const { data: actualReports, error } = await sb.from('financial_reports')
+            .select('shop_code, sold_quantity, sales_detail_json, activity_quantity')
+            .eq('report_month', month + '-01')
+            .in('shop_code', allRelatedShopCodes)
+            .eq('status', 'approved');
+
+        const existingTargets = await api_getTargets(month, scope, refCodes);
 
         cachedTargetData.scope = scope; 
         cachedTargetData.items = listItems; 
@@ -377,11 +417,17 @@ window.loadTargetView = async () => {
         existingTargets.forEach(t => cachedTargetData.targets[t.reference_code] = t);
         
         cachedTargetData.actuals = {}; 
-        actualReports.forEach(r => {
-            let si = 0; 
-            try { const details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json || []; details.forEach(d => si += (d.qty_si || 0)); } catch(e) {}
-            cachedTargetData.actuals[r.shop_code] = { si: si, so: r.sold_quantity || 0 };
-        });
+        if(actualReports) {
+            actualReports.forEach(r => {
+                let si = 0; 
+                try { const details = typeof r.sales_detail_json === 'string' ? JSON.parse(r.sales_detail_json) : r.sales_detail_json || []; details.forEach(d => si += (d.qty_si || 0)); } catch(e) {}
+                cachedTargetData.actuals[r.shop_code] = { 
+                    si: si, 
+                    so: r.sold_quantity || 0,
+                    act: r.activity_quantity || 0 
+                };
+            });
+        }
 
         populateTargetFilters(listItems); 
         applyTargetFilters(); 
@@ -389,7 +435,7 @@ window.loadTargetView = async () => {
 
     } catch (err) { 
         console.error(err); 
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 font-bold">Lỗi tải dữ liệu: ${err.message}</td></tr>`; 
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 font-bold">Lỗi tải dữ liệu: ${err.message}</td></tr>`; 
     }
 };
 
@@ -431,43 +477,70 @@ window.applyTargetFilters = () => {
     });
 
     document.getElementById('target_count_display').innerText = filteredItems.length;
-    if (filteredItems.length === 0) { tbody.innerHTML = ''; document.getElementById('targetEmptyState').classList.remove('hidden'); return; }
+    if (filteredItems.length === 0) { 
+        tbody.innerHTML = ''; 
+        document.getElementById('targetEmptyState').classList.remove('hidden'); 
+        return; 
+    }
     document.getElementById('targetEmptyState').classList.add('hidden');
     
     tbody.innerHTML = filteredItems.map(item => {
-        const t = cachedTargetData.targets[item.code] || { target_si: 0, target_so: 0 };
+        const t = cachedTargetData.targets[item.code] || { target_si: 0, target_so: 0, target_activity: 0 };
+        
         let allocationInfoHTML = ""; 
 
         if (cachedTargetData.scope === 'SHOP') {
-            let actSi = 0, actSo = 0;
-            if (cachedTargetData.actuals[item.code]) { actSi = cachedTargetData.actuals[item.code].si; actSo = cachedTargetData.actuals[item.code].so; }
+            // --- VIEW: SHOP ---
+            let actSi = 0, actSo = 0, actAct = 0;
+            if (cachedTargetData.actuals[item.code]) { 
+                actSi = cachedTargetData.actuals[item.code].si; 
+                actSo = cachedTargetData.actuals[item.code].so; 
+                actAct = cachedTargetData.actuals[item.code].act;
+            }
+            
             const pctSi = t.target_si > 0 ? Math.min(Math.round((actSi/t.target_si)*100), 100) : 0;
             const pctSo = t.target_so > 0 ? Math.min(Math.round((actSo/t.target_so)*100), 100) : 0;
+            const pctAct = t.target_activity > 0 ? Math.min(Math.round((actAct/t.target_activity)*100), 100) : 0;
             
             allocationInfoHTML = `
                 <div class="flex items-center gap-2 text-[10px] font-bold text-orange-600"><span class="w-6">S.I</span><div class="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="bg-orange-500 h-1.5 rounded-full" style="width: ${pctSi}%"></div></div><span class="w-16 text-right">${fmn(actSi)}/${fmn(t.target_si)}</span></div>
                 <div class="flex items-center gap-2 text-[10px] font-bold text-blue-600"><span class="w-6">S.O</span><div class="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="bg-blue-600 h-1.5 rounded-full" style="width: ${pctSo}%"></div></div><span class="w-16 text-right">${fmn(actSo)}/${fmn(t.target_so)}</span></div>
+                <div class="flex items-center gap-2 text-[10px] font-bold text-purple-600"><span class="w-6">HĐ</span><div class="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="bg-purple-600 h-1.5 rounded-full" style="width: ${pctAct}%"></div></div><span class="w-16 text-right">${fmn(actAct)}/${fmn(t.target_activity)}</span></div>
             `;
         } else {
-            const alloc = cachedTargetData.allocated[item.code] || { si: 0, so: 0 };
-            const diffSi = t.target_si - alloc.si;
-            let siStatusHtml = t.target_si === 0 ? `<span class="text-gray-400">Chưa đặt chỉ tiêu</span>` : (diffSi > 0 ? `<span class="text-red-600 font-black animate-pulse">⚠️ Thiếu ${fmn(diffSi)} xe</span> <span class="text-gray-400 font-normal">(${fmn(alloc.si)}/${fmn(t.target_si)})</span>` : `<span class="text-green-600 font-black">✅ Đã đủ (${fmn(alloc.si)})</span>`);
-            const diffSo = t.target_so - alloc.so;
-            let soStatusHtml = t.target_so === 0 ? `<span class="text-gray-400">Chưa đặt chỉ tiêu</span>` : (diffSo > 0 ? `<span class="text-red-600 font-black animate-pulse">⚠️ Thiếu ${fmn(diffSo)} xe</span> <span class="text-gray-400 font-normal">(${fmn(alloc.so)}/${fmn(t.target_so)})</span>` : `<span class="text-blue-600 font-black">✅ Đã đủ (${fmn(alloc.so)})</span>`);
+            // --- VIEW: SALE AGENT (Phân bổ) ---
+            const alloc = cachedTargetData.allocated[item.code] || { si: 0, so: 0, act: 0 };
+            
+            const check = (target, actual) => {
+                if (target === 0) return `<span class="text-gray-400">---</span>`;
+                const diff = target - actual;
+                if (diff > 0) return `<span class="text-red-600 font-black animate-pulse text-[10px]">⚠️ Thiếu ${fmn(diff)}</span> <span class="text-gray-400 font-normal">(${fmn(actual)}/${fmn(target)})</span>`;
+                return `<span class="text-green-600 font-black text-[10px]">✅ Đủ (${fmn(actual)})</span>`;
+            };
 
             allocationInfoHTML = `
                 <div class="space-y-1.5">
-                    <div class="flex justify-between items-center text-xs border-b border-gray-100 pb-1"><span class="font-bold text-orange-600 w-8">S.I:</span><div class="text-right flex-1">${siStatusHtml}</div></div>
-                    <div class="flex justify-between items-center text-xs"><span class="font-bold text-blue-600 w-8">S.O:</span><div class="text-right flex-1">${soStatusHtml}</div></div>
+                    <div class="flex justify-between items-center text-xs border-b border-gray-100 pb-1"><span class="font-bold text-orange-600 w-8">S.I:</span><div class="text-right flex-1">${check(t.target_si, alloc.si)}</div></div>
+                    <div class="flex justify-between items-center text-xs border-b border-gray-100 pb-1"><span class="font-bold text-blue-600 w-8">S.O:</span><div class="text-right flex-1">${check(t.target_so, alloc.so)}</div></div>
+                    <div class="flex justify-between items-center text-xs"><span class="font-bold text-purple-600 w-8">HĐ:</span><div class="text-right flex-1">${check(t.target_activity, alloc.act)}</div></div>
                 </div>
             `;
         }
 
+        const isRowMissing = (t.target_si === 0 && t.target_so === 0 && t.target_activity === 0);
+
         return `
-            <tr class="hover:bg-gray-50 border-b group ${t.target_si === 0 && t.target_so === 0 ? 'bg-red-50/30' : ''}" data-code="${item.code}">
-                <td class="p-4"><div class="font-bold text-slate-700">${item.name}</div><div class="flex items-center gap-2 mt-1"><span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-bold uppercase">${item.type}</span>${item.province ? `<span class="text-[9px] border border-blue-100 text-blue-500 px-1.5 py-0.5 rounded font-bold">${item.province}</span>` : ''}</div></td>
+            <tr class="hover:bg-gray-50 border-b group ${isRowMissing ? 'bg-red-50/30' : ''}" data-code="${item.code}">
+                <td class="p-4">
+                    <div class="font-bold text-slate-700">${item.name}</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-bold uppercase">${item.type}</span>
+                        ${item.province ? `<span class="text-[9px] border border-blue-100 text-blue-500 px-1.5 py-0.5 rounded font-bold">${item.province}</span>` : ''}
+                    </div>
+                </td>
                 <td class="p-4 bg-orange-50/30 border-l border-orange-100"><input type="number" class="inp-target-si w-full bg-white border border-orange-200 rounded p-2 text-center font-bold text-orange-700 outline-none focus:ring-2 focus:ring-orange-200" value="${t.target_si}" placeholder="0"></td>
                 <td class="p-4 bg-blue-50/30 border-l border-blue-100"><input type="number" class="inp-target-so w-full bg-white border border-blue-200 rounded p-2 text-center font-bold text-blue-700 outline-none focus:ring-2 focus:ring-blue-200" value="${t.target_so}" placeholder="0"></td>
+                <td class="p-4 bg-purple-50/30 border-l border-purple-100"><input type="number" class="inp-target-act w-full bg-white border border-purple-200 rounded p-2 text-center font-bold text-purple-700 outline-none focus:ring-2 focus:ring-purple-200" value="${t.target_activity||0}" placeholder="0"></td>
                 <td class="p-4 align-middle bg-white border-l border-gray-100">${allocationInfoHTML}</td>
             </tr>`;
     }).join('');
@@ -489,7 +562,18 @@ window.saveTargets = async () => {
             const code = tr.getAttribute('data-code');
             const si = parseInt(tr.querySelector('.inp-target-si').value) || 0;
             const so = parseInt(tr.querySelector('.inp-target-so').value) || 0;
-            if (code) { payloads.push({ target_month: month, scope: scope, reference_code: code, target_si: si, target_so: so, updated_by: STATE.currentUser.full_name }); }
+            const act = parseInt(tr.querySelector('.inp-target-act').value) || 0;
+            if (code) { 
+                payloads.push({ 
+                    target_month: month, 
+                    scope: scope, 
+                    reference_code: code, 
+                    target_si: si, 
+                    target_so: so, 
+                    target_activity: act, 
+                    updated_by: STATE.currentUser.full_name 
+                }); 
+            }
         });
         if (payloads.length > 0) { await api_upsertTargets(payloads); ui_showMsg("Đã lưu Target thành công!", "green"); loadTargetView(); }
     } catch (err) { alert("Lỗi lưu target: " + err.message); } finally { btn.innerHTML = oldText; btn.disabled = false; }

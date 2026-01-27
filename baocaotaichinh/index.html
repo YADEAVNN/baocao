@@ -18,38 +18,29 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <style>
-    /* Ép font chữ hệ thống */
-    body { font-family: 'Roboto', sans-serif !important; background-color: #F8FAFC; }
-    
+    body { font-family: 'Roboto', sans-serif; background-color: #F8FAFC; }
     .fade-in { animation: fadeIn 0.4s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    
     .modal-enter { animation: modalIn 0.3s ease-out forwards; }
     @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
-    
     .nav-item { display: flex; align-items: center; padding: 12px 20px; color: #9ca3af; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
     .nav-item:hover { background-color: #1f2937; color: white; }
     .nav-item.active { background-color: #1f2937; color: #fff; border-left-color: #FF4500; }
-    .nav-item i { width: 20px; margin-right: 10px; text-align: center; }
-    
     .form-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
     .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
     .form-input:focus { border-color: #FF4500; box-shadow: 0 0 0 3px rgba(255,69,0,0.1); }
     .form-input[readonly] { background-color: #f3f4f6; color: #64748b; cursor: not-allowed; }
     .form-input:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7; }
-    
     .sub-tab-btn { border-bottom: 2px solid transparent; color: #6b7280; font-weight: 600; padding: 10px 15px; transition: all 0.2s; white-space: nowrap; font-size: 13px; }
     .sub-tab-btn:hover { color: #1f2937; background-color: #f3f4f6; border-radius: 8px 8px 0 0; }
     .sub-tab-btn.active { color: #FF4500; border-bottom-color: #FF4500; background-color: white; border-radius: 8px 8px 0 0; }
-    
     .edit-mode-banner { background: #fff7ed; border: 1px solid #fdba74; color: #c2410c; padding: 12px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(253, 186, 116, 0.2); }
   </style>
 </head>
-<body class="h-[100dvh] overflow-hidden flex text-slate-800 font-sans">
+<body class="h-[100dvh] overflow-hidden flex text-slate-800">
 
   <div id="authContainer" class="fixed inset-0 z-[60] bg-[#F3F4F6] flex items-center justify-center p-4">
     <div class="bg-white rounded-[20px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-w-4xl w-full min-h-[550px] fade-in">
@@ -111,7 +102,6 @@
     </aside>
 
     <main class="flex-1 overflow-y-auto bg-[#F8FAFC] relative pt-20 md:pt-0">
-        
         <div id="view-charts" class="p-4 md:p-8 fade-in max-w-[1600px] mx-auto space-y-4">
             <div class="flex justify-between items-end border-b border-gray-200 bg-white rounded-t-xl px-2 pt-2 sticky top-0 z-10 shadow-sm overflow-x-auto">
                 <div class="flex">
@@ -168,7 +158,6 @@
                     </div>
                 </div>
             </div>
-
             <div id="chart-tab-detail" class="hidden space-y-6">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
                      <div class="w-full md:flex-1 md:min-w-[200px]"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">Sale Phụ Trách</label><select id="chart_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-sm w-full" onchange="updateChartFilters('sale')"><option value="">-- Tất cả --</option></select></div>
@@ -179,11 +168,10 @@
                 <div id="shop-charts-container" class="space-y-6 hidden">
                      <div id="chart_kpi_cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-sm font-black text-slate-800 uppercase mb-6 border-b pb-4">💰 Sức Khỏe Tài Chính (Waterfall)</h4><div class="h-[350px] w-full"><canvas id="chartWaterfall"></canvas></div></div><div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-6 border-b pb-4"><h4 class="text-sm font-black text-slate-800 uppercase">📈 Phân Tích Điểm Hòa Vốn</h4><div class="text-right"><span class="block text-[10px] text-gray-400 uppercase font-bold">Điểm hòa vốn dự kiến</span><span id="txt_breakeven" class="text-xl font-black text-orange-600">--- xe</span></div></div><div class="h-[350px] w-full"><canvas id="chartBreakeven"></canvas></div></div></div>
-                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C2. Cơ Cấu Chi Phí Shop</h4><div class="h-[250px]"><canvas id="chart_C2_Donut"></canvas></div></div><div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C3. Xu Hướng Shop (12 Tháng)</h4><div class="h-[250px]"><canvas id="chart_C3_Trend"></canvas></div></div></div>
+                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase">C2. Cơ Cấu Chi Phí Shop</h4><div class="h-[250px]"><canvas id="chart_C2_Donut"></canvas></div></div><div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C3. Xu Hướng Shop (12 Tháng)</h4><div class="h-[250px]"><canvas id="chart_C3_Trend"></canvas></div></div></div>
                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><div class="flex justify-between items-center mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase">C5. Top Model Bán Chạy</h4></div><div class="overflow-y-auto h-[300px]" id="div_C5_Model"></div></div><div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"><h4 class="text-xs font-bold text-gray-500 uppercase mb-4">C6. Nhập vs Bán Theo Model</h4><div class="h-[300px]"><canvas id="chart_C6_Stack"></canvas></div></div></div>
                 </div>
             </div>
-
             <div id="chart-tab-target_prog" class="hidden space-y-6">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
                     <div class="w-[100px]">
@@ -227,7 +215,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-l-4 border-l-orange-500 border-gray-200 relative overflow-hidden">
                         <div class="flex justify-between items-start mb-4">
                             <div><h4 class="text-xs font-black text-gray-500 uppercase">Tiến độ Nhập (S.I) - Năm nay</h4><h2 id="tg_card_si_percent" class="text-4xl font-black text-orange-600 mt-2">0%</h2></div>
@@ -243,6 +231,14 @@
                         </div>
                         <div class="w-full bg-gray-100 rounded-full h-2 mb-4"><div id="tg_progress_so" class="bg-blue-600 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
                         <div class="flex justify-between text-xs font-bold text-gray-500"><span>Thực tế: <strong id="tg_val_so_act" class="text-slate-800">0</strong></span><span>Mục tiêu: <strong id="tg_val_so_target" class="text-slate-800">0</strong></span></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-l-4 border-l-purple-500 border-gray-200 relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-4">
+                            <div><h4 class="text-xs font-black text-gray-500 uppercase">Tiến độ Hoạt Động - Năm nay</h4><h2 id="tg_card_act_percent" class="text-4xl font-black text-purple-600 mt-2">0%</h2></div>
+                            <div class="p-3 bg-purple-100 rounded-xl text-purple-600"><i class="fa-solid fa-bullhorn text-2xl"></i></div>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2 mb-4"><div id="tg_progress_act" class="bg-purple-600 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                        <div class="flex justify-between text-xs font-bold text-gray-500"><span>Thực tế: <strong id="tg_val_act_act" class="text-slate-800">0</strong></span><span>Mục tiêu: <strong id="tg_val_act_target" class="text-slate-800">0</strong></span></div>
                     </div>
                 </div>
 
@@ -263,7 +259,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
                 <div>
                     <h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase">2. Thiết Lập Target</h1>
-                    <p class="text-gray-500 text-xs mt-1">Quản lý mục tiêu S.I và S.O theo tháng.</p>
+                    <p class="text-gray-500 text-xs mt-1">Quản lý mục tiêu S.I, S.O và Hoạt Động theo tháng.</p>
                 </div>
                 <div class="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
                     <label class="text-xs font-bold text-gray-500 uppercase">Tháng:</label>
@@ -317,9 +313,10 @@
                     <table class="w-full text-left text-sm whitespace-nowrap relative">
                         <thead class="bg-slate-100 text-[10px] font-black text-gray-500 uppercase sticky top-0 z-10 shadow-sm">
                             <tr>
-                                <th class="p-4 w-[250px]">Đối Tượng</th>
-                                <th class="p-4 text-center w-[150px] bg-orange-50 text-orange-600 border-l border-orange-100">Target S.I (Nhập)</th>
-                                <th class="p-4 text-center w-[150px] bg-blue-50 text-blue-600 border-l border-blue-100">Target S.O (Bán)</th>
+                                <th class="p-4 w-[200px]">Đối Tượng</th>
+                                <th class="p-4 text-center w-[120px] bg-orange-50 text-orange-600 border-l border-orange-100">Target S.I</th>
+                                <th class="p-4 text-center w-[120px] bg-blue-50 text-blue-600 border-l border-blue-100">Target S.O</th>
+                                <th class="p-4 text-center w-[120px] bg-purple-50 text-purple-600 border-l border-purple-100">Target HĐ</th>
                                 <th class="p-4 w-[300px]">Tiến Độ Thực Tế (Actual)</th>
                             </tr>
                         </thead>
@@ -336,7 +333,7 @@
         <form id="financeForm"> 
             <div id="view-sales" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
                 <div class="flex justify-between items-end mb-6">
-                    <div><h1 id="entryTitle" class="text-xl md:text-2xl font-black text-slate-800 uppercase">3. Báo Cáo Nhập - Xuất</h1><p class="text-gray-500 text-xs mt-1">Bước 1: Khai báo địa điểm, tồn kho và sản lượng.</p></div>
+                    <div><h1 id="entryTitle" class="text-xl md:text-2xl font-black text-slate-800 uppercase">3. Báo Cáo Nhập - Xuất</h1><p class="text-gray-500 text-xs mt-1">Bước 1: Khai báo địa điểm, hoạt động và sản lượng.</p></div>
                     <button type="button" onclick="resetEntryForm()" id="btnCancelEdit" class="hidden bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 shadow-sm"><i class="fa-solid fa-xmark mr-1"></i>Hủy Sửa</button>
                 </div>
                 <div id="editBanner" class="hidden edit-mode-banner"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i class="fa-solid fa-pen"></i></div><div><h4 class="font-bold text-sm text-orange-800">Chế độ Chỉnh Sửa</h4><p class="text-xs text-orange-600">Đang cập nhật báo cáo cũ.</p></div></div><input type="hidden" id="editReportId"></div>
@@ -358,8 +355,10 @@
                             <div id="shop_info_display" class="hidden p-3 bg-green-50 border border-green-200 rounded-lg"></div>
                             
                             <div class="mt-4 pt-4 border-t border-gray-100">
-                                <label class="form-label text-purple-600">Tồn Đầu Kỳ (Khai báo)</label><input type="text" id="opening_stock" class="form-input font-bold text-purple-700 bg-purple-50" placeholder="0" oninput="formatCurrency(this)">
+                                <label class="form-label text-purple-600">Số Lượng Hoạt Động (Event/Roadshow)</label>
+                                <input type="number" id="activity_quantity" class="form-input font-bold text-purple-700 bg-purple-50" placeholder="0">
                             </div>
+
                             <div class="p-4 bg-orange-50 border border-orange-100 rounded-xl mt-4">
                                  <div class="text-center"><label class="form-label text-orange-700 mb-1">TỔNG XE BÁN (S.O)</label><input type="text" id="sold_quantity" readonly class="w-full bg-transparent text-center text-3xl font-black text-orange-600 outline-none" placeholder="0"></div>
                             </div>
@@ -474,67 +473,26 @@
   <div id="pnlDetailModal" class="fixed inset-0 z-[70] bg-gray-900/50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden modal-enter transform transition-all">
           <div class="bg-slate-50 border-b border-gray-200 p-5 flex justify-between items-center">
-               <div>
-                  <h3 class="text-xl font-black text-slate-800 uppercase flex items-center gap-2">
-                      <i class="fa-solid fa-file-invoice-dollar text-orange-600"></i> CHI TIẾT P&L
-                  </h3>
-                  <p id="modal_shop_name" class="text-sm text-gray-500 font-bold mt-1">---</p>
-               </div>
+               <div><h3 class="text-xl font-black text-slate-800 uppercase flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-orange-600"></i> CHI TIẾT P&L</h3><p id="modal_shop_name" class="text-sm text-gray-500 font-bold mt-1">---</p></div>
                <button onclick="closePnlModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
           </div>
-          
           <div class="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
-                      <p class="text-[10px] font-bold text-blue-500 uppercase">Tổng Doanh Thu</p>
-                      <h4 id="modal_rev" class="text-2xl font-black text-blue-700">0</h4>
-                  </div>
-                  <div class="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
-                      <p class="text-[10px] font-bold text-red-500 uppercase">Giá Vốn (COGS)</p>
-                      <h4 id="modal_cogs" class="text-2xl font-black text-red-700">0</h4>
-                  </div>
-                  <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-center">
-                      <p class="text-[10px] font-bold text-green-500 uppercase">Lợi Nhuận Gộp</p>
-                      <h4 id="modal_gross" class="text-2xl font-black text-green-700">0</h4>
-                  </div>
+                  <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center"><p class="text-[10px] font-bold text-blue-500 uppercase">Tổng Doanh Thu</p><h4 id="modal_rev" class="text-2xl font-black text-blue-700">0</h4></div>
+                  <div class="bg-red-50 p-4 rounded-xl border border-red-100 text-center"><p class="text-[10px] font-bold text-red-500 uppercase">Giá Vốn (COGS)</p><h4 id="modal_cogs" class="text-2xl font-black text-red-700">0</h4></div>
+                  <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-center"><p class="text-[10px] font-bold text-green-500 uppercase">Lợi Nhuận Gộp</p><h4 id="modal_gross" class="text-2xl font-black text-green-700">0</h4></div>
               </div>
-
               <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                   <div class="p-3 bg-gray-50 rounded-lg">
-                      <p class="text-[10px] font-bold text-gray-400 uppercase">I. Vận Hành</p>
-                      <p id="modal_op" class="font-bold text-slate-700">0</p>
-                   </div>
-                   <div class="p-3 bg-gray-50 rounded-lg">
-                      <p class="text-[10px] font-bold text-gray-400 uppercase">II. Logistic</p>
-                      <p id="modal_log" class="font-bold text-slate-700">0</p>
-                   </div>
-                   <div class="p-3 bg-gray-50 rounded-lg">
-                      <p class="text-[10px] font-bold text-gray-400 uppercase">III. Marketing</p>
-                      <p id="modal_mkt" class="font-bold text-slate-700">0</p>
-                   </div>
-                   <div class="p-3 bg-gray-50 rounded-lg">
-                      <p class="text-[10px] font-bold text-gray-400 uppercase">IV. Khác</p>
-                      <p id="modal_other" class="font-bold text-slate-700">0</p>
-                   </div>
+                   <div class="p-3 bg-gray-50 rounded-lg"><p class="text-[10px] font-bold text-gray-400 uppercase">I. Vận Hành</p><p id="modal_op" class="font-bold text-slate-700">0</p></div>
+                   <div class="p-3 bg-gray-50 rounded-lg"><p class="text-[10px] font-bold text-gray-400 uppercase">II. Logistic</p><p id="modal_log" class="font-bold text-slate-700">0</p></div>
+                   <div class="p-3 bg-gray-50 rounded-lg"><p class="text-[10px] font-bold text-gray-400 uppercase">III. Marketing</p><p id="modal_mkt" class="font-bold text-slate-700">0</p></div>
+                   <div class="p-3 bg-gray-50 rounded-lg"><p class="text-[10px] font-bold text-gray-400 uppercase">IV. Khác</p><p id="modal_other" class="font-bold text-slate-700">0</p></div>
               </div>
-
-              <div class="bg-slate-900 text-white p-6 rounded-xl flex justify-between items-center shadow-lg">
-                  <div>
-                      <p class="text-xs font-bold text-gray-400 uppercase">Tổng Chi Phí (I+II+III+IV)</p>
-                      <h4 id="modal_total_exp" class="text-xl font-bold">0</h4>
-                  </div>
-                  <div class="text-right">
-                       <p class="text-xs font-bold text-gray-400 uppercase">LỢI NHUẬN RÒNG (NET)</p>
-                       <h2 id="modal_net" class="text-3xl font-black text-green-400">0</h2>
-                  </div>
-              </div>
+              <div class="bg-slate-900 text-white p-6 rounded-xl flex justify-between items-center shadow-lg"><div><p class="text-xs font-bold text-gray-400 uppercase">Tổng Chi Phí (I+II+III+IV)</p><h4 id="modal_total_exp" class="text-xl font-bold">0</h4></div><div class="text-right"><p class="text-xs font-bold text-gray-400 uppercase">LỢI NHUẬN RÒNG (NET)</p><h2 id="modal_net" class="text-3xl font-black text-green-400">0</h2></div></div>
           </div>
-
           <div class="bg-gray-50 p-5 border-t border-gray-200 flex justify-end gap-3">
               <button onclick="closePnlModal()" class="px-5 py-2.5 rounded-xl font-bold text-xs text-gray-600 hover:bg-gray-200 transition">Đóng lại</button>
-              <button id="btnModalApprove" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2 transition">
-                  <i class="fa-solid fa-check-circle"></i> DUYỆT BÁO CÁO
-              </button>
+              <button id="btnModalApprove" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2 transition"><i class="fa-solid fa-check-circle"></i> DUYỆT BÁO CÁO</button>
           </div>
       </div>
   </div>
@@ -547,7 +505,6 @@
         const oldText = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tạo...';
         btn.disabled = true;
-
         try {
             const element = document.getElementById('dashboard-capture-area');
             const canvas = await html2canvas(element, { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' });
@@ -559,12 +516,7 @@
             pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
             const dateStr = new Date().toISOString().split('T')[0];
             pdf.save(`Bao_Cao_Tong_Quan_${dateStr}.pdf`);
-        } catch (err) {
-            alert("Lỗi khi xuất PDF: " + err.message);
-        } finally {
-            btn.innerHTML = oldText;
-            btn.disabled = false;
-        }
+        } catch (err) { alert("Lỗi khi xuất PDF: " + err.message); } finally { btn.innerHTML = oldText; btn.disabled = false; }
     };
   </script>
 </body>

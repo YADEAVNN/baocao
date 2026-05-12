@@ -289,31 +289,55 @@
         </div>
 
         <div id="view-history" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto">
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
-                <h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase whitespace-nowrap">4. Lịch sử báo cáo</h1>
-                <div class="flex flex-wrap gap-2 w-full xl:w-auto items-center">
-                    
-                    <select id="history_filter_director" onchange="window.updateHistoryFilters('director')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-slate-700"></select>
-                    <select id="history_filter_sale" onchange="window.updateHistoryFilters('sale')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-slate-700"></select>
-                    <select id="history_filter_svn" onchange="window.updateHistoryFilters('svn')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-purple-700"></select>
-                    <select id="history_filter_shop" onchange="window.applyHistoryFilter()" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-orange-700"></select>
-
-                    <input type="month" id="history_month_filter" onchange="window.applyHistoryFilter()" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-blue-600 uppercase">
-                    
-                    <select id="history_status_filter" onchange="window.applyHistoryFilter()" class="hidden form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-gray-600">
-                        <option value="">-- Tất cả trạng thái --</option>
-                        <option value="Đã mua xe">✅ Đã chốt</option>
-                        <option value="Đang phân vân">🤔 Chưa chốt</option>
-                        <option value="Không mua">❌ Không mua</option>
-                    </select>
-
-                    <button onclick="window.downloadCRMTemplate()" id="btn_download_template" class="hidden bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-[11px] shadow hover:bg-blue-700 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-download"></i> Tải Mẫu</button>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase whitespace-nowrap">4. Lịch sử báo cáo</h1>
+                    <p class="text-gray-500 text-xs mt-1">Tra cứu, chỉnh sửa và xuất dữ liệu đã nhập.</p>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+                    <button onclick="window.downloadCRMTemplate()" id="btn_download_template" class="hidden bg-blue-600 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-download"></i> Tải Mẫu</button>
                     <input type="file" id="import_crm_excel" accept=".xlsx, .xls" class="hidden" onchange="window.handleImportCRMExcel(event)">
-                    <button onclick="document.getElementById('import_crm_excel').click()" id="btn_import_excel" class="hidden bg-[#F97316] text-white px-3 py-2 rounded-lg font-bold text-[11px] shadow hover:bg-orange-600 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-upload"></i> Nhập Excel</button>
+                    <button onclick="document.getElementById('import_crm_excel').click()" id="btn_import_excel" class="hidden bg-[#F97316] text-white px-5 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-orange-600 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-upload"></i> Nhập Excel</button>
+                    <button onclick="window.exportHistoryExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm uppercase shadow-lg hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                </div>
+            </div>
 
-                    <button onclick="window.resetHistoryFilters()" class="bg-slate-700 text-white px-3 py-2 rounded-lg font-bold text-[11px] uppercase shadow hover:bg-slate-800 transition flex items-center gap-2 whitespace-nowrap" title="Làm mới bộ lọc"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
-
-                    <button onclick="window.exportHistoryExcel()" class="bg-green-600 text-white px-3 py-2 rounded-lg font-bold text-[11px] uppercase shadow hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-4 items-end">
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Tháng</label>
+                        <input type="month" id="history_month_filter" onchange="window.applyHistoryFilter()" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-blue-50 border-blue-100 text-blue-700 uppercase">
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Giám Đốc</label>
+                        <select id="history_filter_director" onchange="window.updateHistoryFilters('director')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-slate-700"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Sale</label>
+                        <select id="history_filter_sale" onchange="window.updateHistoryFilters('sale')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-slate-700"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Mã SVN</label>
+                        <select id="history_filter_svn" onchange="window.updateHistoryFilters('svn')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-purple-700"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-[#F97316] font-black uppercase mb-1.5 block">Cửa Hàng (Shop)</label>
+                        <select id="history_filter_shop" onchange="window.applyHistoryFilter()" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-orange-50/50 shadow-sm border-orange-200 text-orange-800"></select>
+                    </div>
+                    <div class="xl:col-span-1 hidden" id="history_status_container">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Trạng Thái CRM</label>
+                        <select id="history_status_filter" onchange="window.applyHistoryFilter()" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-gray-700">
+                            <option value="">-- Tất cả --</option>
+                            <option value="Đã mua xe">✅ Đã chốt</option>
+                            <option value="Đang phân vân">🤔 Chưa chốt</option>
+                            <option value="Không mua">❌ Không mua</option>
+                        </select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <button onclick="window.resetHistoryFilters()" class="w-full bg-gray-100 text-gray-600 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-200 transition border border-gray-200 flex items-center justify-center gap-2" title="Làm mới bộ lọc">
+                            <i class="fa-solid fa-rotate-right"></i> Đặt Lại Lọc
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -379,25 +403,47 @@
         </div>
 
         <div id="view-charts" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto space-y-6">
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-2">
-                <h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase whitespace-nowrap">5. Phân Tích Tổng Quan</h1>
-                
-                <div class="flex flex-wrap gap-2 w-full xl:w-auto items-center">
-                    <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 shadow-sm h-[38px]">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase">Từ</label>
-                        <input type="date" id="ov_filter_date_from" onchange="window.filterOverview()" class="py-1 text-[11px] font-bold text-blue-700 outline-none bg-transparent cursor-pointer">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase border-l border-gray-200 pl-2">Đến</label>
-                        <input type="date" id="ov_filter_date_to" onchange="window.filterOverview()" class="py-1 text-[11px] font-bold text-blue-700 outline-none bg-transparent cursor-pointer">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase whitespace-nowrap">5. Phân Tích Tổng Quan</h1>
+                    <p class="text-gray-500 text-xs mt-1">Đánh giá hiệu quả kinh doanh qua các chỉ số.</p>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+                    <button onclick="window.exportOverviewExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm uppercase shadow-lg hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-4 items-end">
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Từ Ngày</label>
+                        <input type="date" id="ov_filter_date_from" onchange="window.filterOverview()" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-blue-50 border-blue-100 text-blue-700 cursor-pointer">
                     </div>
-
-                    <select id="ov_filter_director" onchange="window.updateOVFilters('director')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-slate-700"></select>
-                    <select id="ov_filter_sale" onchange="window.updateOVFilters('sale')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-slate-700"></select>
-                    <select id="ov_filter_svn" onchange="window.updateOVFilters('svn')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-purple-700"></select>
-                    <select id="ov_filter_shop" onchange="window.filterOverview()" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-white shadow-sm border-gray-200 text-[#F97316]"></select>
-                    
-                    <button onclick="window.resetOverviewFilters()" class="bg-slate-700 text-white px-3 py-2 rounded-lg font-bold text-[11px] uppercase shadow hover:bg-slate-800 transition flex items-center gap-2 whitespace-nowrap" title="Làm mới bộ lọc"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
-
-                    <button onclick="window.exportOverviewExcel()" class="bg-green-600 text-white px-3 py-2 rounded-lg font-bold text-[11px] uppercase shadow hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Đến Ngày</label>
+                        <input type="date" id="ov_filter_date_to" onchange="window.filterOverview()" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-blue-50 border-blue-100 text-blue-700 cursor-pointer">
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Giám Đốc Miền</label>
+                        <select id="ov_filter_director" onchange="window.updateOVFilters('director')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-slate-700"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Quản Lý Vùng (Sale)</label>
+                        <select id="ov_filter_sale" onchange="window.updateOVFilters('sale')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-slate-700"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Mã SVN</label>
+                        <select id="ov_filter_svn" onchange="window.updateOVFilters('svn')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-purple-700"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-[#F97316] font-black uppercase mb-1.5 block">Cửa Hàng (Shop)</label>
+                        <select id="ov_filter_shop" onchange="window.filterOverview()" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-orange-50/50 shadow-sm border-orange-200 text-orange-800"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <button onclick="window.resetOverviewFilters()" class="w-full bg-gray-100 text-gray-600 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-200 transition border border-gray-200 flex items-center justify-center gap-2" title="Làm mới bộ lọc">
+                            <i class="fa-solid fa-rotate-right"></i> Đặt Lại Lọc
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -457,21 +503,48 @@
         </div>
 
         <div id="view-target" class="hidden p-4 md:p-8 fade-in max-w-[1600px] mx-auto space-y-6">
-            <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 relative">
-                <div class="flex items-center gap-2 w-full xl:w-auto">
-                    <label class="text-[10px] text-gray-400 font-bold uppercase">Tháng phân tích</label>
-                    <input type="month" id="tgt_filter_month" onchange="window.filterTargetDashboard()" class="form-input py-2 px-3 text-sm font-bold w-full xl:w-auto bg-gray-50 border-gray-200 text-slate-800">
-                </div>
-                <div class="flex flex-wrap gap-2 w-full xl:w-auto items-center">
-                    <select id="tgt_filter_director" onchange="window.updateTGTFilters('director')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-gray-50 shadow-sm border-gray-200 text-blue-700"></select>
-                    <select id="tgt_filter_sale" onchange="window.updateTGTFilters('sale')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-gray-50 shadow-sm border-gray-200 text-blue-700"></select>
-                    <select id="tgt_filter_svn" onchange="window.updateTGTFilters('svn')" class="form-input py-2 px-2 text-[11px] font-bold w-auto bg-gray-50 shadow-sm border-gray-200 text-purple-700"></select>
-                    <div class="relative w-full md:w-auto">
-                        <input type="text" id="tgt_filter_search" onkeyup="window.filterTargetDashboard()" placeholder="Tìm tên / mã DVN..." class="form-input py-2 px-3 text-[11px] w-full md:w-48 bg-gray-50 shadow-sm border-gray-200">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col gap-5 relative mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="bg-orange-100 text-[#F97316] p-2.5 rounded-xl"><i class="fa-solid fa-calendar-days text-xl"></i></div>
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold uppercase tracking-wider block mb-1">Tháng phân tích</label>
+                            <input type="month" id="tgt_filter_month" onchange="window.filterTargetDashboard()" class="form-input py-2 px-3 text-base font-black w-full md:w-auto bg-gray-50 border-gray-200 text-[#F97316] shadow-inner uppercase tracking-wider cursor-pointer">
+                        </div>
                     </div>
-                    <button onclick="window.updateTGTFilters('init')" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-gray-300 transition" title="Xóa bộ lọc"><i class="fa-solid fa-filter-circle-xmark"></i></button>
-                    <button onclick="window.loadTargetDashboard()" class="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-[11px] uppercase shadow-lg hover:bg-slate-800 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-bolt"></i> Tải Tiến Độ</button>
-                    <button onclick="window.exportTargetExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-[11px] uppercase shadow-lg hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                        <button onclick="window.loadTargetDashboard()" class="flex-1 md:flex-none bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg hover:bg-slate-800 transition flex items-center justify-center gap-2 whitespace-nowrap"><i class="fa-solid fa-bolt text-yellow-400"></i> Tải Tiến Độ</button>
+                        <button onclick="window.exportTargetExcel()" class="flex-1 md:flex-none bg-green-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Giám Đốc Miền</label>
+                        <select id="tgt_filter_director" onchange="window.updateTGTFilters('director')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-slate-800"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Quản Lý Vùng (Sale)</label>
+                        <select id="tgt_filter_sale" onchange="window.updateTGTFilters('sale')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-slate-800"></select>
+                    </div>
+                    <div class="xl:col-span-1">
+                        <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Mã SVN</label>
+                        <select id="tgt_filter_svn" onchange="window.updateTGTFilters('svn')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-purple-700"></select>
+                    </div>
+                    
+                    <div class="xl:col-span-1 relative">
+                        <label class="text-[11px] text-[#F97316] font-black uppercase mb-1.5 block">Tìm Cửa Hàng / DVN</label>
+                        <div class="relative">
+                            <input type="text" id="tgt_filter_search" onkeyup="window.filterTargetDashboard()" placeholder="Nhập tên hoặc mã DVN..." class="form-input py-2.5 pl-10 pr-3 text-sm font-bold w-full bg-orange-50/50 shadow-sm border-orange-200 text-slate-800 placeholder-gray-400 focus:border-[#F97316]">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F97316]"></i>
+                        </div>
+                    </div>
+
+                    <div class="xl:col-span-1 flex items-end">
+                        <button onclick="window.updateTGTFilters('init')" class="w-full bg-gray-100 text-gray-600 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-200 transition border border-gray-200 flex items-center justify-center gap-2" title="Làm mới bộ lọc">
+                            <i class="fa-solid fa-rotate-right"></i> Đặt Lại Lọc
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -565,15 +638,18 @@
         document.getElementById('htab-' + tab).className = "px-4 py-2 border-b-2 border-orange-500 text-[#F97316] font-bold uppercase text-xs";
 
         const statusFilter = document.getElementById('history_status_filter');
+        const statusContainer = document.getElementById('history_status_container'); // MỚI
         const btnImport = document.getElementById('btn_import_excel');
         const btnTemplate = document.getElementById('btn_download_template');
         
         if (tab === 'crm') {
             if(statusFilter) statusFilter.classList.remove('hidden');
+            if(statusContainer) statusContainer.classList.remove('hidden'); // MỚI
             if(btnImport) btnImport.classList.remove('hidden');
             if(btnTemplate) btnTemplate.classList.remove('hidden');
         } else {
             if(statusFilter) { statusFilter.classList.add('hidden'); statusFilter.value = ''; }
+            if(statusContainer) statusContainer.classList.add('hidden'); // MỚI
             if(btnImport) btnImport.classList.add('hidden');
             if(btnTemplate) btnTemplate.classList.add('hidden');
         }

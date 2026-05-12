@@ -183,7 +183,7 @@ function renderOverviewVisuals(reports, baseReports) {
 }
 
 // ==========================================
-// TAB 6: HOÀN THÀNH TIẾN ĐỘ TARGET (BẢN ĐÃ FIX ĐỒNG BỘ BẢNG ADMIN)
+// TAB 6: HOÀN THÀNH TIẾN ĐỘ TARGET
 // ==========================================
 let tgtDataState = { targets: [], soReports: [], mediaReports: [] };
 
@@ -220,7 +220,6 @@ window.updateTGTFilters = (level) => {
         (!document.getElementById('tgt_filter_sale')?.value || x.sale_name === document.getElementById('tgt_filter_sale').value) && 
         (!document.getElementById('tgt_filter_svn')?.value || x.svn_code === document.getElementById('tgt_filter_svn').value)
     );
-    document.getElementById('tgt_filter_shop').innerHTML = `<option value="">-- Tất cả DVN --</option>` + finalShops.map(x => `<option value="${x.shop_code}">${x.shop_code} - ${x.shop_name}</option>`).join('');
 
     if(level !== 'init') window.filterTargetDashboard();
 };
@@ -239,8 +238,6 @@ export async function loadTargetDashboard(action) {
         const startOfMonth = `${month}-01`;
         const endOfMonth = `${month}-${new Date(y, m, 0).getDate().toString().padStart(2, '0')}`;
 
-        // --- BƯỚC 1: LẤY TARGET TỪ BẢNG CHUẨN CỦA ADMIN ---
-        // Sửa lại thành bảng "monthly_shop_targets" và truy vấn bằng cột "report_month"
         const { data: rawTargets } = await sb.from('monthly_shop_targets')
             .select('*')
             .eq('report_month', month)
@@ -248,7 +245,6 @@ export async function loadTargetDashboard(action) {
 
         tgtDataState.targets = rawTargets || [];
 
-        // --- BƯỚC 2 & 3: Lấy báo cáo SO và Media ---
         const { data: soData } = await sb.from('daily_so_reports')
             .select('shop_code, report_date, total_so, traffic_natural, traffic_leads')
             .in('shop_code', STATE.assignedShopCodes)
@@ -273,13 +269,17 @@ window.filterTargetDashboard = () => {
     const dir = document.getElementById('tgt_filter_director')?.value || '';
     const sale = document.getElementById('tgt_filter_sale')?.value || '';
     const svn = document.getElementById('tgt_filter_svn')?.value || '';
-    const shop = document.getElementById('tgt_filter_shop')?.value || '';
+    
+    const searchKw = (document.getElementById('tgt_filter_search')?.value || '').toLowerCase().trim();
 
     const displayShops = STATE.globalAssignedShops.filter(x => 
         (!dir || x.director_name === dir) && 
         (!sale || x.sale_name === sale) && 
         (!svn || x.svn_code === svn) &&
-        (!shop || x.shop_code === shop)
+        (!searchKw || 
+            (x.shop_code && x.shop_code.toLowerCase().includes(searchKw)) || 
+            (x.shop_name && x.shop_name.toLowerCase().includes(searchKw))
+        )
     );
 
     renderTargetDashboard(displayShops);
@@ -293,12 +293,8 @@ function renderTargetDashboard(shops) {
     let now = new Date();
     let elapsedDays = (now.getFullYear() === y && (now.getMonth() + 1) === m) ? now.getDate() : daysInMonth;
 
-    const tgtMap = {}; 
-    const trfTgtMap = {};
-    const vidTgtMap = {};
-    const liveTgtMap = {};
+    const tgtMap = {}, trfTgtMap = {}, vidTgtMap = {}, liveTgtMap = {};
 
-    // Gán dữ liệu Target theo đúng chuẩn tên cột Admin
     tgtDataState.targets.forEach(t => {
         const code = t.shop_code;
         if(code) {
@@ -328,7 +324,6 @@ function renderTargetDashboard(shops) {
 
     const htmlRows = shops.map(s => {
         const sCode = s.shop_code;
-        
         const tgt = tgtMap[sCode] || 0;
         const act = actualMap[sCode] || 0;
         const trf = trafficMap[sCode] || 0;
@@ -347,10 +342,9 @@ function renderTargetDashboard(shops) {
         let statusBadge = `<span class="bg-red-100 text-red-600 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Chậm tiến độ</span>`;
         if (pct >= 80) statusBadge = `<span class="bg-green-100 text-green-600 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fa-solid fa-check-double"></i> Ổn định</span>`;
 
-        const tgtTrf = trfTgtMap[sCode] > 0 ? trfTgtMap[sCode] : (tgt * 5); // Tỷ lệ chốt 20%
+        const tgtTrf = trfTgtMap[sCode] > 0 ? trfTgtMap[sCode] : (tgt * 5);
         const trfPct = tgtTrf > 0 ? Math.round((trf/tgtTrf)*100) : 0;
-        
-        const tgtVid = vidTgtMap[sCode] > 0 ? vidTgtMap[sCode] : 8; // Mặc định 8 Video/tháng
+        const tgtVid = vidTgtMap[sCode] > 0 ? vidTgtMap[sCode] : 8;
         const tgtLive = liveTgtMap[sCode] > 0 ? liveTgtMap[sCode] : 0;
 
         return `

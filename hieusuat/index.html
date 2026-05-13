@@ -17,18 +17,74 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #F8FAFC; }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #F8FAFC;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
-        .nav-item { display: flex; align-items: center; padding: 12px 20px; color: #9ca3af; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
-        .nav-item:hover { background-color: #1f2937; color: white; }
-        .nav-item.active { background-color: #1f2937; color: #fff; border-left-color: #F97316; }
-        .form-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
-        .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
-        .form-input:focus { border-color: #F97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #9ca3af;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: #1f2937;
+            color: white;
+        }
+
+        .nav-item.active {
+            background-color: #1f2937;
+            color: #fff;
+            border-left-color: #F97316;
+        }
+
+        .form-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 6px;
+            display: block;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 12px;
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e293b;
+            transition: 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: #F97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
     </style>
 </head>
 
@@ -186,23 +242,24 @@
                 <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
                     <div class="xl:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 h-full">
                         <input type="hidden" id="editReportId" value="">
-                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
+                        <input type="hidden" id="hidden_shop_code" value=""> <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
                             <span class="text-lg text-slate-400 font-black">A.</span>
                             <h3 class="text-sm font-black text-slate-700 uppercase" data-i18n="lbl_info">Thông Tin</h3>
                         </div>
                         <div class="space-y-4">
                             <input type="date" id="so_daily_date" required class="form-input font-bold bg-blue-50 text-blue-700">
                             
-                            <div id="compact_shop_display" class="bg-blue-50 border border-blue-200 p-3 rounded-xl flex items-center gap-3 shadow-sm">
+                            <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl flex items-center gap-3 shadow-sm">
                                  <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white shrink-0">
                                      <i class="fa-solid fa-store"></i>
                                  </div>
-                                 <div>
+                                 <div class="flex-1 overflow-hidden">
                                       <p class="text-[10px] uppercase font-bold text-blue-500" id="display_prov_svn">Đang tải...</p>
-                                      <h4 class="font-black text-slate-800 text-sm leading-tight" id="display_shop_name">Vui lòng đợi</h4>
+                                      <select id="select_shop_so" onchange="window.changeInputShop(this.value)" class="w-full bg-transparent font-black text-slate-800 text-sm outline-none cursor-pointer truncate">
+                                          <option value="">Vui lòng đợi...</option>
+                                      </select>
                                  </div>
                             </div>
-                            <input type="hidden" id="hidden_shop_code">
                             
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <div class="bg-green-50 p-3 rounded-xl border border-green-100 text-center">
@@ -278,9 +335,13 @@
                         </div>
                         <div class="flex-1">
                             <label class="form-label text-orange-600" data-i18n="lbl_shop">Cửa Hàng (Shop)</label>
-                            <div id="media_compact_shop" class="bg-orange-50 border border-orange-200 p-3 rounded-lg flex items-center gap-3">
+                            <div class="bg-orange-50 border border-orange-200 p-3 rounded-lg flex items-center gap-3">
                                 <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white shrink-0"><i class="fa-solid fa-store"></i></div>
-                                <h4 class="font-black text-slate-800 text-sm truncate" id="media_shop_name">Đang tải...</h4>
+                                <div class="flex-1 overflow-hidden">
+                                    <select id="select_shop_media" onchange="window.changeInputShop(this.value)" class="w-full bg-transparent font-black text-slate-800 text-sm outline-none cursor-pointer truncate">
+                                        <option value="">Vui lòng đợi...</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -338,6 +399,18 @@
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 mb-20 space-y-6 relative">
                     <div id="editCRMBanner" class="hidden absolute -top-3 right-4 bg-[#F97316] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase shadow">Đang chỉnh sửa</div>
                     <input type="hidden" id="editCRMId" value="">
+
+                    <div class="mb-4">
+                        <label class="form-label text-orange-600" data-i18n="lbl_shop">Cửa Hàng (Shop)</label>
+                        <div class="bg-orange-50 border border-orange-200 p-3 rounded-lg flex items-center gap-3 w-full md:w-1/2">
+                            <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white shrink-0"><i class="fa-solid fa-store"></i></div>
+                            <div class="flex-1 overflow-hidden">
+                                <select id="select_shop_crm" onchange="window.changeInputShop(this.value)" class="w-full bg-transparent font-black text-slate-800 text-sm outline-none cursor-pointer truncate">
+                                    <option value="">Vui lòng đợi...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -833,15 +906,17 @@
         const checkStateInterval = setInterval(() => {
             if (window.STATE && window.STATE.globalAssignedShops && window.STATE.globalAssignedShops.length > 0) {
                 const shops = window.STATE.globalAssignedShops;
-                const shop = shops[0];
 
-                const updateTxt = (id, val) => { if (document.getElementById(id)) document.getElementById(id).innerText = val; };
-                updateTxt('display_prov_svn', `${shop.province || ''} | ${shop.svn_code || ''}`);
-                updateTxt('display_shop_name', `${shop.shop_code} - ${shop.shop_name || ''}`);
-                updateTxt('media_shop_name', `${shop.shop_code} - ${shop.shop_name || ''}`);
+                // TẠO OPTIONS CHO DROP DOWN CỬA HÀNG (SỰ THAY ĐỔI CỐT LÕI)
+                const options = shops.map(s => `<option value="${s.shop_code}">${s.shop_code} - ${s.shop_name}</option>`).join('');
+                
+                ['select_shop_so', 'select_shop_media', 'select_shop_crm'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.innerHTML = options;
+                });
 
-                const hiddenCode = document.getElementById('hidden_shop_code');
-                if (hiddenCode) hiddenCode.value = shop.shop_code;
+                // Chọn mặc định shop đầu tiên
+                window.changeInputShop(shops[0].shop_code);
 
                 const dateInput = document.getElementById('so_daily_date');
                 if (dateInput && !dateInput.value) { dateInput.value = new Date().toISOString().split('T')[0]; }
@@ -855,6 +930,24 @@
                 clearInterval(checkStateInterval);
             }
         }, 500);
+
+        // HÀM MỚI: ĐỒNG BỘ SHOP GIỮA CÁC TAB
+        window.changeInputShop = (code) => {
+            const shop = window.STATE.globalShopMap[code];
+            if (!shop) return;
+            
+            // Đồng bộ 3 ô select nếu không bị khóa
+            ['select_shop_so', 'select_shop_media', 'select_shop_crm'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el && !el.disabled) el.value = code;
+            });
+
+            const hiddenCode = document.getElementById('hidden_shop_code');
+            if(hiddenCode) hiddenCode.value = code;
+
+            const updateTxt = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
+            updateTxt('display_prov_svn', `${shop.province || ''} | ${shop.svn_code || ''}`);
+        };
 
         window.resetHistoryFilters = () => {
             ['history_filter_director', 'history_filter_sale', 'history_filter_svn', 'history_filter_shop', 'history_month_filter', 'history_status_filter'].forEach(id => {

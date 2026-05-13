@@ -286,15 +286,16 @@ window.editDailySO = async (id) => {
         
         if (r.shop_code) {
             document.getElementById('hidden_shop_code').value = r.shop_code;
+            const el = document.getElementById('select_shop_so');
+            if(el) { el.value = r.shop_code; el.disabled = true; } // Khóa shop lại khi đang sửa
+
             const shop = window.STATE.globalShopMap[r.shop_code];
             if (shop) {
                 const updateTxt = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
                 updateTxt('display_prov_svn', `${shop.province || ''} | ${shop.svn_code || ''}`);
-                updateTxt('display_shop_name', `${shop.shop_code} - ${shop.shop_name || ''}`);
             }
         }
 
-        // TẢI GIÁ XE THEO THÁNG BÁO CÁO ĐỂ HIỂN THỊ TÊN & GIÁ CHÍNH XÁC (FIX LỖI 0đ)
         let month = r.report_date.slice(0, 7);
         const parts = month.split('-');
         const { data: prices } = await window.sb.from('monthly_product_prices')
@@ -361,6 +362,11 @@ window.cancelEdit = () => {
     document.getElementById('traffic_natural').value = '';
     document.getElementById('traffic_leads').value = '';
     document.getElementById('salesDetailContainer').innerHTML = '';
+    
+    // Mở khóa shop
+    const el = document.getElementById('select_shop_so');
+    if(el) el.disabled = false;
+
     window.recalcSOTotal();
 };
 
@@ -428,6 +434,10 @@ window.editMediaReport = async (id) => {
         document.getElementById('btnSubmitMediaText').innerText = "LƯU THAY ĐỔI";
         
         document.getElementById('media_date').value = r.report_date;
+
+        const el = document.getElementById('select_shop_media');
+        if(el) { el.value = r.shop_code; el.disabled = true; } // Khóa chọn shop
+
         document.getElementById('media_tiktok').value = r.tiktok_videos || '';
         document.getElementById('media_livestream').value = r.livestreams || '';
         document.getElementById('media_link').value = r.media_link || '';
@@ -448,6 +458,9 @@ window.cancelEditMedia = () => {
     document.getElementById('media_link').value = '';
     document.getElementById('media_flyer').value = '';
     document.getElementById('media_notes').value = '';
+
+    const el = document.getElementById('select_shop_media');
+    if(el) el.disabled = false;
 };
 
 // ==========================================
@@ -480,7 +493,7 @@ window.submitCRM = async () => {
             const { error } = await window.sb.from('crm_customers').insert([payload]);
             if (error) throw error;
             alert("✅ Đã lưu thông tin khách hàng!");
-            document.querySelectorAll('#view-costs input, #view-costs textarea, #view-costs select').forEach(el => el.value = ''); 
+            document.querySelectorAll('#view-costs input[type="text"], #view-costs input[type="tel"], #view-costs textarea').forEach(el => el.value = ''); 
         }
         window.customSwitchView('history');
         window.switchHistoryTab('crm');
@@ -499,6 +512,9 @@ window.editCRMReport = async (id) => {
         document.getElementById('editCRMBanner').classList.remove('hidden');
         document.getElementById('btnCancelEditCRM').classList.remove('hidden');
         document.getElementById('btnSubmitCRMText').innerText = "LƯU THAY ĐỔI";
+
+        const el = document.getElementById('select_shop_crm');
+        if(el) { el.value = r.shop_code; el.disabled = true; } // Khóa chọn shop
         
         document.getElementById('crm_name').value = r.customer_name || '';
         document.getElementById('crm_phone').value = r.phone || '';
@@ -527,7 +543,10 @@ window.cancelEditCRM = () => {
     document.getElementById('editCRMBanner').classList.add('hidden');
     document.getElementById('btnCancelEditCRM').classList.add('hidden');
     document.getElementById('btnSubmitCRMText').innerText = "LƯU THÔNG TIN KHÁCH HÀNG";
-    document.querySelectorAll('#view-costs input, #view-costs textarea').forEach(el => el.value = ''); 
+    document.querySelectorAll('#view-costs input[type="text"], #view-costs input[type="tel"], #view-costs textarea').forEach(el => el.value = ''); 
+    
+    const el = document.getElementById('select_shop_crm');
+    if(el) el.disabled = false;
 };
 
 window.loadCRMModels = async () => {

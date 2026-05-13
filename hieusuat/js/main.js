@@ -1,3 +1,4 @@
+import { dictionary } from './i18n.js';
 import { 
     api_checkSession, api_loadShopsAndLock, api_login, api_signup, api_logout, api_loadMonthlyModels, api_submitReport, api_getReportById, api_deleteReport, api_loadSaleHistory, api_approveReport, api_upsertTargets, api_getTargets, api_getActualPerformance, api_sendResetPasswordEmail, api_updatePassword 
 } from './api.js';
@@ -201,7 +202,7 @@ window.submitDailySO = async () => {
     });
     
     if (details.length > 0 && missingModel) {
-        alert("Vui lòng chọn mẫu xe hoặc xóa dòng trống!");
+        alert(window.t("Vui lòng chọn mẫu xe hoặc xóa dòng trống!"));
         btn.disabled = false; document.getElementById('btnSubmitText').innerText = editId ? 'LƯU THAY ĐỔI' : 'GỬI BÁO CÁO';
         return;
     }
@@ -251,7 +252,7 @@ window.submitDailySO = async () => {
             } else {
                 const { error } = await window.sb.from('daily_so_reports').insert([payload]);
                 if (error) throw error;
-                alert("✅ Tạo báo cáo thành công!");
+                alert(window.t("msg_success_report") || "✅ Tạo báo cáo thành công!");
             }
             
             document.getElementById('traffic_natural').value = '';
@@ -275,7 +276,7 @@ window.editDailySO = async (id) => {
         document.getElementById('editReportId').value = r.id;
         document.getElementById('editBanner').classList.remove('hidden');
         document.getElementById('btnCancelEdit').classList.remove('hidden');
-        document.getElementById('entryTitle').innerText = "Sửa Báo Cáo: " + r.report_date;
+        document.getElementById('entryTitle').innerText = "SỬA BÁO CÁO: " + r.report_date;
         document.getElementById('btnSubmitText').innerText = "Lưu Thay Đổi";
         
         document.getElementById('so_daily_date').value = r.report_date;
@@ -292,6 +293,16 @@ window.editDailySO = async (id) => {
                 updateTxt('display_shop_name', `${shop.shop_code} - ${shop.shop_name || ''}`);
             }
         }
+
+        // TẢI GIÁ XE THEO THÁNG BÁO CÁO ĐỂ HIỂN THỊ TÊN & GIÁ CHÍNH XÁC (FIX LỖI 0đ)
+        let month = r.report_date.slice(0, 7);
+        const parts = month.split('-');
+        const { data: prices } = await window.sb.from('monthly_product_prices')
+            .select('*')
+            .or(`report_month.eq.${month},report_month.eq.${parts[1]}/${parts[0]},report_month.eq.${parseInt(parts[1])}/${parts[0]}`);
+        if (prices && prices.length > 0) {
+            window.STATE.currentAdminPrices = prices;
+        }
         
         const container = document.getElementById('salesDetailContainer');
         container.innerHTML = ''; 
@@ -303,10 +314,10 @@ window.editDailySO = async (id) => {
         } else {
            details.forEach(item => {
                const card = document.createElement('div');
-               card.className = "sale-item-card bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-4";
+               card.className = "sale-item-card bg-white border border-gray-200 p-4 rounded-xl flex flex-col md:flex-row md:items-center gap-4 relative shadow-sm";
                
                let options = '<option value="" data-price="0">-- Chọn xe --</option>';
-               if(window.STATE && window.STATE.currentAdminPrices) {
+               if(window.STATE && window.STATE.currentAdminPrices && window.STATE.currentAdminPrices.length > 0) {
                    options += window.STATE.currentAdminPrices.map(p => {
                        const isSel = p.model === item.model ? 'selected' : '';
                        return `<option value="${p.model}" data-price="${p.selling_price}" ${isSel}>${p.model}</option>`
@@ -316,10 +327,21 @@ window.editDailySO = async (id) => {
                }
                
                card.innerHTML = `
-                   <div class="flex-1"><select class="model-select w-full bg-gray-50 border rounded-lg p-2 text-sm font-bold" onchange="window.updateCardRevenue(this)">${options}</select></div>
-                   <div class="w-20"><input type="number" class="qty-so-input w-full text-center border rounded-lg p-2 font-black" value="${item.qty_so || 1}" min="1" oninput="window.updateCardRevenue(this)"></div>
-                   <div class="flex-1 text-right"><span class="card-revenue-display text-base font-black text-orange-600">0đ</span></div>
-                   <button type="button" onclick="this.closest('.sale-item-card').remove(); window.recalcSOTotal();" class="text-red-400 p-2"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="w-full md:flex-1">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Mẫu xe</label>
+                        <select class="model-select w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm font-bold text-slate-700 focus:border-orange-500 outline-none truncate" onchange="window.updateCardRevenue(this)">${options}</select>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 w-full md:w-auto">
+                        <div class="w-24 shrink-0">
+                            <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Số lượng</label>
+                            <input type="number" class="qty-so-input w-full text-center border border-gray-200 rounded-lg p-2.5 font-black text-slate-800 focus:border-orange-500 outline-none" value="${item.qty_so || 1}" min="1" oninput="window.updateCardRevenue(this)">
+                        </div>
+                        <div class="flex-1 text-right md:w-32">
+                            <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Tạm tính</label>
+                            <span class="card-revenue-display text-base font-black text-[#F97316]">0đ</span>
+                        </div>
+                        <button type="button" onclick="this.closest('.sale-item-card').remove(); window.recalcSOTotal();" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition mt-4"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                    </div>
                `;
                container.appendChild(card);
            });
@@ -332,7 +354,7 @@ window.cancelEdit = () => {
     document.getElementById('editReportId').value = "";
     document.getElementById('editBanner').classList.add('hidden');
     document.getElementById('btnCancelEdit').classList.add('hidden');
-    document.getElementById('entryTitle').innerText = "1. Báo Cáo Ngày (S.O)";
+    document.getElementById('entryTitle').innerText = window.t('title_so') || "1. Báo Cáo Ngày (S.O)";
     document.getElementById('btnSubmitText').innerText = "GỬI BÁO CÁO";
     
     document.getElementById('so_daily_date').value = new Date().toISOString().split('T')[0];
@@ -538,18 +560,29 @@ window.addCustomSaleRow = () => {
     const container = document.getElementById('salesDetailContainer');
     if(!container) return;
     const card = document.createElement('div');
-    card.className = "sale-item-card bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-4";
+    card.className = "sale-item-card bg-white border border-gray-200 p-4 rounded-xl flex flex-col md:flex-row md:items-center gap-4 relative shadow-sm";
     
     let options = '<option value="" data-price="0">-- Chọn xe --</option>';
-    if(window.STATE && window.STATE.currentAdminPrices) {
+    if(window.STATE && window.STATE.currentAdminPrices && window.STATE.currentAdminPrices.length > 0) {
         options += window.STATE.currentAdminPrices.map(p => `<option value="${p.model}" data-price="${p.selling_price}">${p.model}</option>`).join('');
     }
     
     card.innerHTML = `
-        <div class="flex-1"><select class="model-select w-full bg-gray-50 border rounded-lg p-2 text-sm font-bold" onchange="window.updateCardRevenue(this)">${options}</select></div>
-        <div class="w-20"><input type="number" class="qty-so-input w-full text-center border rounded-lg p-2 font-black" value="1" min="1" oninput="window.updateCardRevenue(this)"></div>
-        <div class="flex-1 text-right"><span class="card-revenue-display text-base font-black text-orange-600">0đ</span></div>
-        <button type="button" onclick="this.closest('.sale-item-card').remove(); window.recalcSOTotal();" class="text-red-400 p-2"><i class="fa-solid fa-trash-can"></i></button>
+        <div class="w-full md:flex-1">
+            <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Mẫu xe</label>
+            <select class="model-select w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm font-bold text-slate-700 focus:border-orange-500 outline-none truncate" onchange="window.updateCardRevenue(this)">${options}</select>
+        </div>
+        <div class="flex items-center justify-between gap-4 w-full md:w-auto">
+            <div class="w-24 shrink-0">
+                <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Số lượng</label>
+                <input type="number" class="qty-so-input w-full text-center border border-gray-200 rounded-lg p-2.5 font-black text-slate-800 focus:border-orange-500 outline-none" value="1" min="1" oninput="window.updateCardRevenue(this)">
+            </div>
+            <div class="flex-1 text-right md:w-32">
+                <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Tạm tính</label>
+                <span class="card-revenue-display text-base font-black text-[#F97316]">0đ</span>
+            </div>
+            <button type="button" onclick="this.closest('.sale-item-card').remove(); window.recalcSOTotal();" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition mt-4"><i class="fa-solid fa-trash-can text-lg"></i></button>
+        </div>
     `;
     container.appendChild(card);
     window.recalcSOTotal();
@@ -675,3 +708,39 @@ window.handleImportCRMExcel = async (event) => {
     };
     reader.readAsArrayBuffer(file);
 };
+
+// ==========================================
+// HỆ THỐNG ĐA NGÔN NGỮ (I18N)
+// ==========================================
+window.currentLang = localStorage.getItem('yadea_lang') || 'vi';
+
+window.t = (key) => {
+    return (dictionary[window.currentLang] && dictionary[window.currentLang][key]) 
+        ? dictionary[window.currentLang][key] 
+        : key; 
+};
+
+window.updateLanguage = (lang) => {
+    window.currentLang = lang;
+    localStorage.setItem('yadea_lang', lang);
+    
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dictionary[lang] && dictionary[lang][key]) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = dictionary[lang][key];
+            } else {
+                el.innerText = dictionary[lang][key];
+            }
+        }
+    });
+};
+
+window.toggleLanguage = () => {
+    const newLang = window.currentLang === 'vi' ? 'zh' : 'vi';
+    window.updateLanguage(newLang);
+};
+
+setTimeout(() => {
+    window.updateLanguage(window.currentLang);
+}, 100);

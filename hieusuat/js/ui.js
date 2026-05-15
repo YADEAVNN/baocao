@@ -18,21 +18,11 @@ export function switchView(view) {
     if (targetNav) targetNav.classList.add('active');
     if (window.innerWidth < 768) toggleSidebar();
     
-    // Kích hoạt ngay bộ lọc Lịch Sử khi bấm vào Tab 4
     if (view === 'history') {
         updateHistoryFilters('init');
         api_loadSaleHistory();
     }
-    if (view === 'charts') { initChartFilter(); loadOverviewDashboard(); }
-}
-
-export function switchChartTab(tab) {
-    ['chart-tab-overview', 'chart-tab-detail', 'chart-tab-target_prog'].forEach(t => { if(document.getElementById(t)) document.getElementById(t).classList.add('hidden'); });
-    ['btn-tab-overview', 'btn-tab-detail', 'btn-tab-target_prog'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('active'); });
-    if(document.getElementById(`chart-tab-${tab}`)) document.getElementById(`chart-tab-${tab}`).classList.remove('hidden');
-    if(document.getElementById(`btn-tab-${tab}`)) document.getElementById(`btn-tab-${tab}`).classList.add('active');
-    if(tab === 'overview') loadOverviewDashboard();
-    if(tab === 'target_prog') loadTargetDashboard();
+    if (view === 'charts') { loadOverviewDashboard(); }
 }
 
 export function toggleSidebar() { 
@@ -45,7 +35,6 @@ export function ui_showMsg(txt, color) {
     if(el) { el.className = `text-center text-xs font-bold mt-4 h-5 text-${color}-500`; el.innerText = txt; } 
 }
 
-// === BỘ LỌC CASCADING CHO LỊCH SỬ BÁO CÁO (THÔNG MINH) ===
 export function updateHistoryFilters(level) {
     const dir = document.getElementById('history_filter_director')?.value || '';
     const sale = document.getElementById('history_filter_sale')?.value || '';
@@ -59,7 +48,6 @@ export function updateHistoryFilters(level) {
         const dirEl = document.getElementById('history_filter_director');
         if(dirEl) {
             dirEl.innerHTML = `<option value="">-- 1. Tất cả GĐ --</option>` + directors.map(x => `<option value="${x}">${x}</option>`).join('');
-            // Nếu chỉ có 1 GĐ và không phải Admin thì giấu đi cho gọn
             if (directors.length <= 1 && role !== 'Admin') dirEl.classList.add('hidden');
             else dirEl.classList.remove('hidden');
         }
@@ -71,7 +59,6 @@ export function updateHistoryFilters(level) {
         if(saleEl) {
             saleEl.innerHTML = `<option value="">-- 2. Tất cả Sale --</option>` + sales.map(x => `<option value="${x}">${x}</option>`).join('');
             if(level === 'director') saleEl.value = '';
-            // Ẩn nếu chỉ có 1 Sale và role là Sale/Cửa hàng
             if (sales.length <= 1 && role !== 'Admin' && role !== 'Giám Đốc') saleEl.classList.add('hidden');
             else saleEl.classList.remove('hidden');
         }
@@ -83,7 +70,6 @@ export function updateHistoryFilters(level) {
         if(svnEl) {
             svnEl.innerHTML = `<option value="">-- 3. Tất cả SVN --</option>` + svns.map(x => `<option value="${x}">${x}</option>`).join('');
             if(level !== 'init') svnEl.value = '';
-            // Ẩn đối với tài khoản Cửa hàng (vì họ chỉ có 1 shop)
             if (svns.length <= 1 && role === 'Cửa hàng') svnEl.classList.add('hidden');
             else svnEl.classList.remove('hidden');
         }
@@ -147,19 +133,14 @@ function renderFilteredSO() {
     if(!tbody) return;
     const filterMonth = document.getElementById('history_month_filter')?.value;
     
-    // Sử dụng hàm lọc Cascading
     let data = getFilteredHistoryData(STATE.rawHistorySO);
     if (filterMonth) data = data.filter(r => r.report_date && r.report_date.startsWith(filterMonth));
     
     tbody.innerHTML = data.map(r => {
         const shopName = STATE.globalShopMap[r.shop_code]?.shop_name || r.shop_code;
         let actions = `
-            <button onclick="window.editDailySO('${r.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded mx-1" title="Sửa">
-                <i class="fa-solid fa-pen-to-square"></i>
-            </button>
-            <button onclick="window.deleteDailySO('${r.id}')" class="text-red-500 hover:bg-red-100 p-2 rounded mx-1" title="Xóa">
-                <i class="fa-solid fa-trash"></i>
-            </button>
+            <button onclick="window.editDailySO('${r.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded mx-1" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button onclick="window.deleteDailySO('${r.id}')" class="text-red-500 hover:bg-red-100 p-2 rounded mx-1" title="Xóa"><i class="fa-solid fa-trash"></i></button>
         `;
 
         return `<tr class="hover:bg-gray-50 border-b">
@@ -178,23 +159,21 @@ function renderFilteredMedia() {
     if(!tbody) return;
     const filterMonth = document.getElementById('history_month_filter')?.value;
     
-    // Sử dụng hàm lọc Cascading
     let data = getFilteredHistoryData(STATE.rawHistoryMedia);
     if (filterMonth) data = data.filter(r => r.report_date && r.report_date.startsWith(filterMonth));
 
+    // CỘT NỘI DUNG VIDEO ĐƯỢC HIỂN THỊ TRONG BẢNG
     tbody.innerHTML = data.map(r => {
         let actions = `
-            <button onclick="window.editMediaReport('${r.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded mx-1" title="Sửa">
-                <i class="fa-solid fa-pen-to-square"></i>
-            </button>
-            <button onclick="window.sb.from('media_reports').delete().eq('id', '${r.id}').then(()=>window.loadSaleHistory())" class="text-red-500 hover:bg-red-100 p-2 rounded mx-1" title="Xóa">
-                <i class="fa-solid fa-trash"></i>
-            </button>
+            <button onclick="window.editMediaReport('${r.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded mx-1" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button onclick="window.sb.from('media_reports').delete().eq('id', '${r.id}').then(()=>window.loadSaleHistory())" class="text-red-500 hover:bg-red-100 p-2 rounded mx-1" title="Xóa"><i class="fa-solid fa-trash"></i></button>
         `;
         return `<tr class="border-b hover:bg-gray-50">
             <td class="p-4 text-xs font-bold text-slate-700">${r.report_date}</td>
+            <td class="p-4 text-xs text-center font-bold text-gray-600">${r.video_content || '---'}</td>
             <td class="p-4 text-xs text-center text-blue-600 font-bold">${r.tiktok_videos || 0}</td>
-            <td class="p-4 text-xs text-center text-red-500 font-bold">${r.livestreams || 0}</td>
+            <td class="p-4 text-xs text-center text-purple-600 font-bold">${r.tiktok_views ? fmn(r.tiktok_views) : 0}</td>
+            <td class="p-4 text-xs text-center text-red-500 font-bold">${r.marketing_cost ? fmn(r.marketing_cost) + 'đ' : '0đ'}</td>
             <td class="p-4 text-xs text-blue-500 truncate max-w-[150px]"><a href="${r.media_link || '#'}" target="_blank" class="hover:underline">${r.media_link ? '🔗 Xem Link' : '---'}</a></td>
             <td class="p-4 text-center whitespace-nowrap">${actions}</td>
         </tr>`;
@@ -207,7 +186,6 @@ function renderFilteredCRM() {
     const filterMonth = document.getElementById('history_month_filter')?.value;
     const filterStatus = document.getElementById('history_status_filter')?.value;
 
-    // Sử dụng hàm lọc Cascading
     let data = getFilteredHistoryData(STATE.rawHistoryCRM);
     if (filterMonth) data = data.filter(c => c.created_at && c.created_at.startsWith(filterMonth));
     if (filterStatus) data = data.filter(c => c.status === filterStatus);
@@ -219,12 +197,8 @@ function renderFilteredCRM() {
         else statusBadge = `<span class="bg-red-100 text-red-600 px-2 py-1 rounded text-[10px] font-bold">❌ KHÔNG MUA</span>`;
 
         let actions = `
-            <button onclick="window.editCRMReport('${c.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded mx-1" title="Sửa">
-                <i class="fa-solid fa-pen-to-square"></i>
-            </button>
-            <button onclick="window.sb.from('crm_customers').delete().eq('id', '${c.id}').then(()=>window.loadSaleHistory())" class="text-red-500 hover:bg-red-100 p-2 rounded mx-1" title="Xóa">
-                <i class="fa-solid fa-trash"></i>
-            </button>
+            <button onclick="window.editCRMReport('${c.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded mx-1" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button onclick="window.sb.from('crm_customers').delete().eq('id', '${c.id}').then(()=>window.loadSaleHistory())" class="text-red-500 hover:bg-red-100 p-2 rounded mx-1" title="Xóa"><i class="fa-solid fa-trash"></i></button>
         `;
 
         const noteText = c.notes ? c.notes : '---';
@@ -283,9 +257,9 @@ export function exportHistoryExcel() {
         if (filterMonth) data = data.filter(r => r.report_date && r.report_date.startsWith(filterMonth));
         if (data.length === 0) return alert("Không có dữ liệu Truyền thông để xuất!");
 
-        const wsData = [["Ngày", "Video TikTok", "Livestream (Giờ)", "Phát Tờ Rơi (Giờ)", "Link Nguồn", "Ghi Chú"]];
+        const wsData = [["Ngày", "Nội Dung Video", "Video TikTok", "Lượt View", "Chi Phí MKT", "Livestream (Giờ)", "Phát Tờ Rơi (Giờ)", "Link Nguồn", "Ghi Chú"]];
         data.forEach(r => {
-            wsData.push([r.report_date, r.tiktok_videos, r.livestreams, r.offline_flyers, r.media_link, r.notes]);
+            wsData.push([r.report_date, r.video_content, r.tiktok_videos, r.tiktok_views || 0, r.marketing_cost || 0, r.livestreams, r.offline_flyers, r.media_link, r.notes]);
         });
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "Lich_Su_Media");
         XLSX.writeFile(wb, `Lich_Su_Media_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -295,10 +269,8 @@ export function exportHistoryExcel() {
 export function ui_updateSVNOptions() { }
 export function ui_updateDVNOptions() { }
 export function ui_updateShopInfo() { }
-export function getModelOptionsHtml(selectedModel = "") { }
 export function ui_renderModelOptionsAll() { }
 export function ui_addSaleRow(data = {}) { }
 export function calcRow(el) { }
 export function calcAll() { }
-export function initChartFilter() { }
 export function updateChartFilters(level) { }

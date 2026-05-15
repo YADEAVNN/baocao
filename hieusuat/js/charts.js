@@ -26,6 +26,7 @@ export function renderChart(type, id, data, options = {}) {
 }
 
 let currentSOReports = [];
+let currentMediaReports = [];
 
 export async function loadOverviewDashboard() {
     if (STATE.assignedShopCodes.length === 0) return;
@@ -34,20 +35,14 @@ export async function loadOverviewDashboard() {
     STATE.priceMap = {};
     if (prices) prices.forEach(p => STATE.priceMap[p.model] = p.selling_price || 0);
 
-    const { data: reports } = await sb.from('daily_so_reports')
-        .select('*')
-        .in('shop_code', STATE.assignedShopCodes)
-        .order('report_date', { ascending: true });
+    const [soRes, mediaRes] = await Promise.all([
+        sb.from('daily_so_reports').select('*').in('shop_code', STATE.assignedShopCodes).order('report_date', { ascending: true }),
+        sb.from('media_reports').select('*').in('shop_code', STATE.assignedShopCodes).order('report_date', { ascending: true })
+    ]);
 
-    if (!reports || reports.length === 0) {
-        ['ov_so', 'ov_natural', 'ov_leads', 'ov_traffic', 'ov_rate'].forEach(id => {
-            if(document.getElementById(id)) document.getElementById(id).innerText = "0";
-        });
-        if(document.getElementById('ov_rev')) document.getElementById('ov_rev').innerText = "0đ";
-        return;
-    }
+    currentSOReports = soRes.data || [];
+    currentMediaReports = mediaRes.data || [];
 
-    currentSOReports = reports;
     window.updateOVFilters('init');
 }
 
@@ -59,21 +54,23 @@ window.updateOVFilters = (level) => {
 
     if (level === 'init') {
         let directors = [...new Set(shops.map(x => x.director_name).filter(Boolean))].sort();
-        document.getElementById('ov_filter_director').innerHTML = `<option value="">-- 1. Tất cả GĐ --</option>` + directors.map(x => `<option value="${x}">${x}</option>`).join('');
+        document.getElementById('ov_filter_director').innerHTML = `<option value="">-- Tất cả GĐ --</option>` + directors.map(x => `<option value="${x}">${x}</option>`).join('');
     }
     if (level === 'init' || level === 'director') {
         let sales = [...new Set(shops.filter(x => !dir || x.director_name === dir).map(x => x.sale_name).filter(Boolean))].sort();
-        document.getElementById('ov_filter_sale').innerHTML = `<option value="">-- 2. Tất cả Sale --</option>` + sales.map(x => `<option value="${x}">${x}</option>`).join('');
+        document.getElementById('ov_filter_sale').innerHTML = `<option value="">-- Tất cả Sale --</option>` + sales.map(x => `<option value="${x}">${x}</option>`).join('');
         if(level === 'director') document.getElementById('ov_filter_sale').value = '';
     }
     if (level === 'init' || level === 'director' || level === 'sale') {
         let svns = [...new Set(shops.filter(x => (!dir || x.director_name === dir) && (!sale || x.sale_name === sale)).map(x => x.svn_code).filter(Boolean))].sort();
-        document.getElementById('ov_filter_svn').innerHTML = `<option value="">-- 3. Tất cả SVN --</option>` + svns.map(x => `<option value="${x}">${x}</option>`).join('');
+        document.getElementById('ov_filter_svn').innerHTML = `<option value="">-- Tất cả SVN --</option>` + svns.map(x => `<option value="${x}">${x}</option>`).join('');
         if(level !== 'init') document.getElementById('ov_filter_svn').value = '';
     }
     let finalShops = shops.filter(x => (!dir || x.director_name === dir) && (!document.getElementById('ov_filter_sale')?.value || x.sale_name === document.getElementById('ov_filter_sale').value) && (!document.getElementById('ov_filter_svn')?.value || x.svn_code === document.getElementById('ov_filter_svn').value));
-    document.getElementById('ov_filter_shop').innerHTML = `<option value="">-- 4. Tất cả DVN (Shop) --</option>` + finalShops.map(x => `<option value="${x.shop_code}">${x.shop_code} - ${x.shop_name}</option>`).join('');
-    if (level !== 'init') window.filterOverview();
+    document.getElementById('ov_filter_shop').innerHTML = `<option value="">-- Tất cả DVN (Shop) --</option>` + finalShops.map(x => `<option value="${x.shop_code}">${x.shop_code} - ${x.shop_name}</option>`).join('');
+    
+    // Đã Sửa: Luôn gọi hàm vẽ biểu đồ khi khởi tạo (level init) để số liệu không bị trắng
+    window.filterOverview();
 };
 
 window.filterOverview = () => {
@@ -84,24 +81,58 @@ window.filterOverview = () => {
     const selDateFrom = document.getElementById('ov_filter_date_from')?.value || '';
     const selDateTo = document.getElementById('ov_filter_date_to')?.value || ''; 
     
-    let baseReports = currentSOReports;
-    if (selDir) baseReports = baseReports.filter(r => STATE.globalShopMap[r.shop_code]?.director_name === selDir);
-    if (selSale) baseReports = baseReports.filter(r => STATE.globalShopMap[r.shop_code]?.sale_name === selSale);
-    if (selSVN) baseReports = baseReports.filter(r => STATE.globalShopMap[r.shop_code]?.svn_code === selSVN);
-    if (selShop) baseReports = baseReports.filter(r => r.shop_code === selShop);
+    let filteredSO = currentSOReports.filter(r => {
+        const s = STATE.globalShopMap[r.shop_code];
+        if(!s) return false;
+        if(selDir && s.director_name !== selDir) return false;
+        if(selSale && s.sale_name !== selSale) return false;
+        if(selSVN && s.svn_code !== selSVN) return false;
+        if(selShop && r.shop_code !== selShop) return false;
+        if(selDateFrom && r.report_date < selDateFrom) return false;
+        if(selDateTo && r.report_date > selDateTo) return false;
+        return true;
+    });
 
-    let filteredReports = baseReports;
-    if (selDateFrom) filteredReports = filteredReports.filter(r => r.report_date >= selDateFrom);
-    if (selDateTo) filteredReports = filteredReports.filter(r => r.report_date <= selDateTo);
+    let filteredMedia = currentMediaReports.filter(r => {
+        const s = STATE.globalShopMap[r.shop_code];
+        if(!s) return false;
+        if(selDir && s.director_name !== selDir) return false;
+        if(selSale && s.sale_name !== selSale) return false;
+        if(selSVN && s.svn_code !== selSVN) return false;
+        if(selShop && r.shop_code !== selShop) return false;
+        if(selDateFrom && r.report_date < selDateFrom) return false;
+        if(selDateTo && r.report_date > selDateTo) return false;
+        return true;
+    });
 
-    renderOverviewVisuals(filteredReports, baseReports);
+    let trendSO = currentSOReports.filter(r => {
+        const s = STATE.globalShopMap[r.shop_code];
+        if(!s) return false;
+        if(selDir && s.director_name !== selDir) return false;
+        if(selSale && s.sale_name !== selSale) return false;
+        if(selSVN && s.svn_code !== selSVN) return false;
+        if(selShop && r.shop_code !== selShop) return false;
+        return true;
+    });
+
+    let trendMedia = currentMediaReports.filter(r => {
+        const s = STATE.globalShopMap[r.shop_code];
+        if(!s) return false;
+        if(selDir && s.director_name !== selDir) return false;
+        if(selSale && s.sale_name !== selSale) return false;
+        if(selSVN && s.svn_code !== selSVN) return false;
+        if(selShop && r.shop_code !== selShop) return false;
+        return true;
+    });
+
+    renderOverviewVisuals(filteredSO, filteredMedia, trendSO, trendMedia);
 };
 
-function renderOverviewVisuals(reports, baseReports) {
+function renderOverviewVisuals(soReports, mediaReports, trendSOReports, trendMediaReports) {
     let totSO = 0, totNat = 0, totLead = 0, totRev = 0;
     const shopAgg = {}, modelAgg = {};
 
-    reports.forEach(r => {
+    soReports.forEach(r => {
         totSO += (r.total_so || 0); totNat += (r.traffic_natural || 0); totLead += (r.traffic_leads || 0);
         let reportRev = 0; let details = [];
         try { details = typeof r.models_detail === 'string' ? JSON.parse(r.models_detail) : (r.models_detail || []); } catch(e) {}
@@ -114,12 +145,19 @@ function renderOverviewVisuals(reports, baseReports) {
             modelAgg[d.model].rev += lineRev; reportRev += lineRev;
         });
         totRev += reportRev;
-        if (!shopAgg[r.shop_code]) shopAgg[r.shop_code] = { so: 0, nat: 0, lead: 0, rev: 0, name: STATE.globalShopMap[r.shop_code]?.shop_name || r.shop_code };
+        if (!shopAgg[r.shop_code]) shopAgg[r.shop_code] = { so: 0, nat: 0, lead: 0, rev: 0, name: STATE.globalShopMap[r.shop_code]?.shop_name || r.shop_code, views: 0 };
         shopAgg[r.shop_code].so += (r.total_so || 0); shopAgg[r.shop_code].nat += (r.traffic_natural || 0); shopAgg[r.shop_code].lead += (r.traffic_leads || 0); shopAgg[r.shop_code].rev += reportRev;
+    });
+
+    let totMktCost = 0;
+    mediaReports.forEach(r => {
+        totMktCost += (r.marketing_cost || 0);
     });
 
     const totTraffic = totNat + totLead;
     const rate = totTraffic > 0 ? ((totSO / totTraffic) * 100).toFixed(1) : 0;
+    const cpl = totLead > 0 ? Math.round(totMktCost / totLead) : 0;
+    const cps = totSO > 0 ? Math.round(totMktCost / totSO) : 0;
 
     if(document.getElementById('ov_rev')) document.getElementById('ov_rev').innerText = fmn(totRev) + 'đ';
     if(document.getElementById('ov_so')) document.getElementById('ov_so').innerText = totSO;
@@ -127,22 +165,40 @@ function renderOverviewVisuals(reports, baseReports) {
     if(document.getElementById('ov_leads')) document.getElementById('ov_leads').innerText = totLead;
     if(document.getElementById('ov_traffic')) document.getElementById('ov_traffic').innerText = totTraffic;
     if(document.getElementById('ov_rate')) document.getElementById('ov_rate').innerText = rate + '%';
+    if(document.getElementById('ov_mkt_cost')) document.getElementById('ov_mkt_cost').innerText = fmn(totMktCost) + 'đ';
+    if(document.getElementById('ov_cpl')) document.getElementById('ov_cpl').innerText = fmn(cpl) + 'đ';
+    if(document.getElementById('ov_cps')) document.getElementById('ov_cps').innerText = fmn(cps) + 'đ';
 
     const monthAgg = {};
-    baseReports.forEach(r => {
-        const monthKey = r.report_date.slice(0, 7);
-        if (!monthAgg[monthKey]) monthAgg[monthKey] = 0;
-        monthAgg[monthKey] += (r.total_so || 0);
+    trendSOReports.forEach(r => {
+        const m = r.report_date.slice(0, 7);
+        if (!monthAgg[m]) monthAgg[m] = { so: 0, leads: 0, views: 0 };
+        monthAgg[m].so += (r.total_so || 0);
+        monthAgg[m].leads += (r.traffic_leads || 0);
+    });
+    trendMediaReports.forEach(r => {
+        const m = r.report_date.slice(0, 7);
+        if (!monthAgg[m]) monthAgg[m] = { so: 0, leads: 0, views: 0 };
+        monthAgg[m].views += (r.tiktok_views || 0);
     });
 
     const sortedMonths = Object.keys(monthAgg).sort();
-    const trendData = [], growthData = [], trendLabels = [];
-    sortedMonths.forEach((m, index) => {
+    const displayMonths = sortedMonths.slice(-6); 
+
+    const trendDataSO = [], growthData = [], trendLabels = [], trendViews = [], trendLeads = [];
+    
+    displayMonths.forEach((m) => {
         trendLabels.push('T' + m.split('-')[1] + '/' + m.split('-')[0]); 
-        const currentSO = monthAgg[m]; trendData.push(currentSO);
-        if (index === 0) growthData.push(0); 
-        else {
-            const prevSO = monthAgg[sortedMonths[index - 1]];
+        const currentSO = monthAgg[m].so;
+        trendDataSO.push(currentSO);
+        trendViews.push(monthAgg[m].views);
+        trendLeads.push(monthAgg[m].leads);
+        
+        const fullIndex = sortedMonths.indexOf(m);
+        if (fullIndex === 0) {
+            growthData.push(0);
+        } else {
+            const prevSO = monthAgg[sortedMonths[fullIndex - 1]].so;
             if (prevSO === 0) growthData.push(currentSO > 0 ? 100 : 0);
             else growthData.push(((currentSO - prevSO) / prevSO) * 100);
         }
@@ -152,19 +208,27 @@ function renderOverviewVisuals(reports, baseReports) {
         labels: trendLabels, 
         datasets: [
             { type: 'line', label: '% Tăng trưởng', data: growthData, borderColor: '#10b981', borderWidth: 2, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#fff', yAxisID: 'y1', datalabels: { display: true, align: 'top', anchor: 'end', formatter: (v) => v===0 ? '' : `${v>0?'▲':'▼'} ${Math.abs(v).toFixed(1)}%`, color: (ctx) => growthData[ctx.dataIndex] >= 0 ? '#16a34a' : '#ef4444', font: { size: 10, weight: 'bold' } }, order: 1 },
-            { type: 'bar', label: 'Tổng Xe Bán (S.O)', data: trendData, backgroundColor: '#F97316', borderRadius: 4, yAxisID: 'y', order: 2 }
+            { type: 'bar', label: 'Tổng Xe Bán (S.O)', data: trendDataSO, backgroundColor: '#F97316', borderRadius: 4, maxBarThickness: 40, yAxisID: 'y', order: 2 } 
+        ]
+    }, { scales: { x: { grid: { display: false } }, y: { type: 'linear', display: true, position: 'left', beginAtZero: true }, y1: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false } } } });
+
+    renderChart('bar', 'chart_MediaROI', {
+        labels: trendLabels,
+        datasets: [
+            { type: 'line', label: 'Khách Khai Thác (Leads)', data: trendLeads, borderColor: '#a855f7', borderWidth: 2, pointBackgroundColor: '#fff', yAxisID: 'y1', datalabels: { display: true, align: 'top', color: '#9333ea', font: { weight: 'bold' } }, order: 1 },
+            { type: 'bar', label: 'Lượt View', data: trendViews, backgroundColor: '#38bdf8', borderRadius: 4, maxBarThickness: 40, yAxisID: 'y', order: 2 } 
         ]
     }, { scales: { x: { grid: { display: false } }, y: { type: 'linear', display: true, position: 'left', beginAtZero: true }, y1: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false } } } });
 
     const sortedShops = Object.values(shopAgg).sort((a, b) => b.rev - a.rev).slice(0, 10);
-    renderChart('bar', 'chart_TopShop', { labels: sortedShops.map(s => s.name), datasets: [{ label: 'Doanh Thu (VNĐ)', data: sortedShops.map(s => s.rev), backgroundColor: '#3b82f6', borderRadius: 4 }] }, { indexAxis: 'y', plugins: { tooltip: { callbacks: { label: c => ` Doanh Thu: ${fmn(c.raw)}đ` } }, datalabels: { display: false } } });
+    renderChart('bar', 'chart_TopShop', { labels: sortedShops.map(s => s.name), datasets: [{ label: 'Doanh Thu (VNĐ)', data: sortedShops.map(s => s.rev), backgroundColor: '#3b82f6', borderRadius: 4, maxBarThickness: 40 }] }, { indexAxis: 'y', plugins: { tooltip: { callbacks: { label: c => ` Doanh Thu: ${fmn(c.raw)}đ` } }, datalabels: { display: false } } });
     renderChart('doughnut', 'chart_TrafficSource', { labels: ['Khách Tự Nhiên', 'Khách Khai Thác'], datasets: [{ data: [totNat, totLead], backgroundColor: ['#22c55e', '#a855f7'] }] });
 
     const sortedModelsByRev = Object.entries(modelAgg).sort((a, b) => b[1].rev - a[1].rev).slice(0, 10);
-    renderChart('bar', 'chart_TopModels', { labels: sortedModelsByRev.map(m => m[0]), datasets: [{ label: 'Doanh Thu (VNĐ)', data: sortedModelsByRev.map(m => m[1].rev), backgroundColor: '#ef4444', borderRadius: 4 }] }, { plugins: { tooltip: { callbacks: { label: c => ` Doanh Thu: ${fmn(c.raw)}đ` } }, datalabels: { display: false } } });
+    renderChart('bar', 'chart_TopModels', { labels: sortedModelsByRev.map(m => m[0]), datasets: [{ label: 'Doanh Thu (VNĐ)', data: sortedModelsByRev.map(m => m[1].rev), backgroundColor: '#ef4444', borderRadius: 4, maxBarThickness: 40 }] }, { plugins: { tooltip: { callbacks: { label: c => ` Doanh Thu: ${fmn(c.raw)}đ` } }, datalabels: { display: false } } });
 
     const sortedModelsByQty = Object.entries(modelAgg).sort((a, b) => b[1].qty - a[1].qty).slice(0, 10);
-    renderChart('bar', 'chart_TopModelsQty', { labels: sortedModelsByQty.map(m => m[0]), datasets: [{ label: 'Số Lượng Bán (S.O)', data: sortedModelsByQty.map(m => m[1].qty), backgroundColor: '#f59e0b', borderRadius: 4 }] }, { plugins: { datalabels: { color: '#000', anchor: 'end', align: 'top', formatter: (v) => v > 0 ? v : '' } } });
+    renderChart('bar', 'chart_TopModelsQty', { labels: sortedModelsByQty.map(m => m[0]), datasets: [{ label: 'Số Lượng Bán (S.O)', data: sortedModelsByQty.map(m => m[1].qty), backgroundColor: '#f59e0b', borderRadius: 4, maxBarThickness: 40 }] }, { plugins: { datalabels: { color: '#000', anchor: 'end', align: 'top', formatter: (v) => v > 0 ? v : '' } } });
 
     if(document.getElementById('body_HeatmapSO')) {
         document.getElementById('body_HeatmapSO').innerHTML = Object.values(shopAgg).sort((a,b)=>b.rev - a.rev).map(s => {
@@ -183,9 +247,9 @@ function renderOverviewVisuals(reports, baseReports) {
 }
 
 // ==========================================
-// TAB 6: HOÀN THÀNH TIẾN ĐỘ TARGET
+// BẮT ĐẦU KHỐI HOÀN THÀNH TIẾN ĐỘ
 // ==========================================
-let tgtDataState = { targets: [], soReports: [], mediaReports: [] };
+let preCalculatedTargetData = []; 
 
 window.updateTGTFilters = (level) => {
     if (level === 'init') {
@@ -215,13 +279,8 @@ window.updateTGTFilters = (level) => {
         if(level !== 'init') document.getElementById('tgt_filter_svn').value = '';
     }
 
-    let finalShops = shops.filter(x => 
-        (!dir || x.director_name === dir) && 
-        (!document.getElementById('tgt_filter_sale')?.value || x.sale_name === document.getElementById('tgt_filter_sale').value) && 
-        (!document.getElementById('tgt_filter_svn')?.value || x.svn_code === document.getElementById('tgt_filter_svn').value)
-    );
-
-    if(level !== 'init') window.filterTargetDashboard();
+    // Đã XÓA dòng gây lỗi (tgt_filter_shop innerHTML) vì nó giờ là Input Search!
+    window.filterTargetDashboard(); // Luôn gọi bộ lọc
 };
 
 export async function loadTargetDashboard(action) {
@@ -238,30 +297,55 @@ export async function loadTargetDashboard(action) {
         const startOfMonth = `${month}-01`;
         const endOfMonth = `${month}-${new Date(y, m, 0).getDate().toString().padStart(2, '0')}`;
 
-        const { data: rawTargets } = await sb.from('monthly_shop_targets')
-            .select('*')
-            .eq('report_month', month)
-            .in('shop_code', STATE.assignedShopCodes);
+        const [tgtRes, soRes, mediaRes] = await Promise.all([
+            sb.from('monthly_shop_targets').select('*').eq('report_month', month).in('shop_code', STATE.assignedShopCodes),
+            sb.from('daily_so_reports').select('shop_code, report_date, total_so, traffic_natural, traffic_leads').in('shop_code', STATE.assignedShopCodes).gte('report_date', startOfMonth).lte('report_date', endOfMonth),
+            sb.from('media_reports').select('shop_code, tiktok_videos, livestreams').in('shop_code', STATE.assignedShopCodes).gte('report_date', startOfMonth).lte('report_date', endOfMonth)
+        ]);
 
-        tgtDataState.targets = rawTargets || [];
+        const targets = tgtRes.data || [];
+        const soReports = soRes.data || [];
+        const mediaReports = mediaRes.data || [];
 
-        const { data: soData } = await sb.from('daily_so_reports')
-            .select('shop_code, report_date, total_so, traffic_natural, traffic_leads')
-            .in('shop_code', STATE.assignedShopCodes)
-            .gte('report_date', startOfMonth)
-            .lte('report_date', endOfMonth);
-        tgtDataState.soReports = soData || [];
+        const shopAgg = {};
+        STATE.globalAssignedShops.forEach(s => {
+            shopAgg[s.shop_code] = {
+                ...s, 
+                tgt_so: 0, tgt_trf: 0, tgt_vid: 8, tgt_live: 0,
+                act_so: 0, act_trf: 0, act_vid: 0, act_live: 0,
+                days_reported: new Set()
+            };
+        });
 
-        const { data: mediaData } = await sb.from('media_reports')
-            .select('shop_code, tiktok_videos, livestreams')
-            .in('shop_code', STATE.assignedShopCodes)
-            .gte('report_date', startOfMonth)
-            .lte('report_date', endOfMonth);
-        tgtDataState.mediaReports = mediaData || [];
+        targets.forEach(t => {
+            if (shopAgg[t.shop_code]) {
+                shopAgg[t.shop_code].tgt_so = parseInt(t.target_so) || 0;
+                shopAgg[t.shop_code].tgt_trf = parseInt(t.target_traffic) || 0;
+                shopAgg[t.shop_code].tgt_vid = parseInt(t.target_video) || 0;
+                shopAgg[t.shop_code].tgt_live = parseInt(t.target_livestream) || 0;
+            }
+        });
 
-        window.filterTargetDashboard();
+        soReports.forEach(r => {
+            if (shopAgg[r.shop_code]) {
+                shopAgg[r.shop_code].act_so += (r.total_so || 0);
+                shopAgg[r.shop_code].act_trf += (r.traffic_natural || 0) + (r.traffic_leads || 0);
+                shopAgg[r.shop_code].days_reported.add(r.report_date);
+            }
+        });
+
+        mediaReports.forEach(r => {
+            if (shopAgg[r.shop_code]) {
+                shopAgg[r.shop_code].act_vid += (r.tiktok_videos || 0);
+                shopAgg[r.shop_code].act_live += (r.livestreams || 0);
+            }
+        });
+
+        preCalculatedTargetData = Object.values(shopAgg);
+        window.filterTargetDashboard(); // Hiển thị luôn dữ liệu đã tính
+
     } catch(err) { console.error("Lỗi tải target:", err); }
-    finally { if(btnLoad) btnLoad.innerHTML = `<i class="fa-solid fa-bolt text-yellow-400"></i> TẢI TIẾN ĐỘ`; }
+    finally { if(btnLoad) btnLoad.innerHTML = `<i class="fa-solid fa-bolt text-yellow-400"></i> Tải Tiến Độ`; }
 }
 window.loadTargetDashboard = loadTargetDashboard;
 
@@ -270,17 +354,19 @@ window.filterTargetDashboard = () => {
     const sale = document.getElementById('tgt_filter_sale')?.value || '';
     const svn = document.getElementById('tgt_filter_svn')?.value || '';
     
-    const searchKw = (document.getElementById('tgt_filter_search')?.value || '').toLowerCase().trim();
+    // Gõ tìm kiếm sẽ Lọc ngay lập tức
+    const searchInput = document.getElementById('tgt_filter_search')?.value.toLowerCase().trim() || '';
 
-    const displayShops = STATE.globalAssignedShops.filter(x => 
-        (!dir || x.director_name === dir) && 
-        (!sale || x.sale_name === sale) && 
-        (!svn || x.svn_code === svn) &&
-        (!searchKw || 
-            (x.shop_code && x.shop_code.toLowerCase().includes(searchKw)) || 
-            (x.shop_name && x.shop_name.toLowerCase().includes(searchKw))
-        )
-    );
+    const displayShops = preCalculatedTargetData.filter(s => {
+        if (dir && s.director_name !== dir) return false;
+        if (sale && s.sale_name !== sale) return false;
+        if (svn && s.svn_code !== svn) return false;
+        if (searchInput) {
+            const searchText = `${s.shop_code} ${s.shop_name}`.toLowerCase();
+            if (!searchText.includes(searchInput)) return false;
+        }
+        return true;
+    });
 
     renderTargetDashboard(displayShops);
 };
@@ -293,47 +379,16 @@ function renderTargetDashboard(shops) {
     let now = new Date();
     let elapsedDays = (now.getFullYear() === y && (now.getMonth() + 1) === m) ? now.getDate() : daysInMonth;
 
-    const tgtMap = {}, trfTgtMap = {}, vidTgtMap = {}, liveTgtMap = {};
-
-    tgtDataState.targets.forEach(t => {
-        const code = t.shop_code;
-        if(code) {
-            tgtMap[code] = parseInt(t.target_so) || 0;
-            trfTgtMap[code] = parseInt(t.target_traffic) || 0;
-            vidTgtMap[code] = parseInt(t.target_video) || 0;
-            liveTgtMap[code] = parseInt(t.target_livestream) || 0;
-        }
-    });
-
-    const actualMap = {}, trafficMap = {}, daysMap = {};
-    tgtDataState.soReports.forEach(r => {
-        if(!actualMap[r.shop_code]) { actualMap[r.shop_code]=0; trafficMap[r.shop_code]=0; daysMap[r.shop_code] = new Set(); }
-        actualMap[r.shop_code] += (r.total_so || 0);
-        trafficMap[r.shop_code] += (r.traffic_natural || 0) + (r.traffic_leads || 0);
-        daysMap[r.shop_code].add(r.report_date);
-    });
-
-    const mediaMap = {};
-    tgtDataState.mediaReports.forEach(r => {
-        if(!mediaMap[r.shop_code]) mediaMap[r.shop_code] = {vid: 0, live: 0};
-        mediaMap[r.shop_code].vid += (r.tiktok_videos || 0);
-        mediaMap[r.shop_code].live += (r.livestreams || 0);
-    });
-
     let sumTarget = 0, sumActual = 0, sumTraffic = 0, sumDigital = 0;
 
     const htmlRows = shops.map(s => {
-        const sCode = s.shop_code;
-        const tgt = tgtMap[sCode] || 0;
-        const act = actualMap[sCode] || 0;
-        const trf = trafficMap[sCode] || 0;
-        const rptDays = daysMap[sCode] ? daysMap[sCode].size : 0;
-        const vid = mediaMap[sCode]?.vid || 0;
-        const live = mediaMap[sCode]?.live || 0;
+        sumTarget += s.tgt_so; 
+        sumActual += s.act_so; 
+        sumTraffic += s.act_trf; 
+        sumDigital += (s.act_vid + s.act_live);
 
-        sumTarget += tgt; sumActual += act; sumTraffic += trf; sumDigital += (vid + live);
-
-        const pct = tgt > 0 ? Math.round((act/tgt)*100) : (act > 0 ? 100 : 0);
+        const pct = s.tgt_so > 0 ? Math.round((s.act_so/s.tgt_so)*100) : (s.act_so > 0 ? 100 : 0);
+        const rptDays = s.days_reported.size;
         const rptPct = Math.round((rptDays / elapsedDays)*100);
         
         let pColor = 'bg-gray-200';
@@ -342,10 +397,11 @@ function renderTargetDashboard(shops) {
         let statusBadge = `<span class="bg-red-100 text-red-600 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Chậm tiến độ</span>`;
         if (pct >= 80) statusBadge = `<span class="bg-green-100 text-green-600 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fa-solid fa-check-double"></i> Ổn định</span>`;
 
-        const tgtTrf = trfTgtMap[sCode] > 0 ? trfTgtMap[sCode] : (tgt * 5);
-        const trfPct = tgtTrf > 0 ? Math.round((trf/tgtTrf)*100) : 0;
-        const tgtVid = vidTgtMap[sCode] > 0 ? vidTgtMap[sCode] : 8;
-        const tgtLive = liveTgtMap[sCode] > 0 ? liveTgtMap[sCode] : 0;
+        const tgtTrf = s.tgt_trf > 0 ? s.tgt_trf : (s.tgt_so * 5); 
+        const trfPct = tgtTrf > 0 ? Math.round((s.act_trf/tgtTrf)*100) : 0;
+        
+        const tgtVid = s.tgt_vid > 0 ? s.tgt_vid : 8; 
+        const tgtLive = s.tgt_live > 0 ? s.tgt_live : 0;
 
         return `
         <tr class="border-b border-gray-100 hover:bg-slate-50 transition">
@@ -353,8 +409,8 @@ function renderTargetDashboard(shops) {
                 <h4 class="font-black text-slate-800 text-sm">${s.shop_name || s.shop_code}</h4>
                 <p class="text-[10px] text-gray-400 font-mono mt-0.5">${s.shop_code}</p>
             </td>
-            <td class="p-4 text-center font-bold text-gray-500">${tgt}</td>
-            <td class="p-4 text-center font-black text-blue-600">${act}</td>
+            <td class="p-4 text-center font-bold text-gray-500">${s.tgt_so}</td>
+            <td class="p-4 text-center font-black text-blue-600">${s.act_so}</td>
             <td class="p-4">
                 <div class="flex items-center justify-between mb-1">
                     <div class="w-full bg-gray-200 rounded-full h-1.5 mr-3">
@@ -369,14 +425,14 @@ function renderTargetDashboard(shops) {
             </td>
             <td class="p-4">
                 <div class="flex items-center justify-between text-[11px] font-bold mb-1">
-                    <span class="text-slate-700">${trf} / ${tgtTrf}</span>
+                    <span class="text-slate-700">${s.act_trf} / ${tgtTrf}</span>
                     <span class="text-blue-500">${trfPct}%</span>
                 </div>
                 <div class="w-full bg-gray-100 rounded-full h-1"><div class="bg-blue-400 h-1 rounded-full" style="width: ${Math.min(trfPct, 100)}%"></div></div>
             </td>
             <td class="p-4 text-center text-[10px] font-bold">
-                <p class="text-pink-500">Video: ${vid}/${tgtVid}</p>
-                <p class="text-purple-500 mt-0.5">Live: ${live}h / ${tgtLive}h</p>
+                <p class="text-pink-500">Video: ${s.act_vid}/${tgtVid}</p>
+                <p class="text-purple-500 mt-0.5">Live: ${s.act_live}h / ${tgtLive}h</p>
             </td>
             <td class="p-4 text-center">${statusBadge}</td>
         </tr>`;

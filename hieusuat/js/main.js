@@ -3,7 +3,7 @@ import {
     api_checkSession, api_loadShopsAndLock, api_login, api_signup, api_logout, api_loadMonthlyModels, api_submitReport, api_getReportById, api_deleteReport, api_loadSaleHistory, api_approveReport, api_upsertTargets, api_getTargets, api_getActualPerformance, api_sendResetPasswordEmail, api_updatePassword 
 } from './api.js';
 import { STATE, sb } from './config.js';
-import { switchView, switchChartTab, toggleSidebar, ui_showMsg, ui_updateSVNOptions, ui_updateDVNOptions, ui_addSaleRow, calcAll, calcRow, exportHistoryExcel, updateChartFilters, ui_updateShopInfo, ui_renderModelOptionsAll, applyHistoryFilter, updateHistoryFilters } from './ui.js';
+import { switchView, toggleSidebar, ui_showMsg, ui_updateSVNOptions, ui_updateDVNOptions, ui_addSaleRow, calcAll, calcRow, exportHistoryExcel, updateChartFilters, ui_updateShopInfo, ui_renderModelOptionsAll, applyHistoryFilter, updateHistoryFilters } from './ui.js';
 import { loadOverviewDashboard, loadTargetDashboard } from './charts.js';
 import { parseNumber, fmn, calcKPI } from './utils.js';
 
@@ -182,7 +182,7 @@ if(document.getElementById('btnUpdatePassword')) {
 }
 
 window.formatCurrency = (input) => { let val = input.value.replace(/\D/g, ""); if (val === "") { input.value = ""; return; } input.value = new Intl.NumberFormat('vi-VN').format(parseInt(val)); if (input.closest('tr')) calcRow(input); };
-window.formatInput = window.formatCurrency; 
+window.fmn = (n) => new Intl.NumberFormat('vi-VN').format(Math.round(n));
 
 // ==========================================
 // CÁC HÀM XỬ LÝ LƯU / CHỐT S.O
@@ -287,7 +287,7 @@ window.editDailySO = async (id) => {
         if (r.shop_code) {
             document.getElementById('hidden_shop_code').value = r.shop_code;
             const el = document.getElementById('select_shop_so');
-            if(el) { el.value = r.shop_code; el.disabled = true; } // Khóa shop lại khi đang sửa
+            if(el) { el.value = r.shop_code; el.disabled = true; } 
 
             const shop = window.STATE.globalShopMap[r.shop_code];
             if (shop) {
@@ -363,7 +363,6 @@ window.cancelEdit = () => {
     document.getElementById('traffic_leads').value = '';
     document.getElementById('salesDetailContainer').innerHTML = '';
     
-    // Mở khóa shop
     const el = document.getElementById('select_shop_so');
     if(el) el.disabled = false;
 
@@ -381,7 +380,7 @@ window.deleteDailySO = async (id) => {
 };
 
 // ==========================================
-// LOGIC BÁO CÁO TRUYỀN THÔNG
+// LOGIC BÁO CÁO TRUYỀN THÔNG (CẬP NHẬT MKT ROI + NỘI DUNG VIDEO)
 // ==========================================
 window.submitMediaReport = async () => {
     const shopCode = document.getElementById('hidden_shop_code').value;
@@ -389,11 +388,16 @@ window.submitMediaReport = async () => {
     const editId = document.getElementById('editMediaId').value;
     btn.disabled = true; document.getElementById('btnSubmitMediaText').innerText = 'ĐANG GỬI...';
 
+    const costStr = document.getElementById('media_cost').value.replace(/\D/g, "");
+
     const payload = {
         report_date: document.getElementById('media_date').value,
         shop_code: shopCode,
+        video_content: document.getElementById('media_content').value, // LẤY CHỦ ĐỀ VIDEO
         tiktok_videos: parseInt(document.getElementById('media_tiktok').value) || 0,
         livestreams: parseFloat(document.getElementById('media_livestream').value) || 0,
+        tiktok_views: parseInt(document.getElementById('media_views').value) || 0,
+        marketing_cost: parseInt(costStr) || 0,
         media_link: document.getElementById('media_link').value,
         offline_flyers: parseFloat(document.getElementById('media_flyer').value) || 0,
         notes: document.getElementById('media_notes').value,
@@ -409,11 +413,7 @@ window.submitMediaReport = async () => {
             const { error } = await window.sb.from('media_reports').insert([payload]);
             if (error) throw error;
             alert("✅ Lên báo cáo Truyền thông thành công!");
-            document.getElementById('media_tiktok').value = '';
-            document.getElementById('media_livestream').value = '';
-            document.getElementById('media_link').value = '';
-            document.getElementById('media_flyer').value = '';
-            document.getElementById('media_notes').value = '';
+            window.cancelEditMedia();
         }
         window.customSwitchView('history');
         window.switchHistoryTab('media');
@@ -436,9 +436,12 @@ window.editMediaReport = async (id) => {
         document.getElementById('media_date').value = r.report_date;
 
         const el = document.getElementById('select_shop_media');
-        if(el) { el.value = r.shop_code; el.disabled = true; } // Khóa chọn shop
+        if(el) { el.value = r.shop_code; el.disabled = true; } 
 
+        document.getElementById('media_content').value = r.video_content || ''; // ĐIỀN LẠI CHỦ ĐỀ
         document.getElementById('media_tiktok').value = r.tiktok_videos || '';
+        document.getElementById('media_views').value = r.tiktok_views || ''; 
+        document.getElementById('media_cost').value = r.marketing_cost ? window.fmn(r.marketing_cost) : ''; 
         document.getElementById('media_livestream').value = r.livestreams || '';
         document.getElementById('media_link').value = r.media_link || '';
         document.getElementById('media_flyer').value = r.offline_flyers || '';
@@ -453,7 +456,10 @@ window.cancelEditMedia = () => {
     document.getElementById('btnSubmitMediaText').innerText = "LƯU BÁO CÁO";
     
     document.getElementById('media_date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('media_content').value = ''; // RESET CHỦ ĐỀ
     document.getElementById('media_tiktok').value = '';
+    document.getElementById('media_views').value = ''; 
+    document.getElementById('media_cost').value = ''; 
     document.getElementById('media_livestream').value = '';
     document.getElementById('media_link').value = '';
     document.getElementById('media_flyer').value = '';
@@ -514,7 +520,7 @@ window.editCRMReport = async (id) => {
         document.getElementById('btnSubmitCRMText').innerText = "LƯU THAY ĐỔI";
 
         const el = document.getElementById('select_shop_crm');
-        if(el) { el.value = r.shop_code; el.disabled = true; } // Khóa chọn shop
+        if(el) { el.value = r.shop_code; el.disabled = true; }
         
         document.getElementById('crm_name').value = r.customer_name || '';
         document.getElementById('crm_phone').value = r.phone || '';

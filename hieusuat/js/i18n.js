@@ -1,13 +1,11 @@
 // File: i18n.js
 export const dictionary = {
     vi: {
-        // Hệ thống chung
-        "app_title": "YADEA FINANCE",
+        "app_title": "YADEA RETAIL PRO",
         "app_desc": "Hệ Thống Quản Trị Bán Lẻ",
         "lang_btn": "🇨🇳 中文",
         "btn_logout": "Đăng xuất",
 
-        // Màn hình Đăng Nhập
         "login_title": "Đăng Nhập",
         "login_email_ph": "Email nhân viên",
         "login_pass_ph": "Mật khẩu",
@@ -16,7 +14,9 @@ export const dictionary = {
         "login_no_acc": "Chưa có tài khoản?",
         "login_reg_now": "Đăng ký ngay",
 
-        // Menu Sidebar
+        "menu_group_1": "📝 VẬN HÀNH & NHẬP LIỆU",
+        "menu_group_2": "📊 QUẢN TRỊ & PHÂN TÍCH",
+
         "menu_so": "1. Báo Cáo Ngày (S.O)",
         "menu_media": "2. Báo Cáo Truyền Thông",
         "menu_crm": "3. Khách Hàng (CRM)",
@@ -24,7 +24,6 @@ export const dictionary = {
         "menu_charts": "5. Phân Tích Tổng Quan",
         "menu_target": "6. Hoàn Thành Tiến Độ",
 
-        // Tiêu đề các trang
         "title_so": "1. Báo Cáo Ngày (S.O)",
         "title_media": "2. Báo Cáo Truyền Thông",
         "title_crm": "3. Thông Tin Khách Hàng (CRM)",
@@ -32,12 +31,10 @@ export const dictionary = {
         "title_charts": "5. Phân Tích Tổng Quan",
         "title_target": "6. Hoàn Thành Tiến Độ",
 
-        // Tab Sub-menu ở Lịch sử báo cáo (Đã tách riêng biệt để không lỗi)
         "sub_tab_so": "BÁO CÁO S.O",
         "sub_tab_media": "TRUYỀN THÔNG",
         "sub_tab_crm": "KHÁCH HÀNG",
 
-        // Tab 1: S.O
         "lbl_info": "Thông Tin",
         "lbl_detail": "Chi Tiết",
         "msg_click_add": "Nhấn nút bên dưới để thêm xe.",
@@ -46,14 +43,12 @@ export const dictionary = {
         "btn_submit_report": "Gửi báo cáo",
         "lbl_est_revenue": "Ước tính Doanh Thu",
 
-        // Các Label Bộ Lọc
         "lbl_month": "Tháng",
         "lbl_director": "Giám Đốc",
         "lbl_sale": "Sale",
         "lbl_svn": "Mã SVN",
         "btn_reset_filter": "Làm Mới",
 
-        // Tab 2 & 3: Lables
         "lbl_date_exec": "Ngày Thực Hiện",
         "lbl_shop": "Cửa Hàng (Shop)",
         "lbl_online": "Online",
@@ -74,7 +69,20 @@ export const dictionary = {
         "lbl_note": "Ghi Chú",
         "btn_save_crm": "Lưu thông tin khách hàng",
 
-        // Chữ Ví dụ (Placeholders)
+        // Từ vựng MKT & Nội dung Video
+        "lbl_video_content": "Nội Dung Video",
+        "opt_content_review": "1. Review sản phẩm",
+        "opt_content_photo_music": "2. Ảnh xe + nhạc",
+        "opt_content_maintenance": "3. Bảo dưỡng - hậu mãi",
+        "opt_content_brand_face": "4. Gương mặt thương hiệu",
+        
+        "lbl_views": "Lượt View (Tích lũy)",
+        "lbl_cost": "Chi phí MKT (VNĐ)",
+        "lbl_cpl": "Chi phí / Khách (CPL)",
+        "lbl_cps": "Chi phí / Xe (CPS)",
+        "lbl_total_mkt": "Tổng Chi Phí MKT",
+        "lbl_roi_chart": "Hiệu Quả Truyền Thông (View vs Khách)",
+
         "ph_tiktok": "Nhập số lượng...",
         "ph_live": "Ví dụ: 1.5",
         "ph_link": "https://tiktok.com/...",
@@ -86,7 +94,6 @@ export const dictionary = {
         "ph_vin": "Nhập mã khung/biển...",
         "ph_crm_note": "Ví dụ: Khách hẹn chốt ngày...",
 
-        // Các Chỉ số Dashboard
         "lbl_revenue": "Doanh Thu",
         "lbl_total_so": "Tổng Xe Bán (S.O)",
         "lbl_natural": "Khách Tự Nhiên",
@@ -103,7 +110,7 @@ export const dictionary = {
         "lbl_digital": "Video & Livestream"
     },
     zh: {
-        "app_title": "雅迪金融",
+        "app_title": "雅迪零售 PRO",
         "app_desc": "零售管理系统",
         "lang_btn": "🇻🇳 Tiếng Việt",
         "btn_logout": "登出",
@@ -115,6 +122,9 @@ export const dictionary = {
         "login_forgot": "忘记密码？",
         "login_no_acc": "还没有账号？",
         "login_reg_now": "立即注册",
+
+        "menu_group_1": "📝 运营与数据录入",
+        "menu_group_2": "📊 管理与数据分析",
 
         "menu_so": "1. 每日销售报告 (S.O)",
         "menu_media": "2. 媒体推广报告",
@@ -167,6 +177,20 @@ export const dictionary = {
         "lbl_status": "状态",
         "lbl_note": "备注",
         "btn_save_crm": "保存客户信息",
+
+        // Từ vựng MKT & Nội dung Video (Tiếng Trung)
+        "lbl_video_content": "视频内容",
+        "opt_content_review": "1. 产品评测",
+        "opt_content_photo_music": "2. 车辆图片+音乐",
+        "opt_content_maintenance": "3. 保养与售后",
+        "opt_content_brand_face": "4. 品牌代言人",
+
+        "lbl_views": "累计播放量",
+        "lbl_cost": "营销费用 (VNĐ)",
+        "lbl_cpl": "获客成本 (CPL)",
+        "lbl_cps": "单车营销成本 (CPS)",
+        "lbl_total_mkt": "总营销费用",
+        "lbl_roi_chart": "营销效果 (播放量 vs 客流)",
 
         "ph_tiktok": "输入数量...",
         "ph_live": "例如：1.5",

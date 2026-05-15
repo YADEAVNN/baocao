@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>YADEA FINANCE</title>
+    <title>YADEA RETAIL PRO</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,74 +17,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #F8FAFC;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        body { font-family: 'Roboto', sans-serif; background-color: #F8FAFC; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: #9ca3af;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-left: 4px solid transparent;
-        }
-
-        .nav-item:hover {
-            background-color: #1f2937;
-            color: white;
-        }
-
-        .nav-item.active {
-            background-color: #1f2937;
-            color: #fff;
-            border-left-color: #F97316;
-        }
-
-        .form-label {
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #6b7280;
-            margin-bottom: 6px;
-            display: block;
-            letter-spacing: 0.5px;
-        }
-
-        .form-input {
-            width: 100%;
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px 12px;
-            font-weight: 600;
-            font-size: 16px;
-            color: #1e293b;
-            transition: 0.2s;
-            outline: none;
-        }
-
-        .form-input:focus {
-            border-color: #F97316;
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
-        }
+        .nav-item { display: flex; align-items: center; padding: 12px 20px; color: #9ca3af; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
+        .nav-item:hover { background-color: #1f2937; color: white; }
+        .nav-item.active { background-color: #1f2937; color: #fff; border-left-color: #F97316; }
+        .form-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+        .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
+        .form-input:focus { border-color: #F97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
     </style>
 </head>
 
@@ -103,7 +47,7 @@
             <div class="w-full md:w-5/12 bg-[#111827] flex flex-col items-center justify-center p-10 text-center relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-blue-600/20"></div>
                 <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-14 mb-6 relative z-10">
-                <h2 class="text-3xl font-black text-white uppercase mb-2 relative z-10 tracking-tight" data-i18n="app_title">YADEA FINANCE</h2>
+                <h2 class="text-3xl font-black text-white uppercase mb-2 relative z-10 tracking-tight" data-i18n="app_title">YADEA RETAIL PRO</h2>
                 <p class="text-gray-400 text-xs font-medium relative z-10" data-i18n="app_desc">Hệ Thống Quản Trị Bán Lẻ</p>
             </div>
             
@@ -171,7 +115,7 @@
         <div class="md:hidden fixed top-0 left-0 w-full h-14 bg-[#111827] z-40 flex items-center px-4 shadow-md justify-between">
             <div class="flex items-center gap-2">
                 <img src="https://raw.githubusercontent.com/vuhuythanh/tichdiem/refs/heads/main/logo%20YADEA.png" class="h-6">
-                <span class="text-white font-bold text-xs uppercase tracking-wide" data-i18n="app_title">YADEA FINANCE</span>
+                <span class="text-white font-bold text-xs uppercase tracking-wide" data-i18n="app_title">YADEA RETAIL PRO</span>
             </div>
             <button onclick="toggleSidebar()" class="text-white text-2xl focus:outline-none p-2"><i class="fa-solid fa-bars"></i></button>
         </div>
@@ -196,7 +140,8 @@
                 </button>
             </div>
             
-            <nav class="flex-1 py-6 space-y-1">
+            <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
+                <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider mt-2" data-i18n="menu_group_1">📝 VẬN HÀNH & NHẬP LIỆU</div>
                 <a onclick="window.customSwitchView('sales')" id="nav-sales" class="nav-item active">
                     <i class="fa-solid fa-motorcycle text-orange-500 w-6"></i> 
                     <span data-i18n="menu_so">1. Báo Cáo Ngày (S.O)</span>
@@ -209,6 +154,8 @@
                     <i class="fa-solid fa-users text-blue-500 w-6"></i> 
                     <span data-i18n="menu_crm">3. Khách Hàng (CRM)</span>
                 </a>
+
+                <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider mt-4" data-i18n="menu_group_2">📊 QUẢN TRỊ & PHÂN TÍCH</div>
                 <a onclick="window.customSwitchView('history')" id="nav-history" class="nav-item">
                     <i class="fa-solid fa-clock-rotate-left text-purple-500 w-6"></i> 
                     <span data-i18n="menu_history">4. Lịch sử báo cáo</span>
@@ -242,7 +189,9 @@
                 <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
                     <div class="xl:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 h-full">
                         <input type="hidden" id="editReportId" value="">
-                        <input type="hidden" id="hidden_shop_code" value=""> <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
+                        <input type="hidden" id="hidden_shop_code" value="">
+                        
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
                             <span class="text-lg text-slate-400 font-black">A.</span>
                             <h3 class="text-sm font-black text-slate-700 uppercase" data-i18n="lbl_info">Thông Tin</h3>
                         </div>
@@ -351,9 +300,29 @@
                             <h3 class="font-black text-blue-800 uppercase flex items-center gap-2">
                                 <i class="fa-solid fa-mobile-screen"></i> <span data-i18n="lbl_online">Online</span>
                             </h3>
+
+                             <div>
+                                <label class="form-label text-blue-600" data-i18n="lbl_video_content">Nội Dung Video</label>
+                                <select id="media_content" class="form-input bg-white font-bold text-sm">
+                                    <option value="">-- Chọn chủ đề --</option>
+                                    <option value="Review sản phẩm" data-i18n="opt_content_review">1. Review sản phẩm</option>
+                                    <option value="Ảnh xe + nhạc" data-i18n="opt_content_photo_music">2. Ảnh xe + nhạc</option>
+                                    <option value="Bảo dưỡng - hậu mãi" data-i18n="opt_content_maintenance">3. Bảo dưỡng - hậu mãi</option>
+                                    <option value="Gương mặt thương hiệu" data-i18n="opt_content_brand_face">4. Gương mặt thương hiệu</option>
+                                </select>
+                            </div>
+
                             <div>
                                 <label class="form-label" data-i18n="lbl_tiktok_qty">Số lượng Video TikTok</label>
                                 <input type="number" id="media_tiktok" class="form-input" data-i18n="ph_tiktok" placeholder="Nhập số lượng...">
+                            </div>
+                            <div>
+                                <label class="form-label" data-i18n="lbl_views">Lượt View (Tích lũy)</label>
+                                <input type="number" id="media_views" class="form-input" placeholder="0">
+                            </div>
+                            <div>
+                                <label class="form-label" data-i18n="lbl_cost">Chi phí MKT (VNĐ)</label>
+                                <input type="text" id="media_cost" class="form-input" oninput="window.formatCurrency(this)" placeholder="0đ">
                             </div>
                             <div>
                                 <label class="form-label" data-i18n="lbl_livestream">Livestream (Số giờ)</label>
@@ -569,8 +538,10 @@
                             <thead class="bg-gray-100/80 border-b border-gray-200 font-bold text-slate-600">
                                 <tr>
                                     <th class="p-4 uppercase text-[10px] w-24">Ngày</th>
+                                    <th class="p-4 uppercase text-[10px] text-center" data-i18n="lbl_video_content">Nội Dung Video</th>
                                     <th class="p-4 uppercase text-[10px] text-center" data-i18n="lbl_tiktok_qty">Video TikTok</th>
-                                    <th class="p-4 uppercase text-[10px] text-center" data-i18n="lbl_livestream">Livestream (Giờ)</th>
+                                    <th class="p-4 uppercase text-[10px] text-center" data-i18n="lbl_views">Lượt View</th>
+                                    <th class="p-4 uppercase text-[10px] text-center text-red-600" data-i18n="lbl_cost">Chi Phí</th>
                                     <th class="p-4 uppercase text-[10px]" data-i18n="lbl_tiktok_link">Link Nguồn</th>
                                     <th class="p-4 uppercase text-[10px] text-center w-20">Thao tác</th>
                                 </tr>
@@ -673,6 +644,21 @@
                     </div>
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-6">
+                    <div class="bg-indigo-50 p-4 rounded-2xl shadow-sm border border-indigo-100">
+                        <p class="text-[10px] text-indigo-500 font-bold uppercase mb-1" data-i18n="lbl_total_mkt">Tổng Chi Phí MKT</p>
+                        <h3 id="ov_mkt_cost" class="text-xl md:text-2xl font-black text-indigo-700 truncate">0đ</h3>
+                    </div>
+                    <div class="bg-rose-50 p-4 rounded-2xl shadow-sm border border-rose-100">
+                        <p class="text-[10px] text-rose-500 font-bold uppercase mb-1" data-i18n="lbl_cpl">Chi phí / Khách (CPL)</p>
+                        <h3 id="ov_cpl" class="text-xl md:text-2xl font-black text-rose-700 truncate">0đ</h3>
+                    </div>
+                    <div class="bg-fuchsia-50 p-4 rounded-2xl shadow-sm border border-fuchsia-100">
+                        <p class="text-[10px] text-fuchsia-500 font-bold uppercase mb-1" data-i18n="lbl_cps">Chi phí / Xe (CPS)</p>
+                        <h3 id="ov_cps" class="text-xl md:text-2xl font-black text-fuchsia-700 truncate">0đ</h3>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 xl:col-span-2">
                         <h3 class="text-sm font-black text-slate-700 mb-4 uppercase"><i class="fa-solid fa-chart-line text-blue-500 mr-2"></i>Xu hướng Bán Hàng</h3>
@@ -683,6 +669,13 @@
                         <div class="h-64 w-full"><canvas id="chart_TopShop"></canvas></div>
                     </div>
                     
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 xl:col-span-3">
+                        <h3 class="text-sm font-black text-slate-700 mb-4 uppercase">
+                            <i class="fa-solid fa-chart-area text-indigo-500 mr-2"></i><span data-i18n="lbl_roi_chart">Hiệu Quả Truyền Thông (View vs Khách)</span>
+                        </h3>
+                        <div class="h-64 w-full"><canvas id="chart_MediaROI"></canvas></div>
+                    </div>
+
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                         <h3 class="text-sm font-black text-slate-700 mb-4 uppercase">
                             <i class="fa-solid fa-motorcycle text-[#F97316] mr-2"></i><span data-i18n="lbl_top_qty">Top Mẫu Xe (Theo Số Lượng)</span>
@@ -738,7 +731,7 @@
                         <div class="flex items-center gap-3 w-full md:w-auto">
                             <div class="bg-orange-100 text-[#F97316] p-2.5 rounded-xl"><i class="fa-solid fa-calendar-days text-xl"></i></div>
                             <div>
-                                <input type="month" id="tgt_filter_month" onchange="window.filterTargetDashboard()" class="form-input py-2 px-3 text-base font-black w-full md:w-auto bg-gray-50 border-gray-200 text-[#F97316] shadow-inner uppercase tracking-wider cursor-pointer">
+                                <input type="month" id="tgt_filter_month" onchange="window.loadTargetDashboard()" class="form-input py-2 px-3 text-base font-black w-full md:w-auto bg-gray-50 border-gray-200 text-[#F97316] shadow-inner uppercase tracking-wider cursor-pointer">
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-3 w-full md:w-auto">
@@ -768,7 +761,7 @@
                         <div class="xl:col-span-1 relative">
                             <label class="text-[11px] text-[#F97316] font-black uppercase mb-1.5 block" data-i18n="lbl_shop">Tìm Cửa Hàng / DVN</label>
                             <div class="relative">
-                                <input type="text" id="tgt_filter_search" onkeyup="window.filterTargetDashboard()" placeholder="..." class="form-input py-2.5 pl-10 pr-3 text-sm font-bold w-full bg-orange-50/50 shadow-sm border-orange-200 text-slate-800 focus:border-[#F97316]">
+                                <input type="text" id="tgt_filter_search" oninput="window.filterTargetDashboard()" placeholder="..." class="form-input py-2.5 pl-10 pr-3 text-sm font-bold w-full bg-orange-50/50 shadow-sm border-orange-200 text-slate-800 focus:border-[#F97316]">
                                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F97316]"></i>
                             </div>
                         </div>
@@ -907,15 +900,12 @@
             if (window.STATE && window.STATE.globalAssignedShops && window.STATE.globalAssignedShops.length > 0) {
                 const shops = window.STATE.globalAssignedShops;
 
-                // TẠO OPTIONS CHO DROP DOWN CỬA HÀNG (SỰ THAY ĐỔI CỐT LÕI)
                 const options = shops.map(s => `<option value="${s.shop_code}">${s.shop_code} - ${s.shop_name}</option>`).join('');
-                
                 ['select_shop_so', 'select_shop_media', 'select_shop_crm'].forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.innerHTML = options;
                 });
 
-                // Chọn mặc định shop đầu tiên
                 window.changeInputShop(shops[0].shop_code);
 
                 const dateInput = document.getElementById('so_daily_date');
@@ -931,12 +921,10 @@
             }
         }, 500);
 
-        // HÀM MỚI: ĐỒNG BỘ SHOP GIỮA CÁC TAB
         window.changeInputShop = (code) => {
             const shop = window.STATE.globalShopMap[code];
             if (!shop) return;
             
-            // Đồng bộ 3 ô select nếu không bị khóa
             ['select_shop_so', 'select_shop_media', 'select_shop_crm'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el && !el.disabled) el.value = code;

@@ -212,11 +212,11 @@
                             
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <div class="bg-green-50 p-3 rounded-xl border border-green-100 text-center">
-                                    <label class="block text-[10px] font-black text-green-600 mb-1" data-i18n="lbl_natural">Khách Tự Nhiên</label>
+                                    <label class="block text-[10px] font-black text-green-600 mb-1" data-i18n="lbl_natural">Khách Offline</label>
                                     <input type="number" id="traffic_natural" class="w-full bg-transparent text-2xl font-black text-green-700 outline-none text-center" placeholder="0">
                                 </div>
                                 <div class="bg-purple-50 p-3 rounded-xl border border-purple-100 text-center">
-                                    <label class="block text-[10px] font-black text-purple-600 mb-1" data-i18n="lbl_leads">Khách Khai Thác</label>
+                                    <label class="block text-[10px] font-black text-purple-600 mb-1" data-i18n="lbl_leads">Khách Online</label>
                                     <input type="number" id="traffic_leads" class="w-full bg-transparent text-2xl font-black text-purple-700 outline-none text-center" placeholder="0">
                                 </div>
                             </div>
@@ -419,8 +419,8 @@
                         <div>
                             <label class="form-label text-purple-600" data-i18n="lbl_vin">Số Khung / Biển Số</label>
                             <div class="relative">
-                                <input type="text" id="crm_vin" class="form-input pr-12" data-i18n="ph_vin" placeholder="Nhập mã khung/biển...">
-                                <button onclick="startQrScan('crm_vin')" class="absolute top-1/2 right-2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition">
+                                <input type="text" id="crm_vin" class="form-input" data-i18n="ph_vin" placeholder="Nhập mã khung/biển...">
+                                <button onclick="startQrScan('crm_vin')" class="hidden absolute top-1/2 right-2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition">
                                     <i class="fa-solid fa-qrcode"></i>
                                 </button>
                             </div>
@@ -521,8 +521,8 @@
                                 <tr>
                                     <th class="p-4 uppercase text-[10px] w-24">Ngày S.O</th>
                                     <th class="p-4 uppercase text-[10px]" data-i18n="lbl_shop">Shop</th>
-                                    <th class="p-4 uppercase text-[10px] text-center text-green-600" data-i18n="lbl_natural">Khách Tự Nhiên</th>
-                                    <th class="p-4 uppercase text-[10px] text-center text-purple-600" data-i18n="lbl_leads">Khách Khai Thác</th>
+                                    <th class="p-4 uppercase text-[10px] text-center text-green-600" data-i18n="lbl_natural">Khách Offline</th>
+                                    <th class="p-4 uppercase text-[10px] text-center text-purple-600" data-i18n="lbl_leads">Khách Online</th>
                                     <th class="p-4 uppercase text-[10px] text-center text-orange-600" data-i18n="lbl_total_so">Tổng Xe (S.O)</th>
                                     <th class="p-4 uppercase text-[10px] text-center w-24">Thao Tác</th>
                                 </tr>
@@ -627,11 +627,11 @@
                         <h3 id="ov_so" class="text-xl md:text-2xl font-black text-[#F97316] truncate">0</h3>
                     </div>
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 border-b-4 border-b-green-500">
-                        <p class="text-[10px] text-gray-500 font-bold uppercase mb-1" data-i18n="lbl_natural">Khách Tự Nhiên</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase mb-1" data-i18n="lbl_natural">Khách Offline</p>
                         <h3 id="ov_natural" class="text-xl md:text-2xl font-black text-green-600 truncate">0</h3>
                     </div>
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 border-b-4 border-b-purple-500">
-                        <p class="text-[10px] text-gray-500 font-bold uppercase mb-1" data-i18n="lbl_leads">Khách Khai Thác</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase mb-1" data-i18n="lbl_leads">Khách Online</p>
                         <h3 id="ov_leads" class="text-xl md:text-2xl font-black text-purple-600 truncate">0</h3>
                     </div>
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 border-b-4 border-b-blue-500">
@@ -707,8 +707,8 @@
                                     <th class="p-4" data-i18n="lbl_shop">Cửa Hàng (Shop)</th>
                                     <th class="p-4 text-right text-red-600" data-i18n="lbl_revenue">Doanh Thu</th>
                                     <th class="p-4 text-center text-[#F97316]" data-i18n="lbl_total_so">Tổng S.O</th>
-                                    <th class="p-4 text-center text-green-600" data-i18n="lbl_natural">Khách Tự Nhiên</th>
-                                    <th class="p-4 text-center text-purple-600" data-i18n="lbl_leads">Khách Khai Thác</th>
+                                    <th class="p-4 text-center text-green-600" data-i18n="lbl_natural">Khách Offline</th>
+                                    <th class="p-4 text-center text-purple-600" data-i18n="lbl_leads">Khách Online</th>
                                     <th class="p-4 text-center text-blue-600" data-i18n="lbl_total_traffic">Tổng Khách</th>
                                     <th class="p-4 text-center text-teal-600" data-i18n="lbl_rate">Tỷ Lệ Chốt</th>
                                 </tr>
@@ -744,7 +744,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 items-end">
                         <div class="xl:col-span-1">
                             <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block" data-i18n="lbl_director">Giám Đốc Miền</label>
                             <select id="tgt_filter_director" onchange="window.updateTGTFilters('director')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-slate-800"></select>
@@ -758,6 +758,15 @@
                             <select id="tgt_filter_svn" onchange="window.updateTGTFilters('svn')" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-purple-700"></select>
                         </div>
                         
+                        <div class="xl:col-span-1">
+                            <label class="text-[11px] text-gray-500 font-black uppercase mb-1.5 block">Lọc Tiến Độ</label>
+                            <select id="tgt_filter_status" onchange="window.filterTargetDashboard()" class="form-input py-2.5 px-3 text-sm font-bold w-full bg-gray-50 shadow-sm border-gray-200 text-slate-800">
+                                <option value="">-- Tất cả --</option>
+                                <option value="stable">✅ Ổn định</option>
+                                <option value="delay">⚠️ Chậm tiến độ</option>
+                            </select>
+                        </div>
+
                         <div class="xl:col-span-1 relative">
                             <label class="text-[11px] text-[#F97316] font-black uppercase mb-1.5 block" data-i18n="lbl_shop">Tìm Cửa Hàng / DVN</label>
                             <div class="relative">

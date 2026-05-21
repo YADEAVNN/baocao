@@ -69,7 +69,6 @@ window.updateOVFilters = (level) => {
     let finalShops = shops.filter(x => (!dir || x.director_name === dir) && (!document.getElementById('ov_filter_sale')?.value || x.sale_name === document.getElementById('ov_filter_sale').value) && (!document.getElementById('ov_filter_svn')?.value || x.svn_code === document.getElementById('ov_filter_svn').value));
     document.getElementById('ov_filter_shop').innerHTML = `<option value="">-- Tất cả DVN (Shop) --</option>` + finalShops.map(x => `<option value="${x.shop_code}">${x.shop_code} - ${x.shop_name}</option>`).join('');
     
-    // Đã Sửa: Luôn gọi hàm vẽ biểu đồ khi khởi tạo (level init) để số liệu không bị trắng
     window.filterOverview();
 };
 
@@ -215,14 +214,14 @@ function renderOverviewVisuals(soReports, mediaReports, trendSOReports, trendMed
     renderChart('bar', 'chart_MediaROI', {
         labels: trendLabels,
         datasets: [
-            { type: 'line', label: 'Khách Khai Thác (Leads)', data: trendLeads, borderColor: '#a855f7', borderWidth: 2, pointBackgroundColor: '#fff', yAxisID: 'y1', datalabels: { display: true, align: 'top', color: '#9333ea', font: { weight: 'bold' } }, order: 1 },
+            { type: 'line', label: 'Khách Online', data: trendLeads, borderColor: '#a855f7', borderWidth: 2, pointBackgroundColor: '#fff', yAxisID: 'y1', datalabels: { display: true, align: 'top', color: '#9333ea', font: { weight: 'bold' } }, order: 1 },
             { type: 'bar', label: 'Lượt View', data: trendViews, backgroundColor: '#38bdf8', borderRadius: 4, maxBarThickness: 40, yAxisID: 'y', order: 2 } 
         ]
     }, { scales: { x: { grid: { display: false } }, y: { type: 'linear', display: true, position: 'left', beginAtZero: true }, y1: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false } } } });
 
     const sortedShops = Object.values(shopAgg).sort((a, b) => b.rev - a.rev).slice(0, 10);
     renderChart('bar', 'chart_TopShop', { labels: sortedShops.map(s => s.name), datasets: [{ label: 'Doanh Thu (VNĐ)', data: sortedShops.map(s => s.rev), backgroundColor: '#3b82f6', borderRadius: 4, maxBarThickness: 40 }] }, { indexAxis: 'y', plugins: { tooltip: { callbacks: { label: c => ` Doanh Thu: ${fmn(c.raw)}đ` } }, datalabels: { display: false } } });
-    renderChart('doughnut', 'chart_TrafficSource', { labels: ['Khách Tự Nhiên', 'Khách Khai Thác'], datasets: [{ data: [totNat, totLead], backgroundColor: ['#22c55e', '#a855f7'] }] });
+    renderChart('doughnut', 'chart_TrafficSource', { labels: ['Khách Offline', 'Khách Online'], datasets: [{ data: [totNat, totLead], backgroundColor: ['#22c55e', '#a855f7'] }] });
 
     const sortedModelsByRev = Object.entries(modelAgg).sort((a, b) => b[1].rev - a[1].rev).slice(0, 10);
     renderChart('bar', 'chart_TopModels', { labels: sortedModelsByRev.map(m => m[0]), datasets: [{ label: 'Doanh Thu (VNĐ)', data: sortedModelsByRev.map(m => m[1].rev), backgroundColor: '#ef4444', borderRadius: 4, maxBarThickness: 40 }] }, { plugins: { tooltip: { callbacks: { label: c => ` Doanh Thu: ${fmn(c.raw)}đ` } }, datalabels: { display: false } } });
@@ -247,15 +246,16 @@ function renderOverviewVisuals(soReports, mediaReports, trendSOReports, trendMed
 }
 
 // ==========================================
-// BẮT ĐẦU KHỐI HOÀN THÀNH TIẾN ĐỘ
+// BẮT ĐẦU KHỐI HOÀN THÀNH TIẾN ĐỘ (CẬP NHẬT BỘ LỌC TRẠNG THÁI TIẾN ĐỘ)
 // ==========================================
 let preCalculatedTargetData = []; 
 
 window.updateTGTFilters = (level) => {
     if (level === 'init') {
-        ['tgt_filter_director', 'tgt_filter_sale', 'tgt_filter_svn', 'tgt_filter_shop'].forEach(id => {
+        ['tgt_filter_director', 'tgt_filter_sale', 'tgt_filter_svn', 'tgt_filter_status'].forEach(id => {
             if(document.getElementById(id)) document.getElementById(id).value = '';
         });
+        if(document.getElementById('tgt_filter_search')) document.getElementById('tgt_filter_search').value = '';
         document.getElementById('tgt_filter_month').value = new Date().toISOString().slice(0, 7);
     }
 
@@ -279,8 +279,7 @@ window.updateTGTFilters = (level) => {
         if(level !== 'init') document.getElementById('tgt_filter_svn').value = '';
     }
 
-    // Đã XÓA dòng gây lỗi (tgt_filter_shop innerHTML) vì nó giờ là Input Search!
-    window.filterTargetDashboard(); // Luôn gọi bộ lọc
+    window.filterTargetDashboard(); 
 };
 
 export async function loadTargetDashboard(action) {
@@ -342,7 +341,7 @@ export async function loadTargetDashboard(action) {
         });
 
         preCalculatedTargetData = Object.values(shopAgg);
-        window.filterTargetDashboard(); // Hiển thị luôn dữ liệu đã tính
+        window.filterTargetDashboard(); 
 
     } catch(err) { console.error("Lỗi tải target:", err); }
     finally { if(btnLoad) btnLoad.innerHTML = `<i class="fa-solid fa-bolt text-yellow-400"></i> Tải Tiến Độ`; }
@@ -353,8 +352,7 @@ window.filterTargetDashboard = () => {
     const dir = document.getElementById('tgt_filter_director')?.value || '';
     const sale = document.getElementById('tgt_filter_sale')?.value || '';
     const svn = document.getElementById('tgt_filter_svn')?.value || '';
-    
-    // Gõ tìm kiếm sẽ Lọc ngay lập tức
+    const statusFilter = document.getElementById('tgt_filter_status')?.value || '';
     const searchInput = document.getElementById('tgt_filter_search')?.value.toLowerCase().trim() || '';
 
     const displayShops = preCalculatedTargetData.filter(s => {
@@ -365,6 +363,14 @@ window.filterTargetDashboard = () => {
             const searchText = `${s.shop_code} ${s.shop_name}`.toLowerCase();
             if (!searchText.includes(searchInput)) return false;
         }
+        
+        if (statusFilter) {
+            const pct = s.tgt_so > 0 ? Math.round((s.act_so / s.tgt_so) * 100) : (s.act_so > 0 ? 100 : 0);
+            const isStable = pct >= 80;
+            if (statusFilter === 'stable' && !isStable) return false;
+            if (statusFilter === 'delay' && isStable) return false;
+        }
+        
         return true;
     });
 
@@ -452,7 +458,7 @@ function renderTargetDashboard(shops) {
 window.exportOverviewExcel = () => { 
     const tableBody = document.getElementById('body_HeatmapSO');
     if (!tableBody || tableBody.children.length === 0) return alert("Không có dữ liệu để xuất!");
-    const data = [["Cửa Hàng (Shop)", "Doanh Thu (VNĐ)", "Tổng S.O", "Khách Tự Nhiên", "Khách Khai Thác", "Tổng Lượt Khách", "Tỷ Lệ Chốt"]];
+    const data = [["Cửa Hàng (Shop)", "Doanh Thu (VNĐ)", "Tổng S.O", "Khách Offline", "Khách Online", "Tổng Lượt Khách", "Tỷ Lệ Chốt"]];
     Array.from(tableBody.querySelectorAll('tr')).forEach(tr => {
         const cols = tr.querySelectorAll('td');
         data.push([cols[0].innerText, parseInt(cols[1].innerText.replace(/đ|\./g, '')) || 0, parseInt(cols[2].innerText) || 0, parseInt(cols[3].innerText) || 0, parseInt(cols[4].innerText) || 0, parseInt(cols[5].innerText) || 0, cols[6].innerText]);

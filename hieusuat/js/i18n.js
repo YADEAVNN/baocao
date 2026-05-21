@@ -1,4 +1,3 @@
-// File: i18n.js
 export const dictionary = {
     vi: {
         "app_title": "YADEA RETAIL PRO",
@@ -69,7 +68,6 @@ export const dictionary = {
         "lbl_note": "Ghi Chú",
         "btn_save_crm": "Lưu thông tin khách hàng",
 
-        // Từ vựng MKT & Nội dung Video
         "lbl_video_content": "Nội Dung Video",
         "opt_content_review": "1. Review sản phẩm",
         "opt_content_photo_music": "2. Ảnh xe + nhạc",
@@ -96,8 +94,8 @@ export const dictionary = {
 
         "lbl_revenue": "Doanh Thu",
         "lbl_total_so": "Tổng Xe Bán (S.O)",
-        "lbl_natural": "Khách Tự Nhiên",
-        "lbl_leads": "Khách Khai Thác",
+        "lbl_natural": "Khách Offline",
+        "lbl_leads": "Khách Online",
         "lbl_total_traffic": "Tổng Lượt Khách",
         "lbl_rate": "Tỷ lệ chốt",
         "lbl_top_qty": "Top Mẫu Xe (Theo Số Lượng)",
@@ -130,14 +128,14 @@ export const dictionary = {
         "menu_media": "2. 媒体推广报告",
         "menu_crm": "3. 客户信息 (CRM)",
         "menu_history": "4. 历史记录",
-        "menu_charts": "5. 综合数据分析",
+        "menu_charts": "5. 综合数据 analysis",
         "menu_target": "6. 目标完成进度",
 
         "title_so": "1. 每日销售报告 (S.O)",
         "title_media": "2. 媒体推广报告",
         "title_crm": "3. 客户信息 (CRM)",
         "title_history": "4. 历史记录",
-        "title_charts": "5. 综合数据分析",
+        "title_charts": "5. 综合数据 analysis",
         "title_target": "6. 目标完成进度",
 
         "sub_tab_so": "S.O 报告",
@@ -178,7 +176,6 @@ export const dictionary = {
         "lbl_note": "备注",
         "btn_save_crm": "保存客户信息",
 
-        // Từ vựng MKT & Nội dung Video (Tiếng Trung)
         "lbl_video_content": "视频内容",
         "opt_content_review": "1. 产品评测",
         "opt_content_photo_music": "2. 车辆图片+音乐",
@@ -205,8 +202,8 @@ export const dictionary = {
 
         "lbl_revenue": "营业额",
         "lbl_total_so": "总销量 (S.O)",
-        "lbl_natural": "自然客流",
-        "lbl_leads": "开发客流",
+        "lbl_natural": "线下客流 (Offline)",
+        "lbl_leads": "线上客源 (Online)",
         "lbl_total_traffic": "总客流",
         "lbl_rate": "成交率",
         "lbl_top_qty": "畅销车型 (按数量)",

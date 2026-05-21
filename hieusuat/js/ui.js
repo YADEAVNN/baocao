@@ -4,11 +4,11 @@ import { loadOverviewDashboard, loadTargetDashboard } from './charts.js';
 import { api_loadSaleHistory, api_submitReport, api_deleteReport, api_getReportById, api_loadMonthlyModels } from './api.js';
 
 export function switchView(view) {
-    ['view-sales', 'view-costs', 'view-history', 'view-charts', 'view-media'].forEach(v => {
+    ['view-sales', 'view-costs', 'view-history', 'view-charts', 'view-media', 'view-target'].forEach(v => {
         const el = document.getElementById(v);
         if(el) el.classList.add('hidden');
     });
-    ['nav-sales', 'nav-costs', 'nav-history', 'nav-charts', 'nav-media'].forEach(n => {
+    ['nav-sales', 'nav-costs', 'nav-history', 'nav-charts', 'nav-media', 'nav-target'].forEach(n => {
         const el = document.getElementById(n);
         if(el) el.classList.remove('active');
     });
@@ -23,6 +23,7 @@ export function switchView(view) {
         api_loadSaleHistory();
     }
     if (view === 'charts') { loadOverviewDashboard(); }
+    if (view === 'target') { loadTargetDashboard('init'); }
 }
 
 export function toggleSidebar() { 
@@ -162,7 +163,6 @@ function renderFilteredMedia() {
     let data = getFilteredHistoryData(STATE.rawHistoryMedia);
     if (filterMonth) data = data.filter(r => r.report_date && r.report_date.startsWith(filterMonth));
 
-    // CỘT NỘI DUNG VIDEO ĐƯỢC HIỂN THỊ TRONG BẢNG
     tbody.innerHTML = data.map(r => {
         let actions = `
             <button onclick="window.editMediaReport('${r.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded mx-1" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -228,7 +228,7 @@ export function exportHistoryExcel() {
         if (filterMonth) data = data.filter(r => r.report_date && r.report_date.startsWith(filterMonth));
         if (data.length === 0) return alert("Không có dữ liệu S.O để xuất!");
 
-        const wsData = [["Ngày S.O", "Mã Shop", "Tên Shop", "Khách Tự Nhiên", "Khách Khai Thác", "Tổng S.O"]];
+        const wsData = [["Ngày S.O", "Mã Shop", "Tên Shop", "Khách Offline", "Khách Online", "Tổng S.O"]];
         data.forEach(r => {
             const shopName = STATE.globalShopMap[r.shop_code]?.shop_name || r.shop_code;
             wsData.push([r.report_date, r.shop_code, shopName, r.traffic_natural, r.traffic_leads, r.total_so]);

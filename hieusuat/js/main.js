@@ -1,6 +1,6 @@
 import { dictionary } from './i18n.js';
 import { 
-    api_checkSession, api_loadShopsAndLock, api_login, api_signup, api_logout, api_loadMonthlyModels, api_submitReport, api_getReportById, api_deleteReport, api_loadSaleHistory, api_approveReport, api_upsertTargets, api_getTargets, api_getActualPerformance, api_sendResetPasswordEmail, api_updatePassword 
+    api_checkSession, api_loadShopsAndLock, api_login, api_signup, api_logout, api_submitReport, api_getReportById, api_deleteReport, api_loadSaleHistory, api_approveReport, api_upsertTargets, api_getTargets, api_getActualPerformance, api_sendResetPasswordEmail, api_updatePassword 
 } from './api.js';
 import { STATE, sb } from './config.js';
 import { switchView, toggleSidebar, ui_showMsg, ui_updateSVNOptions, ui_updateDVNOptions, ui_addSaleRow, calcAll, calcRow, exportHistoryExcel, updateChartFilters, ui_updateShopInfo, ui_renderModelOptionsAll, applyHistoryFilter, updateHistoryFilters } from './ui.js';
@@ -34,6 +34,31 @@ async function init() {
 
         await api_loadShopsAndLock(profile);
         
+        // TẢI NGẦM DANH SÁCH XE CỦA THÁNG HIỆN TẠI VÀO BIẾN STATE
+        try {
+            let month = new Date().toISOString().slice(0, 7);
+            const parts = month.split('-');
+            const { data } = await sb.from('monthly_product_prices')
+                .select('*')
+                .or(`report_month.eq.${month},report_month.eq.${parts[1]}/${parts[0]},report_month.eq.${parseInt(parts[1])}/${parts[0]}`);
+            
+            if (data && data.length > 0) {
+                STATE.currentAdminPrices = data;
+                
+                // Tự động load 1 dòng trống cho Báo Cáo S.O nếu UI đã sẵn sàng
+                const container = document.getElementById('salesDetailContainer');
+                if (container && container.innerHTML.trim() === '' && typeof window.addCustomSaleRow === 'function') {
+                    window.addCustomSaleRow();
+                }
+                
+                // Tự động load danh sách xe vào form CRM
+                const crmSelect = document.getElementById('crm_model');
+                if (crmSelect) {
+                    crmSelect.innerHTML = '<option value="">-- Chọn xe --</option>' + data.map(p => `<option value="${p.model}">${p.model}</option>`).join('');
+                }
+            }
+        } catch(e) { console.warn("Lỗi khi tải ngầm danh sách xe:", e); }
+
         if (!STATE.globalAssignedShops || STATE.globalAssignedShops.length === 0) {
             alert("CẢNH BÁO: Tài khoản chưa được gán Shop nào.");
         }
@@ -51,7 +76,6 @@ window.toggleSidebar = toggleSidebar;
 window.switchView = switchView;
 window.loadOverviewDashboard = loadOverviewDashboard;
 window.loadTargetDashboard = loadTargetDashboard; 
-window.loadMonthlyModels = api_loadMonthlyModels;
 window.addSaleRow = ui_addSaleRow;
 window.calcAll = calcAll;
 window.updateSVNOptions = ui_updateSVNOptions; 
@@ -380,8 +404,17 @@ window.deleteDailySO = async (id) => {
 };
 
 // ==========================================
-// LOGIC BÁO CÁO TRUYỀN THÔNG (CẬP NHẬT MKT ROI + NỘI DUNG VIDEO)
+// LOGIC BÁO CÁO TRUYỀN THÔNG (CẬP NHẬT MKT ROI + NHIỀU LINK TIKTOK)
 // ==========================================
+window.addMediaLink = () => {
+    const container = document.getElementById('media_link_container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'media-link-input form-input';
+    input.placeholder = 'https://tiktok.com/...';
+    container.appendChild(input);
+};
+
 window.submitMediaReport = async () => {
     const shopCode = document.getElementById('hidden_shop_code').value;
     const btn = document.getElementById('btnSubmitMedia');
@@ -390,15 +423,21 @@ window.submitMediaReport = async () => {
 
     const costStr = document.getElementById('media_cost').value.replace(/\D/g, "");
 
+    // Gộp tất cả các link có dữ liệu thành 1 chuỗi, cách nhau bởi dấu phẩy
+    const links = Array.from(document.querySelectorAll('.media-link-input'))
+        .map(el => el.value.trim())
+        .filter(v => v !== '')
+        .join(', ');
+
     const payload = {
         report_date: document.getElementById('media_date').value,
         shop_code: shopCode,
-        video_content: document.getElementById('media_content').value, // LẤY CHỦ ĐỀ VIDEO
+        video_content: document.getElementById('media_content').value,
         tiktok_videos: parseInt(document.getElementById('media_tiktok').value) || 0,
         livestreams: parseFloat(document.getElementById('media_livestream').value) || 0,
         tiktok_views: parseInt(document.getElementById('media_views').value) || 0,
         marketing_cost: parseInt(costStr) || 0,
-        media_link: document.getElementById('media_link').value,
+        media_link: links, // Sử dụng chuỗi links đã gộp
         offline_flyers: parseFloat(document.getElementById('media_flyer').value) || 0,
         notes: document.getElementById('media_notes').value,
         sale_name: window.STATE?.currentUser?.full_name || ''
@@ -438,12 +477,29 @@ window.editMediaReport = async (id) => {
         const el = document.getElementById('select_shop_media');
         if(el) { el.value = r.shop_code; el.disabled = true; } 
 
-        document.getElementById('media_content').value = r.video_content || ''; // ĐIỀN LẠI CHỦ ĐỀ
+        document.getElementById('media_content').value = r.video_content || ''; 
         document.getElementById('media_tiktok').value = r.tiktok_videos || '';
         document.getElementById('media_views').value = r.tiktok_views || ''; 
         document.getElementById('media_cost').value = r.marketing_cost ? window.fmn(r.marketing_cost) : ''; 
         document.getElementById('media_livestream').value = r.livestreams || '';
-        document.getElementById('media_link').value = r.media_link || '';
+        
+        // Xử lý nạp danh sách link
+        const container = document.getElementById('media_link_container');
+        container.innerHTML = ''; 
+        const linksArray = r.media_link ? r.media_link.split(',') : [''];
+        
+        if (linksArray.length === 0 || (linksArray.length === 1 && linksArray[0] === '')) {
+            container.innerHTML = `<input type="text" class="media-link-input form-input" placeholder="https://tiktok.com/...">`;
+        } else {
+            linksArray.forEach((link) => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'media-link-input form-input';
+                input.value = link.trim();
+                container.appendChild(input);
+            });
+        }
+
         document.getElementById('media_flyer').value = r.offline_flyers || '';
         document.getElementById('media_notes').value = r.notes || '';
     } catch(err) { alert("Lỗi khi tải dữ liệu: " + err.message); }
@@ -456,12 +512,15 @@ window.cancelEditMedia = () => {
     document.getElementById('btnSubmitMediaText').innerText = "LƯU BÁO CÁO";
     
     document.getElementById('media_date').value = new Date().toISOString().split('T')[0];
-    document.getElementById('media_content').value = ''; // RESET CHỦ ĐỀ
+    document.getElementById('media_content').value = ''; 
     document.getElementById('media_tiktok').value = '';
     document.getElementById('media_views').value = ''; 
     document.getElementById('media_cost').value = ''; 
     document.getElementById('media_livestream').value = '';
-    document.getElementById('media_link').value = '';
+    
+    // Reset lại ô nhập link
+    document.getElementById('media_link_container').innerHTML = `<input type="text" class="media-link-input form-input" placeholder="https://tiktok.com/...">`;
+    
     document.getElementById('media_flyer').value = '';
     document.getElementById('media_notes').value = '';
 
@@ -528,9 +587,9 @@ window.editCRMReport = async (id) => {
         
         const crmModelSelect = document.getElementById('crm_model');
         if (crmModelSelect && r.model_interest) {
-            let options = '<option value="">-- Nhấn nút Tải DS Xe --</option>';
+            let options = '<option value="">-- Chọn xe --</option>';
             if(window.STATE && window.STATE.currentAdminPrices) {
-                options = window.STATE.currentAdminPrices.map(p => `<option value="${p.model}" ${p.model === r.model_interest ? 'selected' : ''}>${p.model}</option>`).join('');
+                options += window.STATE.currentAdminPrices.map(p => `<option value="${p.model}" ${p.model === r.model_interest ? 'selected' : ''}>${p.model}</option>`).join('');
             } else {
                 options += `<option value="${r.model_interest}" selected>${r.model_interest}</option>`;
             }
@@ -553,32 +612,6 @@ window.cancelEditCRM = () => {
     
     const el = document.getElementById('select_shop_crm');
     if(el) el.disabled = false;
-};
-
-window.loadCRMModels = async () => {
-    try {
-        let month = new Date().toISOString().slice(0, 7); 
-        const parts = month.split('-');
-        
-        const { data, error } = await window.sb.from('monthly_product_prices')
-            .select('*')
-            .or(`report_month.eq.${month},report_month.eq.${parts[1]}/${parts[0]},report_month.eq.${parseInt(parts[1])}/${parts[0]}`);
-        
-        if (error || !data || data.length === 0) {
-            alert("Chưa có bảng giá Admin cập nhật cho tháng này!");
-        } else {
-            window.STATE.currentAdminPrices = data; 
-            const crmSelect = document.getElementById('crm_model');
-            if (crmSelect) {
-                let options = '<option value="">-- Chọn xe --</option>';
-                options += data.map(p => `<option value="${p.model}">${p.model}</option>`).join('');
-                crmSelect.innerHTML = options;
-            }
-            alert(`✅ Đã tải thành công ${data.length} mẫu xe vào danh sách!`);
-        }
-    } catch (err) {
-        alert("Lỗi tải xe: " + err.message);
-    }
 };
 
 window.addCustomSaleRow = () => {
@@ -632,6 +665,50 @@ window.recalcSOTotal = () => {
     });
     if(document.getElementById('sold_quantity')) document.getElementById('sold_quantity').value = totalQty;
     if(document.getElementById('total_so_revenue')) document.getElementById('total_so_revenue').innerText = fmn(totalRev) + 'đ';
+};
+
+// ==========================================
+// TÍNH NĂNG TẠO QR CHO KHÁCH HÀNG TỰ ĐIỀN FORM
+// ==========================================
+window.generateCustomerQR = () => {
+    const shopCode = document.getElementById('hidden_shop_code').value;
+    if (!shopCode) {
+        alert("Vui lòng chọn cửa hàng trước!");
+        return;
+    }
+    const shop = window.STATE.globalShopMap[shopCode];
+    const shopName = shop ? shop.shop_name : shopCode;
+    
+    document.getElementById('qrShopName').innerText = shopName;
+    
+    // Xóa mã QR cũ nếu có
+    const container = document.getElementById('qrcode_container');
+    container.innerHTML = '';
+    
+    // Lấy link hiện tại và nối thêm khachhang.html + mã shop
+    let currentPath = window.location.pathname;
+    if (currentPath.endsWith('index.html')) currentPath = currentPath.replace('index.html', '');
+    if (!currentPath.endsWith('/')) currentPath += '/';
+    
+    const url = window.location.origin + currentPath + 'khachhang.html?shop=' + shopCode;
+    
+    // Vẽ mã QR mới
+    new QRCode(container, {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark : "#111827", // Màu mã QR
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+    
+    document.getElementById('qrGeneratorModal').classList.remove('hidden');
+    document.getElementById('qrGeneratorModal').classList.add('flex');
+};
+
+window.closeQrGenerator = () => {
+    document.getElementById('qrGeneratorModal').classList.add('hidden');
+    document.getElementById('qrGeneratorModal').classList.remove('flex');
 };
 
 // ==========================================

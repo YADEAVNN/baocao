@@ -3,6 +3,17 @@ import { fmn, parseNumber, safeVal, calcKPI } from './utils.js';
 import { loadOverviewDashboard, loadTargetDashboard } from './charts.js';
 import { api_loadSaleHistory, api_submitReport, api_deleteReport, api_getReportById, api_loadMonthlyModels } from './api.js';
 
+// Hàm chuyển đổi YYYY-MM-DD sang DD/MM/YYYY chuẩn Việt Nam
+function formatDateVN(dateStr) {
+    if (!dateStr) return '---';
+    const pureDate = dateStr.slice(0, 10); 
+    const parts = pureDate.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+}
+
 export function switchView(view) {
     ['view-sales', 'view-costs', 'view-history', 'view-charts', 'view-media', 'view-target'].forEach(v => {
         const el = document.getElementById(v);
@@ -137,6 +148,9 @@ function renderFilteredSO() {
     let data = getFilteredHistoryData(STATE.rawHistorySO);
     if (filterMonth) data = data.filter(r => r.report_date && r.report_date.startsWith(filterMonth));
     
+    // Sắp xếp ngày mới nhất lên trên
+    data.sort((a, b) => new Date(b.report_date) - new Date(a.report_date));
+    
     tbody.innerHTML = data.map(r => {
         const shopName = STATE.globalShopMap[r.shop_code]?.shop_name || r.shop_code;
         let actions = `
@@ -145,7 +159,7 @@ function renderFilteredSO() {
         `;
 
         return `<tr class="hover:bg-gray-50 border-b">
-            <td class="p-4 font-bold text-xs text-blue-600">${r.report_date}</td>
+            <td class="p-4 font-bold text-xs text-blue-600">${formatDateVN(r.report_date)}</td>
             <td class="p-4 text-xs font-bold text-slate-800 uppercase">${shopName}</td>
             <td class="p-4 text-xs font-black text-green-600 text-center">${r.traffic_natural || 0}</td>
             <td class="p-4 text-xs font-black text-purple-600 text-center">${r.traffic_leads || 0}</td>
@@ -163,18 +177,28 @@ function renderFilteredMedia() {
     let data = getFilteredHistoryData(STATE.rawHistoryMedia);
     if (filterMonth) data = data.filter(r => r.report_date && r.report_date.startsWith(filterMonth));
 
+    // Sắp xếp ngày mới nhất lên trên
+    data.sort((a, b) => new Date(b.report_date) - new Date(a.report_date));
+
     tbody.innerHTML = data.map(r => {
         let actions = `
             <button onclick="window.editMediaReport('${r.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded mx-1" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
             <button onclick="window.sb.from('media_reports').delete().eq('id', '${r.id}').then(()=>window.loadSaleHistory())" class="text-red-500 hover:bg-red-100 p-2 rounded mx-1" title="Xóa"><i class="fa-solid fa-trash"></i></button>
         `;
+        
+        let linkHTML = '---';
+        if (r.media_link) {
+            const links = r.media_link.split(',');
+            linkHTML = links.map(l => `<a href="${l.trim()}" target="_blank" class="hover:underline text-blue-500 block truncate">🔗 Xem Link</a>`).join('');
+        }
+
         return `<tr class="border-b hover:bg-gray-50">
-            <td class="p-4 text-xs font-bold text-slate-700">${r.report_date}</td>
+            <td class="p-4 text-xs font-bold text-slate-700">${formatDateVN(r.report_date)}</td>
             <td class="p-4 text-xs text-center font-bold text-gray-600">${r.video_content || '---'}</td>
             <td class="p-4 text-xs text-center text-blue-600 font-bold">${r.tiktok_videos || 0}</td>
             <td class="p-4 text-xs text-center text-purple-600 font-bold">${r.tiktok_views ? fmn(r.tiktok_views) : 0}</td>
             <td class="p-4 text-xs text-center text-red-500 font-bold">${r.marketing_cost ? fmn(r.marketing_cost) + 'đ' : '0đ'}</td>
-            <td class="p-4 text-xs text-blue-500 truncate max-w-[150px]"><a href="${r.media_link || '#'}" target="_blank" class="hover:underline">${r.media_link ? '🔗 Xem Link' : '---'}</a></td>
+            <td class="p-4 text-xs max-w-[150px]">${linkHTML}</td>
             <td class="p-4 text-center whitespace-nowrap">${actions}</td>
         </tr>`;
     }).join('');
@@ -190,6 +214,9 @@ function renderFilteredCRM() {
     if (filterMonth) data = data.filter(c => c.created_at && c.created_at.startsWith(filterMonth));
     if (filterStatus) data = data.filter(c => c.status === filterStatus);
 
+    // Sắp xếp ngày mới nhất lên trên
+    data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
     tbody.innerHTML = data.map(c => {
         let statusBadge = '';
         if (c.status === 'Đã mua xe') statusBadge = `<span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">✅ ĐÃ CHỐT</span>`;
@@ -202,10 +229,9 @@ function renderFilteredCRM() {
         `;
 
         const noteText = c.notes ? c.notes : '---';
-        const dateStr = c.created_at ? c.created_at.slice(0, 10) : '---';
 
         return `<tr class="border-b hover:bg-gray-50">
-            <td class="p-4 text-xs font-bold text-blue-600">${dateStr}</td>
+            <td class="p-4 text-xs font-bold text-blue-600">${formatDateVN(c.created_at)}</td>
             <td class="p-4 text-xs font-bold text-slate-800">${c.customer_name}</td>
             <td class="p-4 text-xs font-mono text-gray-500">${c.phone || '---'}</td>
             <td class="p-4 text-xs font-bold text-orange-600">${c.model_interest || '---'}</td>
@@ -231,7 +257,7 @@ export function exportHistoryExcel() {
         const wsData = [["Ngày S.O", "Mã Shop", "Tên Shop", "Khách Offline", "Khách Online", "Tổng S.O"]];
         data.forEach(r => {
             const shopName = STATE.globalShopMap[r.shop_code]?.shop_name || r.shop_code;
-            wsData.push([r.report_date, r.shop_code, shopName, r.traffic_natural, r.traffic_leads, r.total_so]);
+            wsData.push([formatDateVN(r.report_date), r.shop_code, shopName, r.traffic_natural, r.traffic_leads, r.total_so]);
         });
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "Lich_Su_SO");
         XLSX.writeFile(wb, `Lich_Su_SO_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -246,8 +272,7 @@ export function exportHistoryExcel() {
 
         const wsData = [["Ngày Tạo", "Tên Khách Hàng", "SĐT", "Địa Chỉ", "Mẫu Xe Quan Tâm", "Nguồn", "Trạng Thái", "Ghi Chú"]];
         data.forEach(c => {
-            const dateStr = c.created_at ? c.created_at.slice(0, 10) : '';
-            wsData.push([dateStr, c.customer_name, c.phone, c.address, c.model_interest, c.source, c.status, c.notes]);
+            wsData.push([formatDateVN(c.created_at), c.customer_name, c.phone, c.address, c.model_interest, c.source, c.status, c.notes]);
         });
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "Lich_Su_CRM");
         XLSX.writeFile(wb, `Lich_Su_CRM_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -259,7 +284,7 @@ export function exportHistoryExcel() {
 
         const wsData = [["Ngày", "Nội Dung Video", "Video TikTok", "Lượt View", "Chi Phí MKT", "Livestream (Giờ)", "Phát Tờ Rơi (Giờ)", "Link Nguồn", "Ghi Chú"]];
         data.forEach(r => {
-            wsData.push([r.report_date, r.video_content, r.tiktok_videos, r.tiktok_views || 0, r.marketing_cost || 0, r.livestreams, r.offline_flyers, r.media_link, r.notes]);
+            wsData.push([formatDateVN(r.report_date), r.video_content, r.tiktok_videos, r.tiktok_views || 0, r.marketing_cost || 0, r.livestreams, r.offline_flyers, r.media_link, r.notes]);
         });
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "Lich_Su_Media");
         XLSX.writeFile(wb, `Lich_Su_Media_${new Date().toISOString().slice(0, 10)}.xlsx`);

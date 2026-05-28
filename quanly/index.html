@@ -18,7 +18,7 @@
   <style>
     body { font-family: 'Roboto', sans-serif; }
     .sidebar-link { transition: all 0.2s; border-left: 4px solid transparent; }
-    .sidebar-link:hover, .sidebar-link.active { background-color: #1f2937; border-left-color: #FF4500; color: white; }
+    .sidebar-link:hover, .sidebar-link.active { background-color: #1f2937; border-left-color: #F97316; color: white; }
     .animate-fade { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .modal { transition: opacity 0.25s ease; }
@@ -41,10 +41,10 @@
         <p class="text-gray-400 text-sm font-medium relative z-10">Hệ Thống Phân Tích & Tăng Trưởng</p>
       </div>
       <div class="w-full md:w-1/2 p-10 flex flex-col justify-center bg-white">
-        <h3 class="text-2xl font-black text-slate-800 mb-2">Đăng Nhập Admin</h3>
-        <input id="adm_email" type="email" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4 focus:border-orange-500" placeholder="Email Quản Trị">
+        <h3 class="text-2xl font-black text-slate-800 mb-2">Đăng Nhập Hệ Thống</h3>
+        <input id="adm_email" type="email" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4 focus:border-orange-500" placeholder="Email đăng nhập">
         <input id="adm_pass" type="password" class="w-full bg-slate-50 border p-3.5 rounded-xl outline-none mb-4 focus:border-orange-500" placeholder="Mật khẩu">
-        <button id="btnLogin" class="w-full bg-[#FF4500] text-white font-bold py-4 rounded-xl shadow-lg uppercase text-xs tracking-widest hover:bg-orange-600 transition">Truy cập Dashboard</button>
+        <button id="btnLogin" class="w-full bg-[#F97316] text-white font-bold py-4 rounded-xl shadow-lg uppercase text-xs tracking-widest hover:bg-orange-600 transition">Truy cập Cổng Quản Trị</button>
         <p id="loginMsg" class="mt-4 text-center text-xs font-bold text-red-500"></p>
       </div>
     </div>
@@ -75,8 +75,8 @@
   </div>
   
   <div id="priceEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-sm mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Giá</h3><div class="space-y-4"><div><input id="edit_p_key" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly></div><div><label class="text-xs font-bold text-red-500">Giá Nhập</label><input id="edit_p_cost" type="number" class="w-full border p-3 rounded"></div><div><label class="text-xs font-bold text-blue-500">Giá Bán</label><input id="edit_p_price" type="number" class="w-full border p-3 rounded"></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('priceEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitPriceEdit()" class="flex-1 py-3 bg-orange-600 text-white rounded font-bold">Lưu</button></div></div></div>
-  <div id="shopEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Thông Tin Shop</h3><div class="space-y-3 max-h-[60vh] overflow-y-auto px-1"><div><label class="text-[10px] font-bold text-gray-500 uppercase">Mã DVN</label><input id="edit_s_code" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Tên Shop</label><input id="edit_s_name" class="w-full border p-3 rounded text-sm" placeholder="Tên"></div><div class="flex gap-2"><div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Khu vực</label><input id="edit_s_area" class="w-full border p-3 rounded text-sm" placeholder="Khu vực"></div><div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Mã SVN</label><input id="edit_s_svn" class="w-full border p-3 rounded text-sm bg-purple-50 border-purple-200" placeholder="Mã SVN"></div></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Tỉnh / Thành phố</label><input id="edit_s_province" class="w-full border p-3 rounded text-sm" placeholder="Tỉnh"></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Sale Phụ Trách</label><input id="edit_s_sale" class="w-full border p-3 rounded text-sm" placeholder="Sale"></div><div><label class="text-[10px] font-bold text-blue-600 uppercase">Giám Đốc Vùng</label><input id="edit_s_director" class="w-full border p-3 rounded text-sm bg-blue-50 border-blue-200" placeholder="Tên Giám Đốc"></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('shopEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitShopEdit()" class="flex-1 py-3 bg-blue-600 text-white rounded font-bold">Lưu Cập Nhật</button></div></div></div>
-  <div id="userEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 animate-fade p-6"><h3 class="text-xl font-black text-slate-800 mb-4">Sửa Thông Tin & Quyền</h3><input type="hidden" id="edit_u_id"><div class="space-y-4"><div><label class="text-[10px] uppercase font-bold text-gray-500">Email (Không đổi)</label><input id="edit_u_email" type="text" class="w-full bg-gray-100 border p-3 rounded text-xs font-bold text-gray-500" readonly></div><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg"><label class="text-[10px] uppercase font-bold text-blue-700">Họ và Tên (Phải khớp Master Data)</label><input id="edit_u_name" type="text" class="w-full border p-2 rounded text-sm font-bold text-slate-800 bg-white mt-1 focus:border-blue-500 outline-none" placeholder="Nhập đúng tên trong file Excel..."></div><div><label class="text-[10px] uppercase font-bold text-slate-700">Vai Trò</label><select id="edit_u_role" class="w-full border p-3 rounded text-sm font-bold bg-white text-slate-800"><option value="Sale">Sale</option><option value="Giám Đốc">Giám Đốc</option><option value="Admin">Admin</option></select></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('userEditModal')" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-lg text-xs">Hủy</button><button onclick="submitUserEdit()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg text-xs shadow-lg hover:bg-blue-700">Cập Nhật</button></div></div></div>
+  <div id="shopEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Thông Tin Shop</h3><div class="space-y-3 max-h-[60vh] overflow-y-auto px-1"><div><label class="text-[10px] font-bold text-gray-500 uppercase">Mã DVN</label><input id="edit_s_code" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Tên Shop</label><input id="edit_s_name" class="w-full border p-3 rounded text-sm" placeholder="Tên"></div><div class="flex gap-2"><div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Khu vực</label><input id="edit_s_area" class="w-full border p-3 rounded text-sm" placeholder="Khu vực"></div><div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Mã SVN</label><input id="edit_s_svn" class="w-full border p-3 rounded text-sm bg-purple-50 border-purple-200" placeholder="Mã SVN"></div></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Tỉnh / Thành phố</label><input id="edit_s_province" class="w-full border p-3 rounded text-sm" placeholder="Tỉnh"></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Sale Phụ Trách</label><input id="edit_s_sale" class="w-full border p-3 rounded text-sm" placeholder="Sale"></div><div><label class="text-[10px] font-bold text-blue-600 uppercase">GĐ Khu Vực</label><input id="edit_s_director" class="w-full border p-3 rounded text-sm bg-blue-50 border-blue-200" placeholder="Tên Giám Đốc Khu Vực"></div><div><label class="text-[10px] font-bold text-orange-600 uppercase">GĐ Miền</label><input id="edit_s_regional_director" class="w-full border p-3 rounded text-sm bg-orange-50 border-orange-200 font-bold" placeholder="Tên Giám Đốc Miền"></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('shopEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitShopEdit()" class="flex-1 py-3 bg-blue-600 text-white rounded font-bold">Lưu Cập Nhật</button></div></div></div>
+  <div id="userEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 animate-fade p-6"><h3 class="text-xl font-black text-slate-800 mb-4">Sửa Thông Tin & Quyền</h3><input type="hidden" id="edit_u_id"><div class="space-y-4"><div><label class="text-[10px] uppercase font-bold text-gray-500">Email (Không đổi)</label><input id="edit_u_email" type="text" class="w-full bg-gray-100 border p-3 rounded text-xs font-bold text-gray-500" readonly></div><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg"><label class="text-[10px] uppercase font-bold text-blue-700">Họ và Tên (Phải khớp Master Data)</label><input id="edit_u_name" type="text" class="w-full border p-2 rounded text-sm font-bold text-slate-800 bg-white mt-1 focus:border-blue-500 outline-none" placeholder="Nhập đúng tên trong file Excel..."></div><div><label class="text-[10px] uppercase font-bold text-slate-700">Vai Trò Hệ Thống</label><select id="edit_u_role" class="w-full border p-3 rounded text-sm font-bold bg-white text-slate-800"><option value="Cửa hàng">1. Nhân viên cửa hàng</option><option value="Sale">2. Sale Phụ Trách</option><option value="Giám Đốc">3. Giám Đốc Khu Vực</option><option value="Giám đốc Miền">4. Giám Đốc Miền</option><option value="Admin">5. Admin Toàn Quốc</option></select></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('userEditModal')" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-lg text-xs">Hủy</button><button onclick="submitUserEdit()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg text-xs shadow-lg hover:bg-blue-700">Cập Nhật</button></div></div></div>
 
   <div id="mainApp" class="hidden flex-1 flex flex-col md:flex-row h-full w-full">
       
@@ -93,7 +93,7 @@
         </div>
         
         <nav class="flex-1 mt-6 space-y-1 px-2 overflow-y-auto">
-          <p class="px-4 pt-2 pb-2 text-[10px] font-black text-gray-500 uppercase tracking-widest">Báo Cáo Toàn Quốc</p>
+          <p class="px-4 pt-2 pb-2 text-[10px] font-black text-gray-500 uppercase tracking-widest">Báo Cáo Phân Tích</p>
           <a onclick="switchTab('dashboard')" id="tab-dashboard" class="sidebar-link active flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-pie text-blue-400 mr-3 w-5 text-center"></i> 1. Tổng Quan (Dashboard)</a>
           <a onclick="switchTab('pacing')" id="tab-pacing" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-list-check text-green-400 mr-3 w-5 text-center"></i> 2. Báo Cáo Tiến Độ</a>
           <a onclick="switchTab('analytics-full')" id="tab-analytics-full" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-line text-yellow-400 mr-3 w-5 text-center"></i> 3. Hoàn Thành Tiến Độ</a>
@@ -112,13 +112,14 @@
       
         <div id="view-dashboard" class="space-y-6 animate-fade">
             <div class="bg-white p-5 rounded-2xl shadow-sm border flex flex-col gap-4">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
+                <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-3 w-full">
                     <div class="w-full"><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Từ ngày</label><input type="date" id="f_date_start" class="w-full bg-slate-50 border border-gray-300 p-2 rounded-lg text-xs font-bold outline-none focus:border-orange-500"></div>
                     <div class="w-full"><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Đến ngày</label><input type="date" id="f_date_end" class="w-full bg-slate-50 border border-gray-300 p-2 rounded-lg text-xs font-bold outline-none focus:border-orange-500"></div>
-                    <div class="w-full"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">1. Giám Đốc</label><select id="db_director" onchange="updateDashboardFilterChain('director')" class="w-full bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-blue-500"><option value="">-- Tất cả --</option></select></div>
-                    <div class="w-full"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">2. Sale</label><select id="db_sale" onchange="updateDashboardFilterChain('sale')" class="w-full bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-xs outline-none focus:border-blue-500"><option value="">-- Tất cả --</option></select></div>
-                    <div class="w-full"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">3. Mã SVN</label><select id="db_svn" onchange="updateDashboardFilterChain('svn')" class="w-full bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-purple-500"><option value="">-- Tất cả --</option></select></div>
-                    <div class="w-full"><label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">4. Cửa Hàng (Shop)</label><select id="db_dvn" onchange="loadDashboardSO()" class="w-full bg-orange-50 border border-orange-200 text-orange-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-orange-500"><option value="">-- Tất cả Shop --</option></select></div>
+                    <div class="w-full"><label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">1. GĐ Miền</label><select id="db_regional_director" onchange="updateDashboardFilterChain('regional_director')" class="w-full bg-orange-50 border border-orange-200 text-orange-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-orange-500"><option value="">-- Tất cả --</option></select></div>
+                    <div class="w-full"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">2. GĐ Khu Vực</label><select id="db_director" onchange="updateDashboardFilterChain('director')" class="w-full bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-blue-500"><option value="">-- Tất cả --</option></select></div>
+                    <div class="w-full"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">3. Sale</label><select id="db_sale" onchange="updateDashboardFilterChain('sale')" class="w-full bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-xs outline-none focus:border-blue-500"><option value="">-- Tất cả --</option></select></div>
+                    <div class="w-full"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">4. Mã SVN</label><select id="db_svn" onchange="updateDashboardFilterChain('svn')" class="w-full bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-purple-500"><option value="">-- Tất cả --</option></select></div>
+                    <div class="w-full"><label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">5. Shop (DVN)</label><select id="db_dvn" onchange="loadDashboardSO()" class="w-full bg-orange-50 border border-orange-200 text-orange-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-orange-500"><option value="">-- Tất cả Shop --</option></select></div>
                 </div>
                 
                 <div class="flex justify-end gap-3 w-full mt-2 pt-4 border-t border-gray-100">
@@ -150,17 +151,18 @@
 
         <div id="view-analytics-full" class="hidden space-y-4 animate-fade">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <div class="flex flex-col md:flex-row flex-wrap gap-4 items-end">
+                <div class="flex flex-col md:flex-row flex-wrap gap-3 items-end">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tháng Phân Tích</label>
-                        <input type="month" id="ana_month" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-sm w-full md:w-40">
+                        <input type="month" id="ana_month" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-sm w-full md:w-36">
                     </div>
-                    <div class="flex-1 flex flex-wrap gap-3">
-                        <select id="ana_director" onchange="updateFilterChain('director')" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-xs w-full md:w-40"></select>
-                        <select id="ana_sale" onchange="updateFilterChain('sale')" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-xs w-full md:w-36"></select>
-                        <select id="ana_svn" onchange="updateFilterChain('svn')" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-xs w-full md:w-32"></select>
-                        <input type="text" id="ana_search" oninput="updateFilterChain('search')" placeholder="Tìm tên / mã DVN..." class="flex-1 bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500">
+                    <div class="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-2">
+                        <select id="ana_regional_director" onchange="updateFilterChain('regional_director')" class="bg-orange-50 border border-orange-200 text-orange-800 font-bold rounded-lg p-2 text-xs w-full"></select>
+                        <select id="ana_director" onchange="updateFilterChain('director')" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-xs w-full"></select>
+                        <select id="ana_sale" onchange="updateFilterChain('sale')" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-xs w-full"></select>
+                        <select id="ana_svn" onchange="updateFilterChain('svn')" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-xs w-full"></select>
                     </div>
+                    <input type="text" id="ana_search" oninput="updateFilterChain('search')" placeholder="Tìm kiếm mã/tên shop..." class="bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500 w-full md:w-48 shadow-inner">
                     <div class="flex gap-2">
                         <button onclick="resetFilters()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-2.5 rounded-xl transition" title="Xóa bộ lọc"><i class="fa-solid fa-filter-circle-xmark"></i></button>
                         <button onclick="loadAnalyticsFull()" class="bg-slate-900 hover:bg-black text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition flex items-center gap-2 text-xs uppercase"><i class="fa-solid fa-bolt"></i> Tải Tiến Độ</button>
@@ -185,7 +187,7 @@
                         <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead class="bg-slate-50 text-[10px] font-black text-gray-500 uppercase shadow-sm">
                                 <tr>
-                                    <th class="p-4">Cửa Hàng / Mã DVN</th>
+                                    <th class="p-4">Thứ Hạng / Cửa Hàng / Mã DVN</th>
                                     <th class="p-4 text-center bg-slate-100/50">Mục Tiêu</th>
                                     <th class="p-4 text-center">Thực Đạt</th>
                                     <th class="p-4 w-64">Tiến Độ S.O (%)</th>
@@ -204,15 +206,38 @@
 
         <div id="view-pacing" class="hidden space-y-6 animate-fade">
             <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
                     <div><h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">BÁO CÁO TIẾN ĐỘ THÁNG</h2></div>
-                    <div class="flex items-center gap-2 md:gap-4 flex-wrap">
+                    <div class="flex items-center gap-2 md:gap-4 flex-wrap w-full lg:w-auto lg:justify-end">
                         <div class="flex items-center bg-green-50 border border-green-200 rounded-xl p-2 shadow-inner"><label class="text-[10px] font-black text-green-700 uppercase mr-2 ml-2">Chốt số đến ngày:</label><input type="date" id="pacing_date" class="bg-white border border-green-200 text-green-800 font-bold rounded-lg p-2 text-sm outline-none"></div>
                         <button onclick="loadPacingReport()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase"><i class="fa-solid fa-bolt"></i> Tải Báo Cáo</button>
                         <button onclick="exportPacingExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
                     </div>
                 </div>
-                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 shadow-sm">
+                    <div>
+                        <label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">1. Giám Đốc Miền</label>
+                        <select id="pc_regional_director" onchange="updatePacingFilterChain('regional_director')" class="w-full bg-orange-50 border border-orange-200 text-orange-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-orange-500"><option value="">-- Tất cả GĐ Miền --</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">2. Giám Đốc Vùng</label>
+                        <select id="pc_director" onchange="updatePacingFilterChain('director')" class="w-full bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-blue-500"><option value="">-- Tất cả GĐ Vùng --</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">3. Sale Phụ Trách</label>
+                        <select id="pc_sale" onchange="updatePacingFilterChain('sale')" class="w-full bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-xs outline-none focus:border-blue-500"><option value="">-- Tất cả Sale --</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">4. Tìm Kiếm Cửa Hàng</label>
+                        <input type="text" id="pc_search" oninput="renderPacingTableFiltered()" placeholder="Nhập tên / mã shop..." class="w-full bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="resetPacingFilters()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold py-2.5 px-4 rounded-lg transition text-xs flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-filter-circle-xmark"></i> Xóa Bộ Lọc</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                     <table class="w-full text-center text-sm whitespace-nowrap font-medium">
                         <thead class="sticky top-0 z-10 text-[10px] font-black uppercase text-gray-700 bg-gray-100">
                             <tr>
@@ -240,9 +265,43 @@
             </div>
         </div>
 
+        <div id="view-users" class="hidden space-y-6 animate-fade">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h2 class="text-2xl font-black text-slate-800 uppercase">Duyệt Tài Khoản</h2>
+                
+                <div class="flex flex-1 flex-col sm:flex-row gap-3 w-full md:justify-end">
+                    <input type="text" id="user_search" oninput="renderUserTableFiltered()" placeholder="Tìm theo tên hoặc email nhân sự..." class="bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500 w-full sm:w-64 shadow-inner">
+                    <select id="user_status_filter" onchange="renderUserTableFiltered()" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-orange-500 shadow-sm">
+                        <option value="ALL">-- Tất cả trạng thái --</option>
+                        <option value="PENDING">Chờ phê duyệt (Đang Khóa)</option>
+                        <option value="APPROVED">Đang hoạt động</option>
+                    </select>
+                </div>
+
+                <button onclick="loadUsers()" class="w-full md:w-auto bg-slate-100 px-4 py-2 rounded font-bold text-xs hover:bg-slate-200 uppercase whitespace-nowrap"><i class="fa-solid fa-rotate mr-1"></i> Làm mới</button>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-[10px] font-bold text-gray-500 uppercase">
+                            <tr>
+                                <th class="p-4">Nhân Sự</th>
+                                <th class="p-4">Khu Vực (Auto)</th>
+                                <th class="p-4">Vai Trò</th>
+                                <th class="p-4 text-center">Trạng Thái</th>
+                                <th class="p-4 text-center">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div id="view-master" class="hidden space-y-6 animate-fade">
             <div class="bg-white p-8 rounded-2xl shadow-sm border text-center">
-                <h2 class="text-2xl font-black text-slate-800">Danh Sách Shop</h2>
+                <h2 class="text-2xl font-black text-slate-800">Danh Sách Shop Toàn Quốc</h2>
                 <div class="mt-4 flex flex-wrap gap-3 justify-center">
                     <label class="cursor-pointer bg-slate-900 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-slate-800 transition"><i class="fa-solid fa-upload mr-2"></i> Tải lên danh sách Mới<input type="file" id="excelFile" class="hidden" accept=".xlsx,.csv"></label>
                     <button onclick="exportMasterData()" class="bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-green-700 transition"><i class="fa-solid fa-file-excel mr-2"></i> Xuất Excel Hiện Tại</button>
@@ -250,10 +309,22 @@
                 <p id="uploadStatus" class="mt-4 text-xs font-bold text-blue-500"></p>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                <div class="p-4 border-b font-bold text-sm bg-gray-50 flex justify-between items-center"><span>Danh sách Shop Toàn Quốc</span><span id="shopCount" class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">0 Shop</span></div>
+                <div class="p-4 border-b font-bold text-sm bg-gray-50 flex justify-between items-center"><span>Thông Tin Cửa Hàng Hệ Thống</span><span id="shopCount" class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">0 Shop</span></div>
                 <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead class="bg-slate-100 sticky top-0 z-10"><tr class="text-[10px] font-black text-gray-500 uppercase"><th class="p-4">Khu Vực</th><th class="p-4">Mã SVN</th><th class="p-4">Mã DVN</th><th class="p-4">Tên Đại Lý</th><th class="p-4">Tỉnh/Thành</th><th class="p-4">Sale</th><th class="p-4 text-blue-600">Giám Đốc</th><th class="p-4 text-center">Tác Vụ</th></tr></thead>
+                        <thead class="bg-slate-100 sticky top-0 z-10">
+                            <tr class="text-[10px] font-black text-gray-500 uppercase">
+                                <th class="p-4">Khu Vực</th>
+                                <th class="p-4">Mã SVN</th>
+                                <th class="p-4">Mã DVN</th>
+                                <th class="p-4">Tên Đại Lý</th>
+                                <th class="p-4">Tỉnh/Thành</th>
+                                <th class="p-4">Sale</th>
+                                <th class="p-4 text-blue-600">GĐ Khu Vực</th>
+                                <th class="p-4 text-orange-600">GĐ Miền</th>
+                                <th class="p-4 text-center">Tác Vụ</th>
+                            </tr>
+                        </thead>
                         <tbody id="masterBody" class="divide-y divide-gray-100 font-medium text-slate-700"></tbody>
                     </table>
                 </div>
@@ -285,7 +356,7 @@
         <div id="view-targets" class="hidden space-y-6 animate-fade">
             <div class="bg-white p-6 rounded-2xl shadow-sm border">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                    <div><h2 class="text-2xl font-black text-slate-800">THIẾT LẬP TARGET</h2></div>
+                    <div><h2 class="text-2xl font-black text-slate-800">THIẾT LẬP TARGET TARGET</h2></div>
                     <div class="flex items-center gap-4">
                         <div class="flex items-center bg-pink-50 border border-pink-200 rounded-xl p-2 shadow-inner"><label class="text-xs font-bold text-pink-700 uppercase mr-2 ml-2">Tháng Target:</label><input type="month" id="target_month" onchange="loadTargets()" class="bg-white border border-pink-200 text-pink-800 font-bold rounded-lg p-2 text-sm outline-none"></div>
                         <button onclick="saveAllTargets()" class="bg-slate-900 hover:bg-[#FF4500] text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase"><i class="fa-solid fa-floppy-disk"></i> Lưu Target</button>
@@ -307,11 +378,6 @@
                     </table>
                 </div>
             </div>
-        </div>
-
-        <div id="view-users" class="hidden space-y-6 animate-fade">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><h2 class="text-2xl font-black text-slate-800 uppercase">Duyệt Tài Khoản</h2><button onclick="loadUsers()" class="w-full md:w-auto bg-slate-100 px-4 py-2 rounded font-bold text-xs hover:bg-slate-200 uppercase"><i class="fa-solid fa-rotate mr-1"></i> Làm mới</button></div>
-            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-[10px] font-bold text-gray-500 uppercase"><tr><th class="p-4">Nhân Sự</th><th class="p-4">Khu Vực (Auto)</th><th class="p-4">Vai Trò</th><th class="p-4 text-center">Trạng Thái</th><th class="p-4 text-center">Hành Động</th></tr></thead><tbody id="userTableBody"></tbody></table></div></div>
         </div>
 
       </main>

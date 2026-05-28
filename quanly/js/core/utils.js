@@ -1,17 +1,13 @@
-// Hàm chọn phần tử DOM nhanh
 export const $ = id => document.getElementById(id);
 
-// Định dạng số tiền Việt Nam
 export const fmn = n => new Intl.NumberFormat('vi-VN').format(Math.round(n));
 
-// Xử lý giá trị an toàn (chuyển string sang số)
 export const safeVal = (v) => {
     if (typeof v === 'number') return v;
     if (typeof v === 'string') return parseInt(v.replace(/[\.,]/g, '')) || 0;
     return 0;
 };
 
-// Loại bỏ dấu tiếng Việt (Dùng cho Map và Search)
 export function removeVietnameseTones(str) {
     if(!str) return "";
     str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
@@ -26,7 +22,6 @@ export function removeVietnameseTones(str) {
     return str;
 }
 
-// Định dạng tháng (YYYY-MM)
 export function formatMonth(raw) { 
     if(!raw) return ""; 
     if (!isNaN(raw) || (typeof raw === 'string' && raw.length <= 2)) { 
@@ -40,7 +35,6 @@ export function formatMonth(raw) {
     return raw;
 }
 
-// Hàm Toggle Modal (Dùng chung)
 export const toggleModal = (modalId) => { 
     const body = document.querySelector('body');
     const modal = document.getElementById(modalId); 

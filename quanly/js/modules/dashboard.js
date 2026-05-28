@@ -7,9 +7,28 @@ let cachedSOReportsAll13M = [];
 let cachedMediaData = [];
 window.currentPacingData = []; 
 
-// ==========================================
-// 1. KHỞI TẠO BỘ LỌC & NGÀY THÁNG
-// ==========================================
+export function checkUserScopePermission(shopCode) {
+    const user = window.currentUserProfile;
+    if (!user || user.role === 'Admin') return true; 
+    
+    const shop = window.globalAdminShopMap[shopCode];
+    if (!shop) return false;
+
+    if (user.role === 'Cửa hàng') {
+        return user.full_name === shopCode || user.email.toLowerCase().includes(shopCode.toLowerCase());
+    }
+    if (user.role === 'Sale') {
+        return shop.sale_name && shop.sale_name.trim().toLowerCase() === user.full_name.trim().toLowerCase();
+    }
+    if (user.role === 'Giám Đốc') {
+        return shop.director_name && shop.director_name.trim().toLowerCase() === user.full_name.trim().toLowerCase();
+    }
+    if (user.role === 'Giám đốc Miền') {
+        return shop.regional_director && shop.regional_director.trim().toLowerCase() === user.full_name.trim().toLowerCase();
+    }
+    return false;
+}
+
 export function initDateFilters() {
     const today = new Date();
     const lastWeek = new Date(today);
@@ -18,21 +37,33 @@ export function initDateFilters() {
     if($('f_date_end')) $('f_date_end').value = today.toISOString().split('T')[0];
     if($('f_date_start')) $('f_date_start').value = lastWeek.toISOString().split('T')[0];
 
-    if($('db_director')) {
-        const directors = [...new Set(Object.values(window.globalAdminShopMap).map(s => s.director_name).filter(n => n))].sort();
-        $('db_director').innerHTML = `<option value="">-- Tất cả GĐ --</option>` + directors.map(d => `<option value="${d}">${d}</option>`).join('');
+    // Nạp danh sách Giám đốc Miền vào ô lọc đầu tiên
+    if($('db_regional_director')) {
+        const regionals = [...new Set(Object.values(window.globalAdminShopMap).filter(s => checkUserScopePermission(s.shop_code)).map(s => s.regional_director).filter(n => n))].sort();
+        $('db_regional_director').innerHTML = `<option value="">-- Tất cả GĐ Miền --</option>` + regionals.map(r => `<option value="${r}">${r}</option>`).join('');
     }
+    updateDashboardFilterChain('regional_director');
 }
 
 export const updateDashboardFilterChain = (level) => {
-    let filtered = Object.values(window.globalAdminShopMap);
+    let filtered = Object.values(window.globalAdminShopMap).filter(s => checkUserScopePermission(s.shop_code));
+    
+    const selRegion = $('db_regional_director')?.value;
     const selDir = $('db_director')?.value;
     const selSale = $('db_sale')?.value;
     const selSVN = $('db_svn')?.value;
 
+    if(selRegion) filtered = filtered.filter(s => s.regional_director === selRegion);
+
+    if(level === 'regional_director' && $('db_director')) {
+        const directors = [...new Set(filtered.map(s => s.director_name).filter(n => n))].sort();
+        $('db_director').innerHTML = `<option value="">-- Tất cả GĐ Vùng --</option>` + directors.map(d => `<option value="${d}">${d}</option>`).join('');
+        $('db_director').value = "";
+    }
+
     if(selDir) filtered = filtered.filter(s => s.director_name === selDir);
 
-    if(level === 'director' && $('db_sale')) {
+    if((level === 'regional_director' || level === 'director') && $('db_sale')) {
         const sales = [...new Set(filtered.map(s => s.sale_name).filter(n => n))].sort();
         $('db_sale').innerHTML = `<option value="">-- Tất cả Sale --</option>` + sales.map(s => `<option value="${s}">${s}</option>`).join('');
         $('db_sale').value = "";
@@ -40,7 +71,7 @@ export const updateDashboardFilterChain = (level) => {
 
     if(selSale) filtered = filtered.filter(s => s.sale_name === selSale);
 
-    if((level === 'director' || level === 'sale') && $('db_svn')) {
+    if((level === 'regional_director' || level === 'director' || level === 'sale') && $('db_svn')) {
         const svns = [...new Set(filtered.map(s => s.svn_code).filter(n => n))].sort();
         $('db_svn').innerHTML = `<option value="">-- Tất cả SVN --</option>` + svns.map(s => `<option value="${s}">${s}</option>`).join('');
         $('db_svn').value = "";
@@ -57,12 +88,12 @@ export const updateDashboardFilterChain = (level) => {
 }
 
 export const resetDashboardFilters = () => {
+    if($('db_regional_director')) $('db_regional_director').value = "";
     if($('db_director')) $('db_director').value = "";
     if($('db_sale')) $('db_sale').value = "";
     if($('db_svn')) $('db_svn').value = "";
     if($('db_dvn')) $('db_dvn').value = "";
     initDateFilters(); 
-    updateDashboardFilterChain('director');
     loadDashboardSO(); 
 }
 
@@ -86,13 +117,9 @@ function renderChart(type, id, data, options = {}) {
     });
 }
 
-// ==========================================
-// 2. TẢI DỮ LIỆU TỪ DATABASE
-// ==========================================
 export async function loadDashboardSO() {
     const start = $('f_date_start').value;
     const end = $('f_date_end').value;
-
     if(!start || !end) return alert("Vui lòng chọn khoảng thời gian.");
 
     let endD = new Date(end);
@@ -107,7 +134,6 @@ export async function loadDashboardSO() {
         ]);
 
         if (soRes.error) throw soRes.error;
-
         cachedSOReportsAll13M = soRes.data || [];
         cachedMediaData = mediaRes.data || [];
         
@@ -121,35 +147,30 @@ export async function loadDashboardSO() {
                 const rawModel = (d.model || '').toLowerCase().trim();
                 let matched = priceRes.data.find(p => p.model.toLowerCase().trim() === rawModel && p.report_month === reportMonth);
                 if (!matched) matched = priceRes.data.find(p => p.model.toLowerCase().trim() === rawModel);
-                
                 const count = safeVal(d.qty_so) || safeVal(d.qty) || safeVal(d.quantity) || 0;
                 dailyRev += count * (matched ? safeVal(matched.selling_price) : 0);
             });
             r.calculated_revenue = dailyRev;
         });
-
         applyDashboardFilters();
-
     } catch (err) {
-        console.error("Lỗi Dashboard:", err);
-        alert("Không thể tải dữ liệu Dashboard. Vui lòng kiểm tra kết nối.");
+        alert("Không thể tải dữ liệu Dashboard.");
     }
 }
 
-// ==========================================
-// 3. XỬ LÝ BIỂU ĐỒ CHIẾN THUẬT & KPI
-// ==========================================
 function applyDashboardFilters() {
     const start = $('f_date_start').value;
     const end = $('f_date_end').value;
-
+    const selRegion = $('db_regional_director')?.value;
     const selDir = $('db_director')?.value;
     const selSale = $('db_sale')?.value;
     const selSVN = $('db_svn')?.value;
     const selDVN = $('db_dvn')?.value;
 
     const filterFn = (r) => {
+        if (!checkUserScopePermission(r.shop_code)) return false;
         const shop = window.globalAdminShopMap[r.shop_code] || {};
+        if(selRegion && shop.regional_director !== selRegion) return false;
         if(selDir && shop.director_name !== selDir) return false;
         if(selSale && shop.sale_name !== selSale) return false;
         if(selSVN && shop.svn_code !== selSVN) return false;
@@ -183,10 +204,7 @@ function applyDashboardFilters() {
         months13.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
     }
     
-    let soByMonth = months13.map(m => {
-        return cachedSOReportsAll13M.filter(filterFn).filter(r => r.report_date.startsWith(m)).reduce((s, r) => s + safeVal(r.total_so), 0);
-    });
-
+    let soByMonth = months13.map(m => cachedSOReportsAll13M.filter(filterFn).filter(r => r.report_date.startsWith(m)).reduce((s, r) => s + safeVal(r.total_so), 0));
     let labels12M = months13.slice(1).map(m => { let p = m.split('-'); return `T${p[1]}/${p[0].substring(2)}`; });
     let data12MSO = soByMonth.slice(1);
     let data12MPct = [];
@@ -202,13 +220,10 @@ function applyDashboardFilters() {
         labels: labels12M,
         datasets: [
             { type: 'bar', label: 'Sản lượng S.O', data: data12MSO, backgroundColor: '#f97316', borderRadius: 4, yAxisID: 'y' },
-            { type: 'line', label: '% Tăng trưởng MoM', data: data12MPct, borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 2, tension: 0.1, yAxisID: 'y1', datalabels: { display: true, formatter: v => v + '%', color: '#047857', align: 'top', font: {weight: 'bold', size: 10} } }
+            { type: 'line', label: '% Tăng trưởng MoM', data: data12MPct, borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 2, tension: 0.1, yAxisID: 'y1' }
         ]
     }, {
-        scales: { 
-            y: { type: 'linear', position: 'left', title: {display:true, text:'Xe'} }, 
-            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v => v + '%' } } 
-        }
+        scales: { y: { type: 'linear', position: 'left' }, y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } } }
     });
 
     const modelData = {};
@@ -224,8 +239,6 @@ function applyDashboardFilters() {
     renderChart('bar', 'chart_db_models', {
         labels: top5Models.map(m => m[0]),
         datasets: [{ label: 'Số lượng xe', data: top5Models.map(m => m[1]), backgroundColor: '#10b981', borderRadius: 4 }]
-    }, {
-        plugins: { datalabels: { display: true, anchor: 'end', align: 'top', color: '#047857', font: {weight: '900', size: 12} } }
     });
 
     const shopSO = {};
@@ -234,23 +247,16 @@ function applyDashboardFilters() {
     renderChart('bar', 'chart_db_top_shop', {
         labels: topShops.map(s => window.globalAdminShopMap[s[0]]?.shop_name?.substring(0, 15) || s[0]),
         datasets: [{ label: 'Xe (S.O)', data: topShops.map(s => s[1]), backgroundColor: '#f59e0b', borderRadius: 4 }]
-    }, { 
-        indexAxis: 'y', 
-        plugins: { datalabels: { display: true, align: 'right', font: {weight: 'bold'} } } 
-    }); 
+    }, { indexAxis: 'y' }); 
 
     const mediaCompareData = topShops.map(s => {
-        const c = s[0];
-        const so = s[1];
+        const c = s[0]; const so = s[1];
         const med = fMedia.filter(r => r.shop_code === c).reduce((sum, r) => sum + safeVal(r.livestreams) + safeVal(r.tiktok_videos), 0);
         return { code: c, name: window.globalAdminShopMap[c]?.shop_name?.substring(0, 10) || c, so, med };
     });
     renderChart('bar', 'chart_db_media', {
         labels: mediaCompareData.map(d => d.name),
-        datasets: [
-            { label: 'Sản lượng S.O', data: mediaCompareData.map(d => d.so), backgroundColor: '#FF4500' },
-            { label: 'Cường độ Media', data: mediaCompareData.map(d => d.med), backgroundColor: '#8b5cf6' }
-        ]
+        datasets: [ { label: 'Sản lượng S.O', data: mediaCompareData.map(d => d.so), backgroundColor: '#F97316' }, { label: 'Cường độ Media', data: mediaCompareData.map(d => d.med), backgroundColor: '#8b5cf6' } ]
     });
 
     const areaData = {};
@@ -264,12 +270,9 @@ function applyDashboardFilters() {
     }, { plugins: { legend: { position: 'right' } } });
 }
 
-// ==========================================
-// 4. XUẤT EXCEL & BÁO CÁO TIẾN ĐỘ (PACING)
-// ==========================================
 export function exportDashboardExcel() {
     if(!cachedSOReportsFiltered.length) return alert("Không có dữ liệu để xuất!");
-    const header = ["Ngày", "Mã DVN", "Tên Shop", "Khu Vực", "Giám Đốc", "Sale", "Tổng Khách", "Khách Tự Nhiên", "Khách Khai Thác", "Tổng S.O", "Doanh Thu"];
+    const header = ["Ngày", "Mã DVN", "Tên Shop", "Khu Vực", "Giám Đốc Vùng", "Sale", "Tổng Khách", "Khách Tự Nhiên", "Khách Khai Thác", "Tổng S.O", "Doanh Thu"];
     const rows = cachedSOReportsFiltered.map(r => {
         const shop = window.globalAdminShopMap[r.shop_code] || {};
         return [r.report_date, r.shop_code, shop.shop_name, shop.area, shop.director_name, shop.sale_name, safeVal(r.traffic_natural)+safeVal(r.traffic_leads), r.traffic_natural, r.traffic_leads, r.total_so, r.calculated_revenue];
@@ -279,11 +282,14 @@ export function exportDashboardExcel() {
     XLSX.writeFile(wb, `BaoCao_TongQuan_${$('f_date_start').value}.xlsx`);
 }
 
+// ==========================================
+// PACING ENGINE REPORT - ĐỒNG BỘ Ô LỌC MIỀN
+// ==========================================
 export async function loadPacingReport() {
     const inputDate = $('pacing_date').value;
     if(!inputDate) return alert("Vui lòng chọn ngày!");
 
-    $('pacingBody').innerHTML = `<tr><td colspan="14" class="p-6 text-center text-orange-500 font-bold"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tính toán Run-rate...</td></tr>`;
+    $('pacingBody').innerHTML = `<tr><td colspan="14" class="p-6 text-center text-orange-500 font-bold"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tính toán dữ liệu tiến độ chuỗi...</td></tr>`;
     window.currentPacingData = []; 
 
     const selectedDateObj = new Date(inputDate);
@@ -308,12 +314,12 @@ export async function loadPacingReport() {
             actualsByShop[sc].traffic += (safeVal(r.traffic_natural) + safeVal(r.traffic_leads));
         });
 
-        const shops = Object.values(window.globalAdminShopMap || {}).sort((a,b) => (a.area||'').localeCompare(b.area||''));
+        const shops = Object.values(window.globalAdminShopMap || {}).filter(s => checkUserScopePermission(s.shop_code)).sort((a,b) => (a.area||'').localeCompare(b.area||''));
         
         window.currentPacingData = shops.map(s => {
             const t = targets.find(t => t.shop_code === s.shop_code) || {};
             const a = actualsByShop[s.shop_code] || { so: 0, traffic: 0 };
-            const t_so_m = t.target_so || 0;
+            const t_so_m = t.target_so || 0; 
             const t_traf_m = t.target_traffic || 0; 
 
             return {
@@ -322,34 +328,101 @@ export async function loadPacingReport() {
                 timePct: Math.round(ratio * 100),
                 t_so_td: Math.round(t_so_m * ratio), a_so: a.so,
                 t_traf_td: Math.round(t_traf_m * ratio), a_traf: a.traffic,
-                hit_rate: a.traffic > 0 ? Math.round((a.so/a.traffic)*100) : 0,
-                t_traf_m 
+                hit_rate: a.traffic > 0 ? Math.round((a.so/a.traffic)*100) : 0, t_traf_m 
             };
         });
 
-        $('pacingBody').innerHTML = window.currentPacingData.map(d => {
-            const pctSO = d.t_so_td > 0 ? Math.round((d.a_so/d.t_so_td)*100) : 0;
-            const pctTraf = d.t_traf_td > 0 ? Math.round((d.a_traf/d.t_traf_td)*100) : 0;
-            const getColor = (p) => p < 80 ? "bg-red-100 text-red-700 animate-pulse" : (p < 100 ? "bg-yellow-50 text-orange-600" : "bg-green-50 text-green-700");
-            
-            return `<tr class="border-b text-xs">
-                <td class="p-2 font-bold">${d.area}</td>
-                <td class="p-2 font-mono">${d.shop_code}</td>
-                <td class="p-2 font-bold">${d.shop_name}</td>
-                <td class="p-2 font-bold text-orange-600 bg-orange-50/20">${d.t_so_m}</td>
-                <td class="p-2 text-center">${d.pct_m_so}%</td>
-                <td class="p-2 font-black text-blue-700 bg-blue-50">${d.timePct}%</td>
-                <td class="p-2 text-gray-400">${d.t_so_td}</td>
-                <td class="p-2 font-bold">${d.a_so}</td>
-                <td class="p-2 font-black ${getColor(pctSO)}">${pctSO}%</td>
-                <td class="p-2 font-bold text-indigo-600 bg-indigo-50/20">${d.t_traf_m}</td>
-                <td class="p-2 text-gray-400">${d.t_traf_td}</td>
-                <td class="p-2 font-bold">${d.a_traf}</td>
-                <td class="p-2 font-black ${getColor(pctTraf)}">${pctTraf}%</td>
-                <td class="p-2 font-black text-orange-600 bg-orange-50/50">${d.hit_rate}%</td>
-            </tr>`;
-        }).join('');
+        initPacingFilters();
+        renderPacingTableFiltered();
+
     } catch (err) { console.error(err); }
+}
+
+export function initPacingFilters() {
+    if($('pc_regional_director') && $('pc_regional_director').options.length <= 1) {
+        const regionals = [...new Set(Object.values(window.globalAdminShopMap || {}).filter(s => checkUserScopePermission(s.shop_code)).map(s => s.regional_director).filter(n => n))].sort();
+        $('pc_regional_director').innerHTML = `<option value="">-- Tất cả GĐ Miền --</option>` + regionals.map(r => `<option value="${r}">${r}</option>`).join('');
+    }
+}
+
+export function updatePacingFilterChain(level) {
+    let filtered = Object.values(window.globalAdminShopMap || {}).filter(s => checkUserScopePermission(s.shop_code));
+    const selRegion = $('pc_regional_director')?.value;
+    const selDir = $('pc_director')?.value;
+
+    if(selRegion) filtered = filtered.filter(s => s.regional_director === selRegion);
+
+    if(level === 'regional_director' && $('pc_director')) {
+        const directors = [...new Set(filtered.map(s => s.director_name).filter(n => n))].sort();
+        $('pc_director').innerHTML = `<option value="">-- Tất cả GĐ Vùng --</option>` + directors.map(d => `<option value="${d}">${d}</option>`).join('');
+        $('pc_director').value = "";
+    }
+
+    if(selDir) filtered = filtered.filter(s => s.director_name === selDir);
+
+    if((level === 'regional_director' || level === 'director') && $('pc_sale')) {
+        const sales = [...new Set(filtered.map(s => s.sale_name).filter(n => n))].sort();
+        $('pc_sale').innerHTML = `<option value="">-- Tất cả Sale --</option>` + sales.map(s => `<option value="${s}">${s}</option>`).join('');
+        $('pc_sale').value = "";
+    }
+    renderPacingTableFiltered();
+}
+
+export function resetPacingFilters() {
+    if($('pc_regional_director')) $('pc_regional_director').value = "";
+    if($('pc_director')) $('pc_director').value = "";
+    if($('pc_sale')) $('pc_sale').value = "";
+    if($('pc_search')) $('pc_search').value = "";
+    updatePacingFilterChain('regional_director');
+}
+
+export function renderPacingTableFiltered() {
+    if (!window.currentPacingData || window.currentPacingData.length === 0) {
+        $('pacingBody').innerHTML = `<tr><td colspan="14" class="p-6 text-gray-500 italic text-center">Vui lòng chọn ngày và bấm "Tải Báo Cáo"</td></tr>`;
+        return;
+    }
+    
+    const selRegion = $('pc_regional_director')?.value;
+    const selDir = $('pc_director')?.value;
+    const selSale = $('pc_sale')?.value;
+    const kw = $('pc_search')?.value.toLowerCase().trim();
+    
+    const filteredData = window.currentPacingData.filter(d => {
+        const m = window.globalAdminShopMap[d.shop_code] || {};
+        if (selRegion && m.regional_director !== selRegion) return false;
+        if (selDir && m.director_name !== selDir) return false;
+        if (selSale && m.sale_name !== selSale) return false;
+        if (kw && !((d.shop_name || '').toLowerCase().includes(kw) || (d.shop_code || '').toLowerCase().includes(kw))) return false;
+        return true;
+    });
+
+    if (filteredData.length === 0) {
+        $('pacingBody').innerHTML = `<tr><td colspan="14" class="p-6 text-gray-500 italic text-center">Không có shop nào phù hợp điều kiện lọc.</td></tr>`;
+        return;
+    }
+
+    $('pacingBody').innerHTML = filteredData.map(d => {
+        const pctSO = d.t_so_td > 0 ? Math.round((d.a_so/d.t_so_td)*100) : 0;
+        const pctTraf = d.t_traf_td > 0 ? Math.round((d.a_traf/d.t_traf_td)*100) : 0;
+        const getColor = (p) => p < 80 ? "bg-red-100 text-red-700 animate-pulse" : (p < 100 ? "bg-yellow-50 text-orange-600" : "bg-green-50 text-green-700");
+        
+        return `<tr class="border-b text-xs">
+            <td class="p-2 font-bold">${d.area}</td>
+            <td class="p-2 font-mono">${d.shop_code}</td>
+            <td class="p-2 font-bold">${d.shop_name}</td>
+            <td class="p-2 font-bold text-orange-600 bg-orange-50/20">${d.t_so_m}</td>
+            <td class="p-2 text-center">${d.pct_m_so}%</td>
+            <td class="p-2 font-black text-blue-700 bg-blue-50">${d.timePct}%</td>
+            <td class="p-2 text-gray-400">${d.t_so_td}</td>
+            <td class="p-2 font-bold">${d.a_so}</td>
+            <td class="p-2 font-black ${getColor(pctSO)}">${pctSO}%</td>
+            <td class="p-2 font-bold text-indigo-600 bg-indigo-50/20">${d.t_traf_m}</td>
+            <td class="p-2 text-gray-400">${d.t_traf_td}</td>
+            <td class="p-2 font-bold">${d.a_traf}</td>
+            <td class="p-2 font-black ${getColor(pctTraf)}">${pctTraf}%</td>
+            <td class="p-2 font-black text-orange-600 bg-orange-50/50">${d.hit_rate}%</td>
+        </tr>`;
+    }).join('');
 }
 
 export function exportPacingExcel() {

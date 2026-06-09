@@ -6,6 +6,9 @@ import * as Dashboard from './modules/dashboard.js';
 import * as Analytics from './modules/analytics.js';
 import * as Admin from './modules/admin.js';
 
+// THÊM IMPORT CHO MODULE MỚI
+import * as DailyInput from './modules/dailyInput.js';
+
 window.globalAdminShopMap = {}; 
 window.currentUserProfile = null; 
 
@@ -47,6 +50,7 @@ async function init() {
     
     const today = new Date().toISOString().split('T')[0];
     if($('pacing_date')) $('pacing_date').value = today;
+    if($('di_date')) $('di_date').value = today; // Kích hoạt ngày mặc định cho Tab Nhập liệu ngày
 
     if (window.innerWidth < 768) {
         $('sidebar').classList.add('-translate-x-full');
@@ -79,7 +83,8 @@ window.toggleSidebar = () => {
 window.switchTab = (tab) => { 
     document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active')); 
     
-    const views = ['view-dashboard','view-users','view-master','view-pricing', 'view-analytics-full', 'view-targets', 'view-pacing'];
+    // Đã thêm 'view-daily-input' vào mảng quản lý hiển thị
+    const views = ['view-dashboard','view-users','view-master','view-pricing', 'view-analytics-full', 'view-targets', 'view-pacing', 'view-daily-input'];
     views.forEach(id => {
         if($(id)) $(id).classList.add('hidden');
     });
@@ -90,6 +95,7 @@ window.switchTab = (tab) => {
     if(window.innerWidth < 768) { window.toggleSidebar(); }
 
     if(tab === 'dashboard') Dashboard.loadDashboardSO();
+    if(tab === 'daily-input') DailyInput.loadDailyInputData(); // Kích hoạt chạy dữ liệu khi mở Tab mới
     if(tab === 'pacing') Dashboard.loadPacingReport();
     if(tab === 'pricing') Admin.loadPriceHistory();
     if(tab === 'users') Admin.loadUsers(); 
@@ -149,6 +155,11 @@ window.updateTargetFilterChain = Admin.updateTargetFilterChain;
 window.resetTargetFilters = Admin.resetTargetFilters;
 window.saveAllTargets = Admin.saveAllTargets;
 window.updateLocalTarget = Admin.updateLocalTarget;
+
+// BINDING CÁC HÀM CỦA MODULE NHẬP LIỆU NGÀY VÀO WINDOW
+window.loadDailyInputData = DailyInput.loadDailyInputData;
+window.renderDailyInputTableFiltered = DailyInput.renderDailyInputTableFiltered;
+window.exportDailyInputExcel = DailyInput.exportDailyInputExcel; // <--- ĐÃ THÊM HÀM XUẤT EXCEL Ở ĐÂY
 
 if ($('btnLogin')) {
     $('btnLogin').onclick = async () => { 

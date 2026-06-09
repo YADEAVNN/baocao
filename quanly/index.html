@@ -95,6 +95,9 @@
         <nav class="flex-1 mt-6 space-y-1 px-2 overflow-y-auto">
           <p class="px-4 pt-2 pb-2 text-[10px] font-black text-gray-500 uppercase tracking-widest">Báo Cáo Phân Tích</p>
           <a onclick="switchTab('dashboard')" id="tab-dashboard" class="sidebar-link active flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-pie text-blue-400 mr-3 w-5 text-center"></i> 1. Tổng Quan (Dashboard)</a>
+          
+          <a onclick="switchTab('daily-input')" id="tab-daily-input" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-calendar-day text-orange-400 mr-3 w-5 text-center"></i> 1b. Theo Dõi Báo Cáo Ngày</a>
+          
           <a onclick="switchTab('pacing')" id="tab-pacing" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-list-check text-green-400 mr-3 w-5 text-center"></i> 2. Báo Cáo Tiến Độ</a>
           <a onclick="switchTab('analytics-full')" id="tab-analytics-full" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-line text-yellow-400 mr-3 w-5 text-center"></i> 3. Hoàn Thành Tiến Độ</a>
 
@@ -146,6 +149,61 @@
                 <div class="bg-white p-5 rounded-2xl shadow-sm border"><h4 class="text-sm font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-trophy text-yellow-500"></i> Top 5 Shop S.O Tốt Nhất</h4><div class="h-64"><canvas id="chart_db_top_shop"></canvas></div></div>
                 <div class="bg-white p-5 rounded-2xl shadow-sm border"><h4 class="text-sm font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-motorcycle text-red-500"></i> Cơ Cấu Dòng Xe (S.O)</h4><div class="h-64"><canvas id="chart_db_models"></canvas></div></div>
                 <div class="bg-white p-5 rounded-2xl shadow-sm border"><h4 class="text-sm font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-photo-film text-purple-500"></i> S.O vs Media Online</h4><div class="h-64"><canvas id="chart_db_media"></canvas></div></div>
+            </div>
+        </div>
+
+        <div id="view-daily-input" class="hidden space-y-6 animate-fade">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Theo Dõi Báo Cáo Hàng Ngày</h2>
+                    <p class="text-gray-400 text-xs font-medium mt-1">Bảng tổng hợp số liệu để nhân sự tiện theo dõi và cập nhật lên hệ thống công ty</p>
+                </div>
+                <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+                    <div class="flex items-center bg-green-50 border border-green-200 rounded-xl p-2 shadow-inner">
+                        <label class="text-[10px] font-black text-green-700 uppercase mr-2 ml-2">Ngày Kiểm Tra:</label>
+                        <input type="date" id="di_date" onchange="loadDailyInputData()" class="bg-white border border-green-200 text-green-800 font-bold rounded-lg p-2 text-sm outline-none">
+                    </div>
+                    <button onclick="exportDailyInputExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-orange-500"><p class="text-[10px] text-gray-400 font-bold uppercase">S.O Toàn Chuỗi / Ngày</p><h4 id="kpi_di_so" class="text-xl font-black text-orange-600 mt-1">0</h4></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-[10px] text-gray-400 font-bold uppercase">Tổng Lượt Khách Đến</p><h4 id="kpi_di_traffic" class="text-xl font-black text-blue-600 mt-1">0</h4></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-purple-500"><p class="text-[10px] text-gray-400 font-bold uppercase">Lượt Cập Nhật CRM</p><h4 id="kpi_di_crm" class="text-xl font-black text-purple-600 mt-1">0</h4></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-red-500"><p class="text-[10px] text-gray-400 font-bold uppercase">Shop Chưa Báo Cáo</p><h4 id="kpi_di_missing" class="text-xl font-black text-red-600 mt-1">0 Shop</h4></div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="p-4 border-b font-bold text-sm bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <span class="text-slate-700 font-black uppercase text-xs tracking-wider">Danh Sách Theo Dõi Cửa Hàng</span>
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <select id="di_status_filter" onchange="renderDailyInputTableFiltered()" class="bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500 shadow-inner font-bold text-slate-600">
+                            <option value="ALL">-- Tất cả trạng thái --</option>
+                            <option value="ENTERED">✅ Đã nhập số liệu</option>
+                            <option value="MISSING">❌ Không nhập (Bỏ trống)</option>
+                        </select>
+                        <input type="text" id="di_search" oninput="renderDailyInputTableFiltered()" placeholder="Tìm nhanh mã hoặc tên shop..." class="bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500 w-full sm:w-64 shadow-inner">
+                    </div>
+                </div>
+                <div class="overflow-x-auto max-h-[550px]">
+                    <table class="w-full text-left text-sm whitespace-nowrap font-medium">
+                        <thead class="bg-slate-100 sticky top-0 z-10 text-[10px] font-black text-gray-500 uppercase shadow-sm">
+                            <tr>
+                                <th class="p-4">Cửa Hàng (Mã DVN)</th>
+                                <th class="p-4 text-center">Trạng Thái</th>
+                                <th class="p-4 text-center text-orange-700 bg-orange-50/50">S.O Ngày</th>
+                                <th class="p-4 text-center text-blue-700 bg-blue-50/50">Tổng Khách Đến</th>
+                                <th class="p-4 text-center text-purple-700 bg-purple-50/50">Cập Nhật CRM</th>
+                                <th class="p-4 text-center text-slate-600 bg-gray-50">Target Tuần</th>
+                                <th class="p-4 text-center text-green-700 bg-green-50">Tiến Độ Tuần</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyInputBody" class="divide-y divide-gray-100 text-slate-700">
+                            <tr><td colspan="7" class="p-6 text-center text-gray-400 italic">Vui lòng chọn ngày để tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -271,6 +329,16 @@
                 
                 <div class="flex flex-1 flex-col sm:flex-row gap-3 w-full md:justify-end">
                     <input type="text" id="user_search" oninput="renderUserTableFiltered()" placeholder="Tìm theo tên hoặc email nhân sự..." class="bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500 w-full sm:w-64 shadow-inner">
+                    
+                    <select id="user_role_filter" onchange="renderUserTableFiltered()" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-orange-500 shadow-sm">
+                        <option value="ALL">-- Tất cả vai trò --</option>
+                        <option value="Cửa hàng">1. Nhân viên cửa hàng</option>
+                        <option value="Sale">2. Sale Phụ Trách</option>
+                        <option value="Giám Đốc">3. Giám Đốc Khu Vực</option>
+                        <option value="Giám đốc Miền">4. Giám Đốc Miền</option>
+                        <option value="Admin">5. Admin</option>
+                    </select>
+
                     <select id="user_status_filter" onchange="renderUserTableFiltered()" class="bg-slate-50 border border-gray-300 text-slate-800 font-bold rounded-lg p-2 text-xs outline-none focus:border-orange-500 shadow-sm">
                         <option value="ALL">-- Tất cả trạng thái --</option>
                         <option value="PENDING">Chờ phê duyệt (Đang Khóa)</option>

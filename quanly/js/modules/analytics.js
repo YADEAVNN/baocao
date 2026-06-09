@@ -54,25 +54,33 @@ export const resetFilters = () => {
 export async function loadAnalyticsFull() {
     const month = $('ana_month').value; 
     if(!month) return alert("Vui lòng chọn tháng để xem tiến độ!");
+    
     $('ana_loading').classList.remove('hidden'); 
     $('ana_content').classList.add('hidden');
+    
+    // FIX: Tự động tính ngày cuối tháng chính xác (Ví dụ tháng 6 là 30, tháng 7 là 31)
+    const [yyyy, mm] = month.split('-');
+    const lastDay = new Date(yyyy, parseInt(mm), 0).getDate();
+    
     const startDate = `${month}-01`;
-    const endDate = `${month}-31`;
+    const endDate = `${month}-${String(lastDay).padStart(2, '0')}`;
+    
     try {
         const [targetRes, soRes, mediaRes] = await Promise.all([
             sb.from('monthly_shop_targets').select('*').eq('report_month', month),
             sb.from('daily_so_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
             sb.from('media_reports').select('*').gte('report_date', startDate).lte('report_date', endDate)
         ]);
+        
         const today = new Date();
         const selDate = new Date(month + "-01");
-        const lastDayInMonth = new Date(selDate.getFullYear(), selDate.getMonth() + 1, 0).getDate();
-        let daysPassed = lastDayInMonth;
+        let daysPassed = lastDay;
         if (today.getFullYear() === selDate.getFullYear() && today.getMonth() === selDate.getMonth()) {
             daysPassed = today.getDate();
         }
-        let timeRatio = daysPassed / lastDayInMonth;
+        let timeRatio = daysPassed / lastDay;
         const shops = Object.values(window.globalAdminShopMap).filter(s => checkUserScopePermission(s.shop_code));
+        
         cachedProgressData = shops.map(s => {
             const tgt = targetRes.data?.find(t => t.shop_code === s.shop_code) || {};
             const soShops = soRes.data?.filter(r => r.shop_code === s.shop_code) || [];
@@ -83,16 +91,21 @@ export async function loadAnalyticsFull() {
             const actTraf = soShops.reduce((sum, r) => sum + safeVal(r.traffic_natural) + safeVal(r.traffic_leads), 0);
             const actVideo = medShops.reduce((sum, r) => sum + safeVal(r.tiktok_videos), 0);
             const actLive = medShops.reduce((sum, r) => sum + safeVal(r.livestreams), 0);
+            
             return {
                 ...s, timeRatio, daysPassed, reportDays: uniqueReportDays, reportCompliance,
                 targets: { so: tgt.target_so || 0, traffic: tgt.target_traffic || 0, video: tgt.target_video || 0, live: tgt.target_livestream || 0 },
                 actuals: { so: actSO, traffic: actTraf, video: actVideo, live: actLive }
             };
         });
+        
         $('ana_loading').classList.add('hidden'); 
         $('ana_content').classList.remove('hidden');
         renderProgressTable();
-    } catch (err) { alert(err.message); $('ana_loading').classList.add('hidden'); }
+    } catch (err) { 
+        alert("Lỗi tải dữ liệu: " + err.message); 
+        $('ana_loading').classList.add('hidden'); 
+    }
 }
 
 function renderProgressTable() {
@@ -121,6 +134,7 @@ function renderProgressTable() {
     const totalTgt = filtered.reduce((s, d) => s + d.targets.so, 0);
     const totalAct = filtered.reduce((s, d) => s + d.actuals.so, 0);
     const avgCompletion = totalTgt > 0 ? Math.round((totalAct / totalTgt) * 100) : 0;
+    
     if($('kpi_ana_target_so')) $('kpi_ana_target_so').innerText = fmn(totalTgt);
     if($('kpi_ana_so')) $('kpi_ana_so').innerText = fmn(totalAct);
     if($('kpi_ana_hitrate')) $('kpi_ana_hitrate').innerText = avgCompletion + "%";

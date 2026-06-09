@@ -15,16 +15,26 @@ export async function loadUsers() {
 export function renderUserTableFiltered() {
     const searchEl = $('user_search');
     const filterEl = $('user_status_filter');
+    const roleFilterEl = $('user_role_filter'); // Lấy giá trị ô lọc vai trò
     
     const kw = searchEl ? searchEl.value.toLowerCase().trim() : "";
     const statusFilter = filterEl ? filterEl.value : "ALL";
+    const roleFilter = roleFilterEl ? roleFilterEl.value : "ALL"; // Lọc theo vai trò
     
     const filtered = cachedUsersList.filter(u => {
         const matchesKeyword = (u.full_name || '').toLowerCase().includes(kw) || (u.email || '').toLowerCase().includes(kw);
+        
         let matchesStatus = true;
         if (statusFilter === 'PENDING') matchesStatus = !u.is_approved;
         if (statusFilter === 'APPROVED') matchesStatus = u.is_approved;
-        return matchesKeyword && matchesStatus;
+        
+        // So khớp lọc vai trò
+        let matchesRole = true;
+        if (roleFilter !== 'ALL') {
+            matchesRole = (u.role === roleFilter);
+        }
+        
+        return matchesKeyword && matchesStatus && matchesRole; // Thỏa mãn tất cả điều kiện
     });
 
     const tbody = $('userTableBody');

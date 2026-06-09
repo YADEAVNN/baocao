@@ -58,18 +58,22 @@ export async function loadAnalyticsFull() {
     $('ana_loading').classList.remove('hidden'); 
     $('ana_content').classList.add('hidden');
     
-    // FIX: Tự động tính ngày cuối tháng chính xác (Ví dụ tháng 6 là 30, tháng 7 là 31)
     const [yyyy, mm] = month.split('-');
     const lastDay = new Date(yyyy, parseInt(mm), 0).getDate();
     
     const startDate = `${month}-01`;
     const endDate = `${month}-${String(lastDay).padStart(2, '0')}`;
+
+    // Xử lý múi giờ Việt Nam để đếm khách khai thác (CRM) chuẩn xác trong cả tháng
+    const startOfMonthUTC = new Date(`${startDate}T00:00:00+07:00`).toISOString();
+    const endOfMonthUTC = new Date(`${endDate}T23:59:59+07:00`).toISOString();
     
     try {
-        const [targetRes, soRes, mediaRes] = await Promise.all([
+        const [targetRes, soRes, mediaRes, crmRes] = await Promise.all([
             sb.from('monthly_shop_targets').select('*').eq('report_month', month),
             sb.from('daily_so_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
-            sb.from('media_reports').select('*').gte('report_date', startDate).lte('report_date', endDate)
+            sb.from('media_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
+            sb.from('crm_customers').select('shop_code').gte('created_at', startOfMonthUTC).lte('created_at', endOfMonthUTC) // Truy vấn thêm CRM
         ]);
         
         const today = new Date();
@@ -81,21 +85,26 @@ export async function loadAnalyticsFull() {
         let timeRatio = daysPassed / lastDay;
         const shops = Object.values(window.globalAdminShopMap).filter(s => checkUserScopePermission(s.shop_code));
         
+        const crmData = crmRes.data || [];
+
         cachedProgressData = shops.map(s => {
             const tgt = targetRes.data?.find(t => t.shop_code === s.shop_code) || {};
             const soShops = soRes.data?.filter(r => r.shop_code === s.shop_code) || [];
             const medShops = mediaRes.data?.filter(r => r.shop_code === s.shop_code) || [];
+            
             const uniqueReportDays = [...new Set(soShops.map(r => r.report_date))].length;
             const reportCompliance = daysPassed > 0 ? Math.round((uniqueReportDays / daysPassed) * 100) : 0;
+            
             const actSO = soShops.reduce((sum, r) => sum + safeVal(r.total_so), 0);
             const actTraf = soShops.reduce((sum, r) => sum + safeVal(r.traffic_natural) + safeVal(r.traffic_leads), 0);
             const actVideo = medShops.reduce((sum, r) => sum + safeVal(r.tiktok_videos), 0);
             const actLive = medShops.reduce((sum, r) => sum + safeVal(r.livestreams), 0);
-            
+            const actCrm = crmData.filter(c => c.shop_code === s.shop_code).length; // Tính tổng khách khai thác trong tháng
+
             return {
                 ...s, timeRatio, daysPassed, reportDays: uniqueReportDays, reportCompliance,
                 targets: { so: tgt.target_so || 0, traffic: tgt.target_traffic || 0, video: tgt.target_video || 0, live: tgt.target_livestream || 0 },
-                actuals: { so: actSO, traffic: actTraf, video: actVideo, live: actLive }
+                actuals: { so: actSO, traffic: actTraf, video: actVideo, live: actLive, crm: actCrm }
             };
         });
         
@@ -163,6 +172,7 @@ function renderProgressTable() {
                 <td class="p-4"><div class="flex items-center gap-2"><div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden shadow-inner"><div class="${isAlert ? 'bg-red-500' : 'bg-green-500'} h-full" style="width: ${Math.min(d.computedSoPct, 100)}%"></div></div><span class="font-black ${isAlert ? 'text-red-600 animate-pulse' : 'text-slate-700'}">${d.computedSoPct}%</span></div></td>
                 <td class="p-4 bg-slate-50/50"><div class="font-black text-center ${reportColor}">${d.reportDays} <span class="text-gray-400 font-normal">/ ${d.daysPassed} ngày</span></div><div class="text-[10px] font-bold text-center mt-1 ${reportColor}">${d.reportCompliance}%</div></td>
                 <td class="p-4"><div class="font-bold text-slate-700 text-center">${d.actuals.traffic} <span class="text-gray-400 font-normal">/ ${d.targets.traffic}</span></div><div class="flex items-center gap-2 mt-1"><div class="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="bg-indigo-500 h-full" style="width: ${Math.min(trafPct, 100)}%"></div></div><span class="text-[10px] font-black text-indigo-600">${trafPct}%</span></div></td>
+                <td class="p-4 text-center bg-purple-50/20 font-black text-purple-600 text-sm">${d.actuals.crm}</td>
                 <td class="p-4 text-center"><div class="text-[10px] font-bold text-pink-600">Video: ${d.actuals.video}/${d.targets.video}</div><div class="text-[10px] font-bold text-purple-600">Live: ${d.actuals.live}h / ${d.targets.live}h</div></td>
                 <td class="p-4 text-center">${isAlert ? '<span class="bg-red-100 text-red-600 px-2 py-1 rounded text-[10px] font-black uppercase shadow-sm">⚠️ Chậm</span>' : '<span class="bg-green-100 text-green-600 px-2 py-1 rounded text-[10px] font-black uppercase shadow-sm">✅ Ổn định</span>'}</td>
             </tr>`;
@@ -171,7 +181,7 @@ function renderProgressTable() {
 
 export const exportAnalyticsExcel = () => { 
     if(cachedProgressData.length === 0) return alert("Vui lòng tải dữ liệu trước!");
-    const header = [["Mã Shop", "Tên Shop", "Mục Tiêu S.O", "Thực Đạt S.O", "% Hoàn Thành S.O", "Kỷ Luật Báo Cáo (%)", "Thực Đạt Khách", "Mục Tiêu Khách", "Video Đã Gửi", "Live Đã Thực Hiện (Giờ)"]];
-    const rows = cachedProgressData.map(d => [d.shop_code, d.shop_name, d.targets.so, d.actuals.so, d.targets.so > 0 ? Math.round((d.actuals.so/d.targets.so)*100) : 0, d.reportCompliance, d.actuals.traffic, d.targets.traffic, d.actuals.video, d.actuals.live]);
+    const header = [["Mã Shop", "Tên Shop", "Mục Tiêu S.O", "Thực Đạt S.O", "% Hoàn Thành S.O", "Kỷ Luật Báo Cáo (%)", "Thực Đạt Khách", "Mục Tiêu Khách", "Tổng Khai Thác TT", "Video Đã Gửi", "Live Đã Thực Hiện (Giờ)"]];
+    const rows = cachedProgressData.map(d => [d.shop_code, d.shop_name, d.targets.so, d.actuals.so, d.targets.so > 0 ? Math.round((d.actuals.so/d.targets.so)*100) : 0, d.reportCompliance, d.actuals.traffic, d.targets.traffic, d.actuals.crm, d.actuals.video, d.actuals.live]);
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...header, ...rows]), "Tien_Do"); XLSX.writeFile(wb, `Bao_Cao_Tien_Do_${$('ana_month').value}.xlsx`);
 }

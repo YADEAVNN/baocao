@@ -1,6 +1,11 @@
 import { $, fmn, safeVal, toggleModal } from '../core/utils.js';
 import { sb } from '../core/supabase.js';
 
+// KÍCH HOẠT PLUGIN HIỂN THỊ SỐ LIỆU TRÊN BIỂU ĐỒ (BẮT BUỘC)
+if (typeof ChartDataLabels !== 'undefined') {
+    Chart.register(ChartDataLabels);
+}
+
 let chartInstances = {};
 let cachedSOReportsFiltered = []; 
 let cachedSOReportsAll13M = [];   
@@ -102,17 +107,43 @@ function renderChart(type, id, data, options = {}) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d'); 
     if(chartInstances[id]) chartInstances[id].destroy();
+
+    const isHorizontal = options.indexAxis === 'y';
+    const customPlugins = options.plugins || {};
+
+    const mergedPlugins = {
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } }, ...(customPlugins.legend || {}) },
+        datalabels: { 
+            display: function(context) {
+                if (context.dataset.type === 'line') return false; 
+                return context.dataset.data[context.dataIndex] > 0; 
+            },
+            color: type === 'doughnut' ? '#ffffff' : '#475569',
+            anchor: type === 'doughnut' ? 'center' : 'end',
+            align: type === 'doughnut' ? 'center' : (isHorizontal ? 'right' : 'top'),
+            font: { weight: 'bold', size: 11 },
+            formatter: (value) => fmn(value), 
+            ...(customPlugins.datalabels || {})
+        } 
+    };
+
+    const finalOptions = { ...options };
+    delete finalOptions.plugins;
+
     chartInstances[id] = new Chart(ctx, { 
         type, 
         data, 
         options: { 
             responsive: true, 
             maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
-                datalabels: { display: false } 
+            layout: {
+                padding: { 
+                    top: type === 'bar' && !isHorizontal ? 25 : 0, 
+                    right: isHorizontal ? 35 : 0 
+                }
             },
-            ...options 
+            plugins: mergedPlugins,
+            ...finalOptions 
         } 
     });
 }
@@ -244,16 +275,23 @@ function applyDashboardFilters() {
     const shopSO = {};
     fSO.forEach(r => { shopSO[r.shop_code] = (shopSO[r.shop_code] || 0) + safeVal(r.total_so); });
     const topShops = Object.entries(shopSO).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    
+    const formatShopName = (code) => {
+        let name = window.globalAdminShopMap[code]?.shop_name || code;
+        return name.replace(/Yadea Shop /gi, '').trim(); 
+    };
+
     renderChart('bar', 'chart_db_top_shop', {
-        labels: topShops.map(s => window.globalAdminShopMap[s[0]]?.shop_name?.substring(0, 15) || s[0]),
-        datasets: [{ label: 'Xe (S.O)', data: topShops.map(s => s[1]), backgroundColor: '#f59e0b', borderRadius: 4 }]
+        labels: topShops.map(s => formatShopName(s[0])),
+        datasets: [{ label: 'Xe (S.O)', data: topShops.map(s => s[1]), backgroundColor: '#F97316', borderRadius: 4 }]
     }, { indexAxis: 'y' }); 
 
     const mediaCompareData = topShops.map(s => {
         const c = s[0]; const so = s[1];
         const med = fMedia.filter(r => r.shop_code === c).reduce((sum, r) => sum + safeVal(r.livestreams) + safeVal(r.tiktok_videos), 0);
-        return { code: c, name: window.globalAdminShopMap[c]?.shop_name?.substring(0, 10) || c, so, med };
+        return { code: c, name: formatShopName(c), so, med };
     });
+    
     renderChart('bar', 'chart_db_media', {
         labels: mediaCompareData.map(d => d.name),
         datasets: [ { label: 'Sản lượng S.O', data: mediaCompareData.map(d => d.so), backgroundColor: '#F97316' }, { label: 'Cường độ Media', data: mediaCompareData.map(d => d.med), backgroundColor: '#8b5cf6' } ]
@@ -283,25 +321,35 @@ export function exportDashboardExcel() {
 }
 
 // ==========================================
-// PACING ENGINE REPORT - ĐỒNG BỘ Ô LỌC MIỀN
+// PACING ENGINE REPORT - ĐÃ CẬP NHẬT TÍNH THEO KHOẢNG NGÀY
 // ==========================================
 export async function loadPacingReport() {
-    const inputDate = $('pacing_date').value;
-    if(!inputDate) return alert("Vui lòng chọn ngày!");
+    const startDate = $('pacing_start_date').value;
+    const endDate = $('pacing_date').value;
+    
+    if(!startDate || !endDate) return alert("Vui lòng chọn đầy đủ khoảng thời gian (Từ ngày - Đến ngày)!");
 
     $('pacingBody').innerHTML = `<tr><td colspan="14" class="p-6 text-center text-orange-500 font-bold"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tính toán dữ liệu tiến độ chuỗi...</td></tr>`;
     window.currentPacingData = []; 
 
-    const selectedDateObj = new Date(inputDate);
-    const monthStr = `${selectedDateObj.getFullYear()}-${String(selectedDateObj.getMonth() + 1).padStart(2, '0')}`;
-    const currentDay = selectedDateObj.getDate();
-    const totalDays = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth() + 1, 0).getDate();
-    const ratio = currentDay / totalDays; 
+    const startObj = new Date(startDate);
+    const endObj = new Date(endDate);
+    
+    // Target sẽ được chốt theo tháng của Ngày kết thúc (endDate)
+    const monthStr = `${endObj.getFullYear()}-${String(endObj.getMonth() + 1).padStart(2, '0')}`;
+    const totalDaysInMonth = new Date(endObj.getFullYear(), endObj.getMonth() + 1, 0).getDate();
+
+    // Tính toán số ngày trong khoảng thời gian user chọn
+    const timeDiff = endObj.getTime() - startObj.getTime();
+    const daysInRange = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 để bao gồm cả ngày bắt đầu
+    
+    // Tỷ lệ Tiến độ Thời Gian = Số ngày chọn / Tổng ngày trong tháng
+    const ratio = daysInRange / totalDaysInMonth; 
 
     try {
         const [targetRes, soRes] = await Promise.all([
             sb.from('monthly_shop_targets').select('*').eq('report_month', monthStr),
-            sb.from('daily_so_reports').select('*').gte('report_date', monthStr + "-01").lte('report_date', inputDate)
+            sb.from('daily_so_reports').select('*').gte('report_date', startDate).lte('report_date', endDate) // Chọc data từ startDate đến endDate
         ]);
 
         const targets = targetRes.data || [];
@@ -427,7 +475,11 @@ export function renderPacingTableFiltered() {
 
 export function exportPacingExcel() {
     if (!window.currentPacingData.length) return alert("Bấm 'Tải Báo Cáo' trước!");
-    const header = ["Khu Vực", "Mã Shop", "Tên Shop", "Target Tháng", "% Đạt Tháng", "Tiến Độ TG", "Mục Tiêu Nay", "Thực Đạt Nay", "% Hoàn Thành S.O", "Target Khách", "Mục Tiêu Khách Nay", "Thực Đạt Khách", "% Hoàn Thành Khách", "Tỷ Lệ Chốt"];
+    
+    const startDate = $('pacing_start_date').value;
+    const endDate = $('pacing_date').value;
+
+    const header = ["Khu Vực", "Mã Shop", "Tên Shop", "Target Tháng", "% Đạt Tháng", "Tiến Độ TG", "Mục Tiêu Chọn", "Thực Đạt Nay", "% Hoàn Thành S.O", "Target Khách", "Mục Tiêu Khách", "Thực Đạt Khách", "% Hoàn Thành Khách", "Tỷ Lệ Chốt"];
     const rows = window.currentPacingData.map(d => {
         const pctSO = d.t_so_td > 0 ? Math.round((d.a_so/d.t_so_td)*100) : 0;
         const pctTraf = d.t_traf_td > 0 ? Math.round((d.a_traf/d.t_traf_td)*100) : 0;
@@ -436,7 +488,7 @@ export function exportPacingExcel() {
     const wb = XLSX.utils.book_new(); 
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
     XLSX.utils.book_append_sheet(wb, ws, "Pacing");
-    XLSX.writeFile(wb, `Pacing_${$('pacing_date').value}.xlsx`);
+    XLSX.writeFile(wb, `Pacing_${startDate}_den_${endDate}.xlsx`);
 }
 
 export const openDetailModal = (id) => {}

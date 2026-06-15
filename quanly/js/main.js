@@ -50,7 +50,7 @@ async function init() {
     
     const today = new Date().toISOString().split('T')[0];
     if($('pacing_date')) $('pacing_date').value = today;
-    if($('di_date')) $('di_date').value = today; // Kích hoạt ngày mặc định cho Tab Nhập liệu ngày
+    if($('di_date')) $('di_date').value = today; 
 
     if (window.innerWidth < 768) {
         $('sidebar').classList.add('-translate-x-full');
@@ -83,7 +83,6 @@ window.toggleSidebar = () => {
 window.switchTab = (tab) => { 
     document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active')); 
     
-    // Đã thêm 'view-daily-input' vào mảng quản lý hiển thị
     const views = ['view-dashboard','view-users','view-master','view-pricing', 'view-analytics-full', 'view-targets', 'view-pacing', 'view-daily-input'];
     views.forEach(id => {
         if($(id)) $(id).classList.add('hidden');
@@ -95,7 +94,7 @@ window.switchTab = (tab) => {
     if(window.innerWidth < 768) { window.toggleSidebar(); }
 
     if(tab === 'dashboard') Dashboard.loadDashboardSO();
-    if(tab === 'daily-input') DailyInput.loadDailyInputData(); // Kích hoạt chạy dữ liệu khi mở Tab mới
+    if(tab === 'daily-input') DailyInput.loadDailyInputData(); 
     if(tab === 'pacing') Dashboard.loadPacingReport();
     if(tab === 'pricing') Admin.loadPriceHistory();
     if(tab === 'users') Admin.loadUsers(); 
@@ -131,6 +130,10 @@ window.updateFilterChain = Analytics.updateFilterChain;
 window.resetFilters = Analytics.resetFilters;
 window.exportAnalyticsExcel = Analytics.exportAnalyticsExcel;
 
+// KẾT NỐI HÀM CẢNH BÁO ZALO MỚI VÀO WINDOW
+window.showMissingReports = Analytics.showMissingReports;
+window.copyMissingReports = Analytics.copyMissingReports;
+
 window.loadUsers = Admin.loadUsers;
 window.openUserEdit = Admin.openUserEdit;
 window.submitUserEdit = Admin.submitUserEdit;
@@ -156,10 +159,9 @@ window.resetTargetFilters = Admin.resetTargetFilters;
 window.saveAllTargets = Admin.saveAllTargets;
 window.updateLocalTarget = Admin.updateLocalTarget;
 
-// BINDING CÁC HÀM CỦA MODULE NHẬP LIỆU NGÀY VÀO WINDOW
 window.loadDailyInputData = DailyInput.loadDailyInputData;
 window.renderDailyInputTableFiltered = DailyInput.renderDailyInputTableFiltered;
-window.exportDailyInputExcel = DailyInput.exportDailyInputExcel; // <--- ĐÃ THÊM HÀM XUẤT EXCEL Ở ĐÂY
+window.exportDailyInputExcel = DailyInput.exportDailyInputExcel; 
 
 if ($('btnLogin')) {
     $('btnLogin').onclick = async () => { 

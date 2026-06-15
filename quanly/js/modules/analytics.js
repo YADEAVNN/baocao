@@ -64,7 +64,6 @@ export async function loadAnalyticsFull() {
     const startDate = `${month}-01`;
     const endDate = `${month}-${String(lastDay).padStart(2, '0')}`;
 
-    // Xử lý múi giờ Việt Nam để đếm khách khai thác (CRM) chuẩn xác trong cả tháng
     const startOfMonthUTC = new Date(`${startDate}T00:00:00+07:00`).toISOString();
     const endOfMonthUTC = new Date(`${endDate}T23:59:59+07:00`).toISOString();
     
@@ -73,7 +72,7 @@ export async function loadAnalyticsFull() {
             sb.from('monthly_shop_targets').select('*').eq('report_month', month),
             sb.from('daily_so_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
             sb.from('media_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
-            sb.from('crm_customers').select('shop_code').gte('created_at', startOfMonthUTC).lte('created_at', endOfMonthUTC) // Truy vấn thêm CRM
+            sb.from('crm_customers').select('shop_code').gte('created_at', startOfMonthUTC).lte('created_at', endOfMonthUTC) 
         ]);
         
         const today = new Date();
@@ -95,14 +94,23 @@ export async function loadAnalyticsFull() {
             const uniqueReportDays = [...new Set(soShops.map(r => r.report_date))].length;
             const reportCompliance = daysPassed > 0 ? Math.round((uniqueReportDays / daysPassed) * 100) : 0;
             
+            // LOGIC MỚI: TÌM CÁC NGÀY CHƯA NỘP BÁO CÁO TỪ MÙNG 1 ĐẾN HIỆN TẠI
+            const missingDates = [];
+            for(let d = 1; d <= daysPassed; d++) {
+                const dateStr = `${month}-${String(d).padStart(2, '0')}`;
+                if(!soShops.some(r => r.report_date === dateStr)) {
+                    missingDates.push(`${String(d).padStart(2, '0')}/${month.split('-')[1]}`);
+                }
+            }
+
             const actSO = soShops.reduce((sum, r) => sum + safeVal(r.total_so), 0);
             const actTraf = soShops.reduce((sum, r) => sum + safeVal(r.traffic_natural) + safeVal(r.traffic_leads), 0);
             const actVideo = medShops.reduce((sum, r) => sum + safeVal(r.tiktok_videos), 0);
             const actLive = medShops.reduce((sum, r) => sum + safeVal(r.livestreams), 0);
-            const actCrm = crmData.filter(c => c.shop_code === s.shop_code).length; // Tính tổng khách khai thác trong tháng
+            const actCrm = crmData.filter(c => c.shop_code === s.shop_code).length; 
 
             return {
-                ...s, timeRatio, daysPassed, reportDays: uniqueReportDays, reportCompliance,
+                ...s, timeRatio, daysPassed, reportDays: uniqueReportDays, reportCompliance, missingDates,
                 targets: { so: tgt.target_so || 0, traffic: tgt.target_traffic || 0, video: tgt.target_video || 0, live: tgt.target_livestream || 0 },
                 actuals: { so: actSO, traffic: actTraf, video: actVideo, live: actLive, crm: actCrm }
             };
@@ -184,4 +192,60 @@ export const exportAnalyticsExcel = () => {
     const header = [["Mã Shop", "Tên Shop", "Mục Tiêu S.O", "Thực Đạt S.O", "% Hoàn Thành S.O", "Kỷ Luật Báo Cáo (%)", "Thực Đạt Khách", "Mục Tiêu Khách", "Tổng Khai Thác TT", "Video Đã Gửi", "Live Đã Thực Hiện (Giờ)"]];
     const rows = cachedProgressData.map(d => [d.shop_code, d.shop_name, d.targets.so, d.actuals.so, d.targets.so > 0 ? Math.round((d.actuals.so/d.targets.so)*100) : 0, d.reportCompliance, d.actuals.traffic, d.targets.traffic, d.actuals.crm, d.actuals.video, d.actuals.live]);
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...header, ...rows]), "Tien_Do"); XLSX.writeFile(wb, `Bao_Cao_Tien_Do_${$('ana_month').value}.xlsx`);
+}
+
+// HÀM MỚI: XUẤT BẢNG NHẮC NHỞ ZALO CÁC SHOP THIẾU SỐ
+export function showMissingReports() {
+    if(cachedProgressData.length === 0) return alert("Vui lòng ấn 'Tải Tiến Độ' trước khi xuất nhắc nhở!");
+
+    const selRegion = $('ana_regional_director').value;
+    const selDir = $('ana_director').value;
+    const selSale = $('ana_sale').value;
+    const selSVN = $('ana_svn').value;
+    const kw = $('ana_search').value.toLowerCase().trim();
+    
+    // Lọc theo bộ lọc hiện tại trên thanh công cụ
+    let filtered = cachedProgressData.filter(d => {
+        if(selRegion && d.regional_director !== selRegion) return false;
+        if(selDir && d.director_name !== selDir) return false;
+        if(selSale && d.sale_name !== selSale) return false;
+        if(selSVN && d.svn_code !== selSVN) return false;
+        if(kw && !(d.shop_name.toLowerCase().includes(kw) || d.shop_code.toLowerCase().includes(kw))) return false;
+        return true;
+    });
+
+    // Chỉ lấy những shop có mảng ngày thiếu lớn hơn 0
+    const missingData = filtered.filter(d => d.missingDates.length > 0);
+    
+    if (missingData.length === 0) {
+        $('missingReportContent').innerHTML = `<div class="text-center py-6 text-green-600 font-bold"><i class="fa-solid fa-circle-check text-4xl mb-3"></i><br/>Tuyệt vời! Tất cả các Đại lý trong bộ lọc đều đã nộp báo cáo đầy đủ 100%.</div>`;
+    } else {
+        const monthStr = $('ana_month').value;
+        let textHtml = `🚨 <b>CẢNH BÁO KỶ LUẬT BÁO CÁO THÁNG ${monthStr}</b> 🚨<br/><br/>`;
+        textHtml += `Kính gửi các GĐ Vùng & Sale Phụ Trách,<br/>Dưới đây là danh sách các Đại lý chưa hoàn thành nộp báo cáo hàng ngày (Tính đến hiện tại):<br/><br/>`;
+        
+        missingData.forEach((d, idx) => {
+            textHtml += `<b>${idx + 1}. ${d.shop_name}</b> (${d.shop_code})<br/>`;
+            textHtml += `❌ Thiếu ngày: <span class="text-red-600 font-bold">${d.missingDates.join(', ')}</span><br/><br/>`;
+        });
+        textHtml += `<i>* Yêu cầu các bộ phận nhanh chóng đôn đốc điểm bán bổ sung số liệu lên hệ thống!</i>`;
+        
+        $('missingReportContent').innerHTML = textHtml;
+    }
+
+    window.toggleModal('missingReportModal');
+}
+
+export function copyMissingReports() {
+    const content = $('missingReportContent');
+    if(!content) return;
+    
+    // Chuyển thẻ HTML <br> thành dấu xuống dòng cho Zalo
+    let textToCopy = content.innerHTML.replace(/<br\s*[\/]?>/gi, "\n").replace(/<[^>]+>/g, '');
+    
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        alert("✅ Đã copy danh sách thành công! Bạn có thể dán (Ctrl+V) thẳng vào group Zalo.");
+    }).catch(err => {
+        alert("Trình duyệt không hỗ trợ copy tự động, vui lòng bôi đen và copy thủ công nhé.");
+    });
 }

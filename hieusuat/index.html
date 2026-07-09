@@ -1,1 +1,369 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>YADEA RETAIL PRO</title>
 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #F8FAFC; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        .nav-item { display: flex; align-items: center; padding: 12px 20px; color: #9ca3af; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
+        .nav-item:hover { background-color: #1f2937; color: white; }
+        .nav-item.active { background-color: #1f2937; color: #fff; border-left-color: #F97316; }
+        .form-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+        .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
+        .form-input:focus { border-color: #F97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+        
+        /* HIỆU ỨNG ÁNH KIM CHO THẺ VIP */
+        .premium-badge {
+            position: relative;
+            overflow: hidden;
+        }
+        .premium-badge::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        /* VÒNG SÁNG XOAY QUANH AVATAR */
+        .spin-ring {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0%, transparent 40%, var(--glow-color) 100%);
+            animation: spin-anim 2s linear infinite;
+            z-index: 0;
+            filter: drop-shadow(0 0 5px var(--glow-color));
+        }
+        .spin-ring::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: #1a2332; /* Khớp màu nền sidebar */
+            border-radius: 50%;
+            z-index: 1;
+        }
+        @keyframes spin-anim { 100% { transform: rotate(360deg); } }
+
+        /* VƯƠNG MIỆN TRÊN ĐẦU AVATAR */
+        .avatar-crown {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+            z-index: 20;
+        }
+    </style>
+</head>
+
+<body class="h-[100dvh] overflow-hidden flex text-slate-800 relative">
+
+    <div id="authContainer" class="fixed inset-0 z-[60] bg-[#F3F4F6] flex items-center justify-center p-4">
+        <div class="absolute top-6 right-6 z-[70]">
+            <button onclick="window.toggleLanguage()" class="bg-white px-5 py-2.5 rounded-full shadow-lg text-sm font-black text-slate-700 hover:text-[#F97316] hover:bg-orange-50 border border-gray-200 transition flex items-center gap-2">
+                <i class="fa-solid fa-earth-asia text-blue-500 text-lg"></i>
+                <span data-i18n="lang_btn">🇨🇳 中文</span>
+            </button>
+        </div>
+
+        <div class="bg-white rounded-[20px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-w-4xl w-full min-h-[550px] fade-in">
+            <div class="w-full md:w-5/12 bg-[#111827] flex flex-col items-center justify-center p-10 text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-blue-600/20"></div>
+                <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="h-14 mb-6 relative z-10">
+                <h2 class="text-3xl font-black text-white uppercase mb-2 relative z-10 tracking-tight" data-i18n="app_title">YADEA RETAIL PRO</h2>
+                <p class="text-gray-400 text-xs font-medium relative z-10" data-i18n="app_desc">Hệ Thống Quản Trị Bán Lẻ</p>
+            </div>
+            
+            <div class="w-full md:w-7/12 p-10 flex flex-col justify-center">
+                <div id="loginFormSection" class="max-w-xs mx-auto w-full">
+                    <h3 class="text-2xl font-black text-slate-800 mb-6" data-i18n="login_title">Đăng Nhập</h3>
+                    <div class="space-y-4">
+                        <input id="email" type="email" class="form-input bg-gray-50" data-i18n="login_email_ph" placeholder="Email nhân viên">
+                        <input id="password" type="password" class="form-input bg-gray-50" data-i18n="login_pass_ph" placeholder="Mật khẩu">
+                        <button id="btnLogin" class="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm uppercase tracking-wider" data-i18n="login_btn">Truy cập</button>
+                    </div>
+                    <div class="mt-6 text-center text-xs text-gray-400">
+                        <a href="#" id="goForgotPassword" class="hover:underline text-gray-500 font-bold mb-2 inline-block" data-i18n="login_forgot">Quên mật khẩu?</a><br>
+                        <span data-i18n="login_no_acc">Chưa có tài khoản?</span> <a href="#" id="goSignup" class="text-[#F97316] font-bold hover:underline" data-i18n="login_reg_now">Đăng ký ngay</a>
+                    </div>
+                </div>
+                
+                <div id="signupFormSection" class="hidden max-w-xs mx-auto w-full">
+                    <h3 class="text-2xl font-black text-slate-800 mb-4">Đăng Ký Mới</h3>
+                    <div class="space-y-3">
+                        <input id="reg_name" type="text" class="form-input bg-gray-50" placeholder="Họ và Tên (Hoặc Mã DVN)">
+                        <p class="text-[9px] text-gray-400 italic mb-1">* Nhân viên Cửa hàng bắt buộc nhập mã DVN (Ví dụ: DVN590013).</p>
+                        <select id="reg_role" class="form-input bg-gray-50">
+                            <option value="Sale">Nhân viên Sale</option>
+                            <option value="Giám Đốc">Giám Đốc Miền</option>
+                            <option value="Cửa hàng">Nhân viên cửa hàng</option>
+                        </select>
+                        <input id="reg_email" type="email" class="form-input bg-gray-50" placeholder="Email">
+                        <input id="reg_pass" type="password" class="form-input bg-gray-50" placeholder="Mật khẩu">
+                        <button id="btnSignup" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl">Gửi Yêu Cầu</button>
+                    </div>
+                    <div class="mt-4 text-center text-xs">
+                        <a href="#" id="goLogin" class="text-gray-500 font-bold">← Quay lại đăng nhập</a>
+                    </div>
+                </div>
+
+                <div id="forgotPasswordFormSection" class="hidden max-w-xs mx-auto w-full">
+                    <h3 class="text-2xl font-black text-slate-800 mb-2">Khôi Phục Mật Khẩu</h3>
+                    <p class="text-[11px] text-gray-500 mb-4 font-medium">Nhập email tài khoản để nhận liên kết khôi phục.</p>
+                    <div class="space-y-3">
+                        <input id="forgot_email" type="email" class="form-input bg-gray-50" placeholder="Email nhân viên">
+                        <button id="btnSendReset" class="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm uppercase tracking-wider">Gửi liên kết</button>
+                    </div>
+                    <div class="mt-4 text-center text-xs">
+                        <a href="#" id="goLoginFromForgot" class="text-gray-500 font-bold hover:underline">← Quay lại đăng nhập</a>
+                    </div>
+                </div>
+
+                <div id="updatePasswordFormSection" class="hidden max-w-xs mx-auto w-full">
+                    <h3 class="text-2xl font-black text-slate-800 mb-2">Mật Khẩu Mới</h3>
+                    <p class="text-[11px] text-gray-500 mb-4 font-medium">Vui lòng nhập mật khẩu mới cho tài khoản của bạn.</p>
+                    <div class="space-y-3">
+                        <input id="new_password" type="password" class="form-input bg-gray-50" placeholder="Mật khẩu mới (ít nhất 6 ký tự)">
+                        <button id="btnUpdatePassword" class="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm uppercase tracking-wider">Lưu Mật Khẩu Mới</button>
+                    </div>
+                </div>
+                <p id="msg" class="text-center text-xs font-bold mt-4 h-5 text-red-500"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden flex w-full h-full relative">
+        <div class="md:hidden fixed top-0 left-0 w-full h-14 bg-[#111827] z-40 flex items-center px-4 shadow-md justify-between">
+            <div class="flex items-center gap-2">
+                <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="h-6">
+                <span class="text-white font-bold text-xs uppercase tracking-wide" data-i18n="app_title">YADEA RETAIL PRO</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white text-2xl focus:outline-none p-2"><i class="fa-solid fa-bars"></i></button>
+        </div>
+
+        <aside id="sidebarMobile" class="fixed inset-y-0 left-0 w-64 bg-[#111827] flex-shrink-0 flex flex-col border-r border-gray-800 z-50 shadow-xl transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 pt-14 md:pt-0">
+            <div class="hidden md:flex h-16 items-center px-6 border-b border-gray-800 bg-[#1f2937]">
+                <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="h-8">
+            </div>
+            
+            <div class="p-6 pb-4 border-b border-gray-800 bg-gradient-to-b from-[#1a2332] to-[#111827] relative overflow-hidden">
+                <div class="flex items-center gap-5 mb-3 relative z-10">
+                    <div class="relative flex-shrink-0 mt-3">
+                        <div id="avatarGlow" class="absolute inset-0 rounded-full blur-md opacity-0 transition-opacity duration-500"></div>
+                        <div id="avatarCrown" class="avatar-crown hidden">👑</div>
+                        <div id="avatarGlowRing" class="hidden"></div>
+                        <div class="w-14 h-14 rounded-full bg-slate-700 flex items-center justify-center text-white font-black text-2xl shadow-inner border-2 border-slate-500 relative z-10 transition-colors duration-500" id="avatarLetter">U</div>
+                    </div>
+                    <div class="overflow-hidden flex-1 pt-2">
+                        <h4 id="userDisplay" class="text-white text-base font-black truncate tracking-wider uppercase">User</h4>
+                        <div class="flex items-center gap-1.5 mt-1">
+                            <span id="roleDisplay" class="text-[10px] text-gray-400 font-bold uppercase tracking-wider bg-gray-800 px-2 py-0.5 rounded">SALE</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="premiumBadgesContainer" class="flex flex-col gap-2 mt-4 mb-4 empty:hidden relative z-10"></div>
+                
+                <button onclick="window.toggleLanguage()" class="w-full bg-gray-800/80 hover:bg-gray-700 text-white text-xs font-bold py-2 rounded-lg transition border border-gray-600 flex items-center justify-center gap-2 relative z-10">
+                    <i class="fa-solid fa-language text-blue-400 text-lg"></i> 
+                    <span data-i18n="lang_btn">🇨🇳 中文</span>
+                </button>
+            </div>
+            
+            <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
+                <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider mt-2" data-i18n="menu_group_1">📝 VẬN HÀNH & NHẬP LIỆU</div>
+                <a onclick="window.customSwitchView('sales')" id="nav-sales" class="nav-item active">
+                    <i class="fa-solid fa-motorcycle text-orange-500 w-6"></i> 
+                    <span data-i18n="menu_so">1. Báo Cáo Ngày (S.O)</span>
+                </a>
+                <a onclick="window.customSwitchView('media')" id="nav-media" class="nav-item">
+                    <i class="fa-brands fa-tiktok text-red-500 w-6"></i> 
+                    <span data-i18n="menu_media">2. Báo Cáo Truyền Thông</span>
+                </a>
+                <a onclick="window.customSwitchView('costs')" id="nav-costs" class="nav-item">
+                    <i class="fa-solid fa-users text-blue-500 w-6"></i> 
+                    <span data-i18n="menu_crm">3. Khách Hàng (CRM)</span>
+                </a>
+
+                <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider mt-4" data-i18n="menu_group_2">📊 QUẢN TRỊ & PHÂN TÍCH</div>
+                <a onclick="window.customSwitchView('history')" id="nav-history" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left text-purple-500 w-6"></i> 
+                    <span data-i18n="menu_history">4. Lịch sử báo cáo</span>
+                </a>
+                <a onclick="window.customSwitchView('charts')" id="nav-charts" class="nav-item">
+                    <i class="fa-solid fa-chart-line text-green-500 w-6"></i> 
+                    <span data-i18n="menu_charts">5. Phân Tích Tổng Quan</span>
+                </a>
+                <a onclick="window.customSwitchView('target')" id="nav-target" class="nav-item">
+                    <i class="fa-solid fa-chart-pie text-yellow-400 w-6"></i> 
+                    <span data-i18n="menu_target">6. Hoàn Thành Tiến Độ</span>
+                </a>
+                <a onclick="window.customSwitchView('leaderboard')" id="nav-leaderboard" class="nav-item relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <i class="fa-solid fa-ranking-star text-amber-500 w-6"></i> 
+                    <span class="uppercase font-bold text-xs text-amber-100 group-hover:text-amber-400 transition-colors">7. Bảng Xếp Hạng</span>
+                </a>
+            </nav>
+            
+            <div class="p-4 bg-[#0f1523] border-t border-gray-800">
+                <button id="btnLogout" class="flex items-center justify-center w-full py-2.5 text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition border border-gray-700">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i> 
+                    <span data-i18n="btn_logout">Đăng xuất</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto bg-[#F8FAFC] relative pt-20 md:pt-0">
+            <div id="app-content" class="w-full h-full"></div>
+        </main>
+    </div>
+
+    <div id="qrScannerModal" class="fixed inset-0 z-[100] bg-gray-900/80 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="qrScannerModalContent">
+            <div class="p-5 flex justify-between items-center border-b border-gray-100">
+                <h3 class="text-base font-black text-slate-800 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode text-blue-600"></i> QUÉT MÃ QR KHUNG/BIỂN
+                </h3>
+                <button onclick="closeQrScan()" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div id="qr-reader" class="rounded-xl overflow-hidden border-2 border-blue-100 shadow-inner"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="qrGeneratorModal" class="fixed inset-0 z-[100] bg-gray-900/80 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300">
+            <div class="p-5 flex justify-between items-center border-b border-gray-100 bg-orange-50">
+                <h3 class="text-base font-black text-slate-800 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode text-[#F97316]"></i> QR CHO KHÁCH HÀNG
+                </h3>
+                <button onclick="window.closeQrGenerator()" class="w-8 h-8 rounded-full bg-white text-gray-500 hover:text-red-500 hover:bg-red-50 transition shadow-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 flex flex-col items-center">
+                <p class="text-sm text-center text-blue-600 mb-4 font-black uppercase" id="qrShopName">Tên Cửa Hàng</p>
+                <div id="qrcode_container" class="p-4 bg-white border-4 border-orange-100 rounded-2xl shadow-sm mb-4"></div>
+                <p class="text-[11px] text-center text-gray-500 font-bold">Khách hàng quét mã này bằng Zalo/Camera để tự điền thông tin tư vấn.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+
+    <script>
+        const fmn = n => new Intl.NumberFormat('vi-VN').format(Math.round(n));
+
+        window.customSwitchView = (view) => {
+            if (typeof window.switchView === 'function') {
+                window.switchView(view);
+            }
+        };
+
+        window.switchHistoryTab = (tab) => {
+            ['so', 'media', 'crm'].forEach(t => {
+                const el = document.getElementById('hcontent-' + t);
+                const tabEl = document.getElementById('htab-' + t);
+                if(el) el.classList.add('hidden');
+                if(tabEl) tabEl.className = "px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-slate-800 font-bold uppercase text-xs";
+            });
+            const activeEl = document.getElementById('hcontent-' + tab);
+            const activeTab = document.getElementById('htab-' + tab);
+            if(activeEl) activeEl.classList.remove('hidden');
+            if(activeTab) activeTab.className = "px-4 py-2 border-b-2 border-orange-500 text-[#F97316] font-bold uppercase text-xs";
+
+            const statusFilter = document.getElementById('history_status_filter');
+            const statusContainer = document.getElementById('history_status_container');
+            const btnImport = document.getElementById('btn_import_excel');
+            const btnTemplate = document.getElementById('btn_download_template');
+
+            if (tab === 'crm') {
+                if (statusFilter) statusFilter.classList.remove('hidden');
+                if (statusContainer) statusContainer.classList.remove('hidden');
+                if (btnImport) btnImport.classList.remove('hidden');
+                if (btnTemplate) btnTemplate.classList.remove('hidden');
+            } else {
+                if (statusFilter) { statusFilter.classList.add('hidden'); statusFilter.value = ''; }
+                if (statusContainer) statusContainer.classList.add('hidden');
+                if (btnImport) btnImport.classList.add('hidden');
+                if (btnTemplate) btnTemplate.classList.add('hidden');
+            }
+            if (typeof window.applyHistoryFilter === 'function') window.applyHistoryFilter();
+        };
+
+        window.changeInputShop = (code) => {
+            if (!window.STATE || !window.STATE.globalShopMap) return;
+            const shop = window.STATE.globalShopMap[code];
+            if (!shop) return;
+            
+            ['select_shop_so', 'select_shop_media', 'select_shop_crm'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el && !el.disabled) el.value = code;
+            });
+
+            const hiddenCode = document.getElementById('hidden_shop_code');
+            if(hiddenCode) hiddenCode.value = code;
+
+            const updateTxt = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
+            updateTxt('display_prov_svn', `${shop.province || ''} | ${shop.svn_code || ''}`);
+        };
+
+        window.resetHistoryFilters = () => {
+            ['history_filter_director', 'history_filter_sale', 'history_filter_svn', 'history_filter_shop', 'history_month_filter', 'history_status_filter'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            if (typeof window.updateHistoryFilters === 'function') {
+                window.updateHistoryFilters('init'); window.applyHistoryFilter();
+            }
+        };
+
+        window.resetOverviewFilters = () => {
+            ['ov_filter_director', 'ov_filter_sale', 'ov_filter_svn', 'ov_filter_shop'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const now = new Date();
+            const y = now.getFullYear(); const m = now.getMonth();
+            const pad = (n) => n.toString().padStart(2, '0');
+            document.getElementById('ov_filter_date_from').value = `${y}-${pad(m + 1)}-01`;
+            document.getElementById('ov_filter_date_to').value = `${y}-${pad(m + 1)}-${pad(new Date(y, m + 1, 0).getDate())}`;
+            if (typeof window.updateOVFilters === 'function') {
+                window.updateOVFilters('init'); window.filterOverview();
+            }
+        };
+
+        window.submitMediaReport = async () => { }; window.editMediaReport = async (id) => { }; window.cancelEditMedia = () => { }; window.submitCRM = async () => { }; window.editCRMReport = async (id) => { }; window.cancelEditCRM = () => { }; window.addCustomSaleRow = () => { }; window.updateCardRevenue = (el) => { }; window.recalcSOTotal = () => { }; window.submitDailySO = async () => { }; window.editDailySO = async (id) => { }; window.cancelEdit = () => { }; window.deleteDailySO = async (id) => { }; window.downloadCRMTemplate = () => { }; window.handleImportCRMExcel = async (e) => { }; window.updateHistoryFilters = () => { };
+    </script>
+</body>
+</html>

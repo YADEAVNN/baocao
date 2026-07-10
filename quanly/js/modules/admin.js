@@ -48,8 +48,25 @@ export function renderUserTableFiltered() {
     tbody.innerHTML = filtered.map(u => {
         const areaInfo = getAreaBySaleName(u.full_name);
         const areaDisplay = areaInfo ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200 text-xs font-bold">${areaInfo}</span>` : `<span class="text-gray-400 italic text-xs">Chưa gán shop</span>`;
+        
+        // BỔ SUNG LOGIC TÌM TÊN SHOP THEO MÃ DVN
+        let shopNameHTML = '';
+        if (u.role === 'Cửa hàng' && u.full_name) {
+            // Lấy mã DVN tra cứu trong Master Data (viết hoa để đảm bảo trùng khớp)
+            const matchedShop = window.globalAdminShopMap[u.full_name.trim().toUpperCase()];
+            if (matchedShop) {
+                shopNameHTML = `<div class="text-[10px] font-bold text-blue-600 mt-1 uppercase"><i class="fa-solid fa-store mr-1"></i> ${matchedShop.shop_name}</div>`;
+            } else {
+                shopNameHTML = `<div class="text-[10px] font-bold text-red-500 mt-1 italic"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Sai mã DVN / Không có trong hệ thống</div>`;
+            }
+        }
+
         return `<tr class="hover:bg-slate-50 border-b">
-            <td class="p-4"><div class="font-bold text-slate-800">${u.full_name || '...'}</div><div class="text-xs text-gray-500">${u.email}</div></td>
+            <td class="p-4">
+                <div class="font-bold text-slate-800">${u.full_name || '...'}</div>
+                ${shopNameHTML}
+                <div class="text-[10px] text-gray-500 mt-1">${u.email}</div>
+            </td>
             <td class="p-4">${areaDisplay}</td>
             <td class="p-4"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold border border-blue-100">${u.role || 'Sale'}</span></td>
             <td class="p-4 text-center"><span class="px-2 py-1 rounded text-[10px] font-black uppercase ${u.is_approved ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">${u.is_approved ? 'Hoạt Động' : 'Đã Khóa'}</span></td>

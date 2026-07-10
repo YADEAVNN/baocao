@@ -186,7 +186,7 @@ export function initAdminEvents() {
                 if(oldData) oldData.forEach(s => oldMap[s.shop_code] = s);
 
                 const dbData = jsonData.map(row => {
-                    const shop_code = getVal(row, 'mã dvn', 'shop code');
+                    const shop_code = getVal(row, 'mã dvn', 'shop code', 'mã shop');
                     if (!shop_code) return null;
 
                     const old = oldMap[shop_code] || {}; 
@@ -194,20 +194,29 @@ export function initAdminEvents() {
                     
                     return {
                         ...old, 
-                        shop_code: shop_code,
+                        shop_code: String(shop_code).trim(),
                         area: getVal(row, 'khu vực') !== undefined ? getVal(row, 'khu vực') : old.area,
                         svn_code: valSvn !== undefined ? String(valSvn).trim() : old.svn_code,
-                        shop_name: getVal(row, 'tên đại lý', 'tên shop') !== undefined ? getVal(row, 'tên đại lý', 'tên shop') : old.shop_name,
+                        shop_name: getVal(row, 'tên đại lý', 'tên shop', 'tên đại lý/ch') !== undefined ? getVal(row, 'tên đại lý', 'tên shop', 'tên đại lý/ch') : old.shop_name,
+                        // Bổ sung đọc cột Sale
+                        sale_name: getVal(row, 'sale phụ trách', 'sale', 'nhân viên sale') !== undefined ? getVal(row, 'sale phụ trách', 'sale', 'nhân viên sale') : old.sale_name,
                         director_name: getVal(row, 'giám đốc', 'gđ khu vực', 'giám đốc vùng') !== undefined ? getVal(row, 'giám đốc', 'gđ khu vực', 'giám đốc vùng') : old.director_name,
-                        regional_director: getVal(row, 'gđ miền', 'giám đốc miền', 'regional director') !== undefined ? getVal(row, 'gđ miền', 'giám đốc miền', 'regional director') : old.regional_director, // Nhận diện thông minh cột sếp Miền từ file Excel
-                        province: getVal(row, 'tỉnh/thành', 'tỉnh') !== undefined ? getVal(row, 'tỉnh/thành', 'tỉnh') : old.province,
+                        regional_director: getVal(row, 'gđ miền', 'giám đốc miền', 'regional director') !== undefined ? getVal(row, 'gđ miền', 'giám đốc miền', 'regional director') : old.regional_director, 
+                        province: getVal(row, 'tỉnh/thành', 'tỉnh', 'thành phố') !== undefined ? getVal(row, 'tỉnh/thành', 'tỉnh', 'thành phố') : old.province,
                         shop_type: getVal(row, 'loại hình') !== undefined ? getVal(row, 'loại hình') : old.shop_type
                     };
                 }).filter(x => x !== null);
 
                 if (dbData.length === 0) throw new Error("File không có dữ liệu hợp lệ (Thiếu cột Mã DVN).");
 
-                const { error } = await sb.from('master_shop_list').upsert(dbData); 
+                // Xử lý loại bỏ trùng lặp Mã DVN
+                const uniqueDataMap = {};
+                dbData.forEach(item => {
+                    uniqueDataMap[item.shop_code] = item; 
+                });
+                const finalDbData = Object.values(uniqueDataMap);
+
+                const { error } = await sb.from('master_shop_list').upsert(finalDbData); 
                 if (error) throw error;
 
                 $('uploadStatus').innerText = "Đồng bộ thành công!"; 

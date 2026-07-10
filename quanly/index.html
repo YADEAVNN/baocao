@@ -465,11 +465,19 @@
 
         <div id="view-targets" class="hidden space-y-6 animate-fade">
             <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                    <div><h2 class="text-2xl font-black text-slate-800">THIẾT LẬP TARGET TARGET</h2></div>
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center bg-pink-50 border border-pink-200 rounded-xl p-2 shadow-inner"><label class="text-xs font-bold text-pink-700 uppercase mr-2 ml-2">Tháng Target:</label><input type="month" id="target_month" onchange="loadTargets()" class="bg-white border border-pink-200 text-pink-800 font-bold rounded-lg p-2 text-sm outline-none"></div>
-                        <button onclick="saveAllTargets()" class="bg-slate-900 hover:bg-[#FF4500] text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase"><i class="fa-solid fa-floppy-disk"></i> Lưu Target</button>
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-6">
+                    <div><h2 class="text-2xl font-black text-slate-800">THIẾT LẬP TARGET</h2></div>
+                    <div class="flex items-center gap-3 flex-wrap w-full xl:w-auto xl:justify-end">
+                        <div class="flex items-center bg-pink-50 border border-pink-200 rounded-xl p-2 shadow-inner">
+                            <label class="text-xs font-bold text-pink-700 uppercase mr-2 ml-2">Tháng Target:</label>
+                            <input type="month" id="target_month" onchange="loadTargets()" class="bg-white border border-pink-200 text-pink-800 font-bold rounded-lg p-2 text-sm outline-none">
+                        </div>
+                        <button onclick="exportTargetExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition text-xs uppercase flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Xuất Mẫu</button>
+                        <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition text-xs uppercase mb-0 flex items-center gap-2">
+                            <i class="fa-solid fa-upload"></i> Up File
+                            <input type="file" id="targetFile" class="hidden" accept=".xlsx,.csv">
+                        </label>
+                        <button onclick="saveAllTargets()" class="bg-slate-900 hover:bg-[#FF4500] text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
                     </div>
                 </div>
                 <div class="flex flex-col md:flex-row flex-wrap gap-3 mb-4 bg-slate-50 p-4 rounded-xl border border-slate-100">

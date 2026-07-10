@@ -15,11 +15,11 @@ export async function loadUsers() {
 export function renderUserTableFiltered() {
     const searchEl = $('user_search');
     const filterEl = $('user_status_filter');
-    const roleFilterEl = $('user_role_filter'); // Lấy giá trị ô lọc vai trò
+    const roleFilterEl = $('user_role_filter');
     
     const kw = searchEl ? searchEl.value.toLowerCase().trim() : "";
     const statusFilter = filterEl ? filterEl.value : "ALL";
-    const roleFilter = roleFilterEl ? roleFilterEl.value : "ALL"; // Lọc theo vai trò
+    const roleFilter = roleFilterEl ? roleFilterEl.value : "ALL"; 
     
     const filtered = cachedUsersList.filter(u => {
         const matchesKeyword = (u.full_name || '').toLowerCase().includes(kw) || (u.email || '').toLowerCase().includes(kw);
@@ -28,13 +28,12 @@ export function renderUserTableFiltered() {
         if (statusFilter === 'PENDING') matchesStatus = !u.is_approved;
         if (statusFilter === 'APPROVED') matchesStatus = u.is_approved;
         
-        // So khớp lọc vai trò
         let matchesRole = true;
         if (roleFilter !== 'ALL') {
             matchesRole = (u.role === roleFilter);
         }
         
-        return matchesKeyword && matchesStatus && matchesRole; // Thỏa mãn tất cả điều kiện
+        return matchesKeyword && matchesStatus && matchesRole; 
     });
 
     const tbody = $('userTableBody');
@@ -49,10 +48,8 @@ export function renderUserTableFiltered() {
         const areaInfo = getAreaBySaleName(u.full_name);
         const areaDisplay = areaInfo ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200 text-xs font-bold">${areaInfo}</span>` : `<span class="text-gray-400 italic text-xs">Chưa gán shop</span>`;
         
-        // BỔ SUNG LOGIC TÌM TÊN SHOP THEO MÃ DVN
         let shopNameHTML = '';
         if (u.role === 'Cửa hàng' && u.full_name) {
-            // Lấy mã DVN tra cứu trong Master Data (viết hoa để đảm bảo trùng khớp)
             const matchedShop = window.globalAdminShopMap[u.full_name.trim().toUpperCase()];
             if (matchedShop) {
                 shopNameHTML = `<div class="text-[10px] font-bold text-blue-600 mt-1 uppercase"><i class="fa-solid fa-store mr-1"></i> ${matchedShop.shop_name}</div>`;
@@ -100,7 +97,7 @@ export const resetUserPassword = async (email) => {
     }
 }
 
-// --- MASTER DATA (CẬP NHẬT RENDER HÀM ĐỔ CỘT GIÁM ĐỐC MIỀN) ---
+// --- MASTER DATA ---
 export async function loadMasterData() { 
     const { data } = await sb.from('master_shop_list').select('*').order('area', {ascending: true}); 
     $('shopCount').innerText = `${data?.length || 0} Shop`;
@@ -122,7 +119,6 @@ export async function loadMasterData() {
         </tr>`).join('');
 }
 
-// SỬA LỖI: Xuất đầy đủ tiêu đề cột và trường dữ liệu Giám đốc Miền ra file Excel
 export async function exportMasterData() {
     const { data } = await sb.from('master_shop_list').select('*').order('area');
     if (!data || data.length === 0) return alert("Chưa có dữ liệu!");
@@ -146,7 +142,7 @@ export const openShopEdit = (s) => {
     $('edit_s_province').value = s.province || ''; 
     $('edit_s_sale').value = s.sale_name || ''; 
     $('edit_s_director').value = s.director_name || '';
-    $('edit_s_regional_director').value = s.regional_director || ''; // Gán dữ liệu sếp Miền vào input modal
+    $('edit_s_regional_director').value = s.regional_director || ''; 
     toggleModal('shopEditModal'); 
 }
 
@@ -158,7 +154,7 @@ export const submitShopEdit = async () => {
         province: $('edit_s_province').value, 
         sale_name: $('edit_s_sale').value,
         director_name: $('edit_s_director').value,
-        regional_director: $('edit_s_regional_director').value // Đổ trường dữ liệu đẩy lên database
+        regional_director: $('edit_s_regional_director').value 
     }; 
     const { error } = await sb.from('master_shop_list').update(payload).eq('shop_code', $('edit_s_code').value); 
     if(error) alert("Lỗi: " + error.message); 
@@ -177,7 +173,7 @@ export const openPriceEdit = (m, mo, c, p) => { currentEditPrice={month:m, model
 export const submitPriceEdit = async () => { await sb.from('monthly_product_prices').update({ import_price: parseFloat($('edit_p_cost').value)||0, selling_price: parseFloat($('edit_p_price').value)||0 }).match({ report_month: currentEditPrice.month, model: currentEditPrice.model }); toggleModal('priceEditModal'); loadPriceHistory(); }
 export const deletePrice = async (m, mo) => { if(confirm(`Xóa giá?`)) { await sb.from('monthly_product_prices').delete().match({ report_month: m, model: mo }); loadPriceHistory(); } }
 
-// --- EVENT HANDLERS FOR FILE UPLOAD (ĐỒNG BỘ THÔNG MINH NHẬN DIỆN CỘT EXCEL MỚI) ---
+// --- EVENT HANDLERS FOR FILE UPLOAD ---
 export function initAdminEvents() {
     $('excelFile').onchange = async (e) => { 
         const file = e.target.files[0]; if(!file) return; 
@@ -215,7 +211,6 @@ export function initAdminEvents() {
                         area: getVal(row, 'khu vực') !== undefined ? getVal(row, 'khu vực') : old.area,
                         svn_code: valSvn !== undefined ? String(valSvn).trim() : old.svn_code,
                         shop_name: getVal(row, 'tên đại lý', 'tên shop', 'tên đại lý/ch') !== undefined ? getVal(row, 'tên đại lý', 'tên shop', 'tên đại lý/ch') : old.shop_name,
-                        // Bổ sung đọc cột Sale
                         sale_name: getVal(row, 'sale phụ trách', 'sale', 'nhân viên sale') !== undefined ? getVal(row, 'sale phụ trách', 'sale', 'nhân viên sale') : old.sale_name,
                         director_name: getVal(row, 'giám đốc', 'gđ khu vực', 'giám đốc vùng') !== undefined ? getVal(row, 'giám đốc', 'gđ khu vực', 'giám đốc vùng') : old.director_name,
                         regional_director: getVal(row, 'gđ miền', 'giám đốc miền', 'regional director') !== undefined ? getVal(row, 'gđ miền', 'giám đốc miền', 'regional director') : old.regional_director, 
@@ -226,7 +221,6 @@ export function initAdminEvents() {
 
                 if (dbData.length === 0) throw new Error("File không có dữ liệu hợp lệ (Thiếu cột Mã DVN).");
 
-                // Xử lý loại bỏ trùng lặp Mã DVN
                 const uniqueDataMap = {};
                 dbData.forEach(item => {
                     uniqueDataMap[item.shop_code] = item; 
@@ -309,6 +303,66 @@ export function initAdminEvents() {
         reader.readAsArrayBuffer(file); 
         e.target.value = '';
     };
+
+    // --- XỬ LÝ SỰ KIỆN TẢI LÊN FILE TARGET MỚI THÊM VÀO ---
+    const targetFileInput = $('targetFile');
+    if(targetFileInput) {
+        targetFileInput.onchange = async (e) => {
+            const file = e.target.files[0]; if(!file) return;
+            const month = $('target_month').value;
+            if (!month) {
+                alert("Vui lòng chọn Tháng Target trên màn hình trước khi tải file lên!");
+                e.target.value = ''; return;
+            }
+            if(!confirm(`Hệ thống sẽ cập nhật Target cho tháng: ${month} dựa trên file Excel.\nBạn có muốn tiếp tục?`)) {
+                e.target.value = ''; return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+                    const jsonData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                    
+                    const getVal = (row, ...kws) => {
+                        const keys = Object.keys(row);
+                        for (const k of keys) {
+                            if (kws.some(kw => k.toLowerCase().trim() === kw.toLowerCase())) return row[k];
+                        }
+                        return 0; 
+                    };
+
+                    const payload = jsonData.map(row => {
+                        const codeKey = Object.keys(row).find(k => k.toLowerCase().trim() === 'mã dvn');
+                        if (!codeKey || !row[codeKey]) return null;
+                        
+                        return {
+                            report_month: month,
+                            shop_code: String(row[codeKey]).trim(),
+                            target_so: parseInt(getVal(row, 'target s.o', 'target so')) || 0,
+                            target_report: parseInt(getVal(row, 'báo cáo')) || 0,
+                            target_traffic: parseInt(getVal(row, 'lượt khách')) || 0,
+                            target_video: parseInt(getVal(row, 'video gửi')) || 0,
+                            target_view: parseInt(getVal(row, 'lượt xem')) || 0,
+                            target_livestream: parseInt(getVal(row, 'livestream')) || 0
+                        };
+                    }).filter(x => x !== null);
+
+                    if(payload.length === 0) throw new Error("File không đúng form mẫu (Bắt buộc phải có cột 'Mã DVN').");
+
+                    const { error } = await sb.from('monthly_shop_targets').upsert(payload, { onConflict: 'report_month, shop_code' });
+                    if (error) throw error;
+
+                    alert(`✅ Đã tải lên thành công Target tháng ${month} cho ${payload.length} Cửa hàng!`);
+                    loadTargets();
+                } catch(err) {
+                    alert("Lỗi đọc file Excel: " + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = ''; 
+        };
+    }
 }
 
 // --- TARGETS ---
@@ -387,4 +441,23 @@ export async function saveAllTargets() {
     btn.innerHTML = oldText; btn.disabled = false;
     if (error) alert("Lỗi khi lưu Target: " + error.message);
     else alert(`✅ Đã lưu thành công Target tháng ${month} cho ${payload.length} Cửa hàng!`);
+}
+
+// --- HÀM XUẤT EXCEL TARGET THÊM VÀO ---
+export function exportTargetExcel() {
+    const month = $('target_month').value;
+    if (!month) return alert("Vui lòng chọn tháng trước khi xuất Excel!");
+    if (!window.currentViewTargets || window.currentViewTargets.length === 0) return alert("Không có dữ liệu shop để xuất!");
+
+    const header = ["Mã DVN", "Tên Cửa Hàng", "Target S.O", "Báo Cáo", "Lượt Khách", "Video Gửi", "Lượt Xem", "Livestream"];
+    const rows = window.currentViewTargets.map(s => [
+        s.shop_code, s.shop_name, 
+        s.targets.target_so, s.targets.target_report, s.targets.target_traffic, 
+        s.targets.target_video, s.targets.target_view, s.targets.target_livestream
+    ]);
+
+    const wb = XLSX.utils.book_new(); 
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows]); 
+    XLSX.utils.book_append_sheet(wb, ws, "Target_" + month); 
+    XLSX.writeFile(wb, `Mau_Target_Thang_${month}.xlsx`);
 }

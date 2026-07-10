@@ -158,6 +158,7 @@ window.updateTargetFilterChain = Admin.updateTargetFilterChain;
 window.resetTargetFilters = Admin.resetTargetFilters;
 window.saveAllTargets = Admin.saveAllTargets;
 window.updateLocalTarget = Admin.updateLocalTarget;
+window.exportTargetExcel = Admin.exportTargetExcel; // GẮN KẾT NỐI EXCEL TARGET VÀO WINDOW
 
 window.loadDailyInputData = DailyInput.loadDailyInputData;
 window.renderDailyInputTableFiltered = DailyInput.renderDailyInputTableFiltered;

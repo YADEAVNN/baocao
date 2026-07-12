@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>YADEA 03 GAME - 01 MỤC TIÊU</title>
 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Thư viện xuất Excel cho Lịch sử & Tiến độ -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #F8FAFC; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        .nav-item { display: flex; align-items: center; padding: 12px 20px; color: #9ca3af; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
+        .nav-item:hover { background-color: #1f2937; color: white; }
+        .nav-item.active { background-color: #1f2937; color: #fff; border-left-color: #F97316; }
+        .form-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+        .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
+        .form-input:focus { border-color: #F97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+    </style>
+</head>
+
+<body class="h-[100dvh] overflow-hidden flex text-slate-800 relative">
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ / QUÊN MẬT KHẨU -->
+    <div id="authContainer" class="fixed inset-0 z-[60] bg-[#F3F4F6] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[20px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-w-4xl w-full min-h-[550px] fade-in">
+            <!-- Cột Trái (Banner) -->
+            <div class="w-full md:w-5/12 bg-[#111827] flex flex-col items-center justify-center p-10 text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-red-600/20"></div>
+                <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="h-14 mb-6 relative z-10">
+                <h2 class="text-3xl font-black text-white uppercase mb-2 relative z-10 tracking-tight">03 GAME THI ĐUA</h2>
+                <p class="text-gray-400 text-xs font-medium relative z-10">Bứt Tốc Doanh Số (Tháng 7)</p>
+            </div>
+            
+            <!-- Cột Phải (Forms) -->
+            <div class="w-full md:w-7/12 p-10 flex flex-col justify-center relative">
+                
+                <!-- 1. Form Đăng Nhập -->
+                <div id="loginFormSection" class="max-w-xs mx-auto w-full">
+                    <h3 class="text-2xl font-black text-slate-800 mb-6">Đăng Nhập</h3>
+                    <div class="space-y-4">
+                        <input id="email" type="email" class="form-input bg-gray-50" placeholder="Email nhân viên">
+                        <input id="password" type="password" class="form-input bg-gray-50" placeholder="Mật khẩu">
+                        <button id="btnLogin" class="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm uppercase tracking-wider">Truy cập</button>
+                    </div>
+                    <div class="mt-6 text-center text-xs text-gray-400">
+                        <a href="#" id="goForgotPassword" class="hover:underline text-gray-500 font-bold mb-2 inline-block">Quên mật khẩu?</a><br>
+                        <span>Chưa có tài khoản?</span> <a href="#" id="goSignup" class="text-[#F97316] font-bold hover:underline">Đăng ký ngay</a>
+                    </div>
+                </div>
+                
+                <!-- 2. Form Đăng Ký -->
+                <div id="signupFormSection" class="hidden max-w-xs mx-auto w-full">
+                    <h3 class="text-2xl font-black text-slate-800 mb-4">Đăng Ký Mới</h3>
+                    <div class="space-y-3">
+                        <input id="reg_name" type="text" class="form-input bg-gray-50" placeholder="Họ và Tên (Hoặc Mã DVN)">
+                        <p class="text-[9px] text-gray-400 italic mb-1">* Nhân viên Cửa hàng bắt buộc nhập mã DVN (Ví dụ: DVN590013).</p>
+                        <select id="reg_role" class="form-input bg-gray-50">
+                            <option value="Sale">Nhân viên Sale (NVKD)</option>
+                            <option value="Giám Đốc">Giám Đốc Miền</option>
+                            <option value="Cửa hàng">Nhân viên cửa hàng</option>
+                        </select>
+                        <input id="reg_email" type="email" class="form-input bg-gray-50" placeholder="Email">
+                        <input id="reg_pass" type="password" class="form-input bg-gray-50" placeholder="Mật khẩu">
+                        <button id="btnSignup" class="w-full bg-slate-900 hover:bg-slate-800 transition text-white font-bold py-3 rounded-xl">Gửi Yêu Cầu</button>
+                    </div>
+                    <div class="mt-4 text-center text-xs">
+                        <a href="#" id="goLogin" class="text-gray-500 font-bold hover:text-slate-800">← Quay lại đăng nhập</a>
+                    </div>
+                </div>
+
+                <!-- 3. Form Quên Mật Khẩu -->
+                <div id="forgotPasswordFormSection" class="hidden max-w-xs mx-auto w-full">
+                    <h3 class="text-2xl font-black text-slate-800 mb-2">Khôi Phục Mật Khẩu</h3>
+                    <p class="text-[11px] text-gray-500 mb-4 font-medium">Nhập email tài khoản để nhận liên kết khôi phục.</p>
+                    <div class="space-y-3">
+                        <input id="forgot_email" type="email" class="form-input bg-gray-50" placeholder="Email nhân viên">
+                        <button id="btnSendReset" class="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm uppercase tracking-wider">Gửi liên kết</button>
+                    </div>
+                    <div class="mt-4 text-center text-xs">
+                        <a href="#" id="goLoginFromForgot" class="text-gray-500 font-bold hover:underline">← Quay lại đăng nhập</a>
+                    </div>
+                </div>
+
+                <!-- 4. Form Cập Nhật Mật Khẩu Mới (Khi click từ Email) -->
+                <div id="updatePasswordFormSection" class="hidden max-w-xs mx-auto w-full">
+                    <h3 class="text-2xl font-black text-slate-800 mb-2">Mật Khẩu Mới</h3>
+                    <p class="text-[11px] text-gray-500 mb-4 font-medium">Vui lòng nhập mật khẩu mới cho tài khoản của bạn.</p>
+                    <div class="space-y-3">
+                        <input id="new_password" type="password" class="form-input bg-gray-50" placeholder="Mật khẩu mới (ít nhất 6 ký tự)">
+                        <button id="btnUpdatePassword" class="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm uppercase tracking-wider">Lưu Mật Khẩu Mới</button>
+                    </div>
+                </div>
+
+                <!-- Thông báo trạng thái -->
+                <p id="msg" class="text-center text-xs font-bold mt-4 h-5 text-red-500"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH APP CHÍNH SAU ĐĂNG NHẬP -->
+    <div id="mainApp" class="hidden flex w-full h-full relative">
+        <!-- Header Mobile -->
+        <div class="md:hidden fixed top-0 left-0 w-full h-14 bg-[#111827] z-40 flex items-center px-4 shadow-md justify-between">
+            <div class="flex items-center gap-2">
+                <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="h-6">
+                <span class="text-white font-bold text-xs uppercase tracking-wide">THI ĐUA THÁNG 7</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white text-2xl focus:outline-none p-2"><i class="fa-solid fa-bars"></i></button>
+        </div>
+
+        <!-- Sidebar / Menu -->
+        <aside id="sidebarMobile" class="fixed inset-y-0 left-0 w-64 bg-[#111827] flex-shrink-0 flex flex-col border-r border-gray-800 z-50 shadow-xl transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 pt-14 md:pt-0">
+            <div class="hidden md:flex h-16 items-center px-6 border-b border-gray-800 bg-[#1f2937]">
+                <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="h-8">
+            </div>
+            
+            <div class="p-6 pb-4 border-b border-gray-800 bg-gradient-to-b from-[#1a2332] to-[#111827] relative overflow-hidden">
+                <div class="flex items-center gap-5 mb-3 relative z-10">
+                    <div class="w-14 h-14 rounded-full bg-slate-700 flex items-center justify-center text-white font-black text-2xl shadow-inner border-2 border-slate-500 relative z-10" id="avatarLetter">U</div>
+                    <div class="overflow-hidden flex-1 pt-2">
+                        <h4 id="userDisplay" class="text-white text-base font-black truncate tracking-wider uppercase">User</h4>
+                        <span id="roleDisplay" class="text-[10px] text-gray-400 font-bold uppercase tracking-wider bg-gray-800 px-2 py-0.5 rounded mt-1 inline-block">SALE</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MENU THI ĐUA -->
+            <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
+                <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider mt-2">📊 HỆ THỐNG THI ĐUA THÁNG 7</div>
+                
+                <a onclick="window.customSwitchView('entry')" id="nav-entry" class="nav-item active">
+                    <i class="fa-solid fa-motorcycle text-[#F97316] w-6"></i> 
+                    <span class="font-bold">1. NHẬP LIỆU SELL-OUT</span>
+                </a>
+                
+                <a onclick="window.customSwitchView('history')" id="nav-history" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left text-purple-500 w-6"></i> 
+                    <span class="font-bold">2. LỊCH SỬ BÁO CÁO</span>
+                </a>
+                
+                <a onclick="window.customSwitchView('target')" id="nav-target" class="nav-item">
+                    <i class="fa-solid fa-chart-pie text-yellow-400 w-6"></i> 
+                    <span class="font-bold">3. TIẾN ĐỘ NHẬP LIỆU</span>
+                </a>
+
+                <a onclick="window.customSwitchView('competition')" id="nav-competition" class="nav-item relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <i class="fa-solid fa-trophy text-red-500 w-6"></i> 
+                    <span class="uppercase font-bold text-xs text-slate-400 group-hover:text-red-500 transition-colors">4. ĐẤU TRƯỜNG THI ĐUA</span>
+                </a>
+            </nav>
+            
+            <div class="p-4 bg-[#0f1523] border-t border-gray-800">
+                <button id="btnLogout" class="flex items-center justify-center w-full py-2.5 text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition border border-gray-700">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i> Đăng xuất
+                </button>
+            </div>
+        </aside>
+
+        <!-- Container Đổ Giao Diện -->
+        <main class="flex-1 overflow-y-auto bg-[#F8FAFC] relative pt-20 md:pt-0">
+            <div id="app-content" class="w-full h-full"></div>
+        </main>
+    </div>
+
+    <!-- Script kết nối module -->
+    <script type="module" src="./js/main.js"></script>
+
+    <script>
+        // Gọi hàm switch view toàn cục
+        window.customSwitchView = (view) => {
+            if (typeof window.switchView === 'function') {
+                window.switchView(view);
+            }
+        };
+
+        // Hàm thay đổi mã Shop cho Input
+        window.changeInputShop = (code) => {
+            if (!window.STATE || !window.STATE.globalShopMap) return;
+            const el = document.getElementById('select_shop_so');
+            if(el && !el.disabled) el.value = code;
+        };
+    </script>
+</body>
+</html>

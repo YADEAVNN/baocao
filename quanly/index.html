@@ -50,46 +50,9 @@
     </div>
   </div>
 
-  <div id="missingReportModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
-      <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('missingReportModal')"></div>
-      <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-2xl z-50 p-6 flex flex-col max-h-[90vh] animate-fade">
-          <div class="flex justify-between items-center mb-4">
-              <h3 class="text-xl font-black text-red-600 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO KỶ LUẬT BÁO CÁO</h3>
-              <button class="text-gray-400 hover:text-red-500 transition" onclick="toggleModal('missingReportModal')"><i class="fa-solid fa-xmark text-xl"></i></button>
-          </div>
-          <div class="bg-red-50 text-red-800 p-5 rounded-xl flex-1 overflow-y-auto font-medium text-sm leading-relaxed border border-red-100" id="missingReportContent">
-          </div>
-          <div class="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
-              <button onclick="toggleModal('missingReportModal')" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-sm transition">Đóng lại</button>
-              <button onclick="copyMissingReports()" class="px-5 py-2.5 bg-red-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-red-700 transition flex items-center gap-2 uppercase tracking-wider"><i class="fa-regular fa-copy"></i> Copy Gửi Zalo Group</button>
-          </div>
-      </div>
-  </div>
-
-  <div id="detailModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[60]">
-    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('detailModal')"></div>
-    <div class="modal-container bg-white w-full md:w-11/12 md:max-w-5xl mx-auto rounded-none md:rounded-2xl shadow-2xl z-50 overflow-y-auto h-full md:h-auto md:max-h-[90vh] animate-fade transform flex flex-col">
-        <div class="flex justify-between items-center pb-4 px-6 pt-6 border-b border-gray-100 bg-white sticky top-0 z-20">
-            <div class="flex items-center gap-4">
-                <div class="bg-orange-100 text-orange-600 w-12 h-12 rounded-xl flex items-center justify-center"><i class="fa-solid fa-file-invoice-dollar text-xl"></i></div>
-                <div><p class="text-xl md:text-2xl font-black text-slate-800 uppercase">Chi Tiết S.O</p></div>
-            </div>
-            <button class="bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 w-10 h-10 rounded-full transition" onclick="toggleModal('detailModal')"><i class="fa-solid fa-xmark text-xl"></i></button>
-        </div>
-        <div class="px-6 py-6 bg-[#F8FAFC] flex-1 overflow-y-auto">
-            <table class="w-full text-left text-sm bg-white rounded-xl shadow-sm overflow-hidden">
-                <thead class="bg-slate-50 text-gray-500 uppercase text-[10px] font-black">
-                    <tr><th class="p-4">Mẫu xe bán ra</th><th class="p-4 text-center">Số lượng</th><th class="p-4">Ghi chú thêm</th></tr>
-                </thead>
-                <tbody id="modalDetailBody" class="divide-y divide-gray-100"></tbody>
-            </table>
-        </div>
-        <div class="flex justify-end p-6 bg-white border-t border-gray-100 gap-3">
-            <button onclick="toggleModal('detailModal')" class="px-6 py-3 bg-gray-100 rounded-xl text-gray-600 text-sm font-bold">Đóng lại</button>
-        </div>
-    </div>
-  </div>
-  
+  <!-- Các Modal giữ nguyên như cũ -->
+  <div id="missingReportModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('missingReportModal')"></div><div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-2xl z-50 p-6 flex flex-col max-h-[90vh] animate-fade"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-black text-red-600 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO KỶ LUẬT BÁO CÁO</h3><button class="text-gray-400 hover:text-red-500 transition" onclick="toggleModal('missingReportModal')"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="bg-red-50 text-red-800 p-5 rounded-xl flex-1 overflow-y-auto font-medium text-sm leading-relaxed border border-red-100" id="missingReportContent"></div><div class="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100"><button onclick="toggleModal('missingReportModal')" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-sm transition">Đóng lại</button><button onclick="copyMissingReports()" class="px-5 py-2.5 bg-red-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-red-700 transition flex items-center gap-2 uppercase tracking-wider"><i class="fa-regular fa-copy"></i> Copy Gửi Zalo Group</button></div></div></div>
+  <div id="detailModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[60]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('detailModal')"></div><div class="modal-container bg-white w-full md:w-11/12 md:max-w-5xl mx-auto rounded-none md:rounded-2xl shadow-2xl z-50 overflow-y-auto h-full md:h-auto md:max-h-[90vh] animate-fade transform flex flex-col"><div class="flex justify-between items-center pb-4 px-6 pt-6 border-b border-gray-100 bg-white sticky top-0 z-20"><div class="flex items-center gap-4"><div class="bg-orange-100 text-orange-600 w-12 h-12 rounded-xl flex items-center justify-center"><i class="fa-solid fa-file-invoice-dollar text-xl"></i></div><div><p class="text-xl md:text-2xl font-black text-slate-800 uppercase">Chi Tiết S.O</p></div></div><button class="bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 w-10 h-10 rounded-full transition" onclick="toggleModal('detailModal')"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="px-6 py-6 bg-[#F8FAFC] flex-1 overflow-y-auto"><table class="w-full text-left text-sm bg-white rounded-xl shadow-sm overflow-hidden"><thead class="bg-slate-50 text-gray-500 uppercase text-[10px] font-black"><tr><th class="p-4">Mẫu xe bán ra</th><th class="p-4 text-center">Số lượng</th><th class="p-4">Ghi chú thêm</th></tr></thead><tbody id="modalDetailBody" class="divide-y divide-gray-100"></tbody></table></div><div class="flex justify-end p-6 bg-white border-t border-gray-100 gap-3"><button onclick="toggleModal('detailModal')" class="px-6 py-3 bg-gray-100 rounded-xl text-gray-600 text-sm font-bold">Đóng lại</button></div></div></div>
   <div id="priceEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-sm mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Giá</h3><div class="space-y-4"><div><input id="edit_p_key" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly></div><div><label class="text-xs font-bold text-red-500">Giá Nhập</label><input id="edit_p_cost" type="number" class="w-full border p-3 rounded"></div><div><label class="text-xs font-bold text-blue-500">Giá Bán</label><input id="edit_p_price" type="number" class="w-full border p-3 rounded"></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('priceEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitPriceEdit()" class="flex-1 py-3 bg-orange-600 text-white rounded font-bold">Lưu</button></div></div></div>
   <div id="shopEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 p-6"><h3 class="text-xl font-black mb-4">Sửa Thông Tin Shop</h3><div class="space-y-3 max-h-[60vh] overflow-y-auto px-1"><div><label class="text-[10px] font-bold text-gray-500 uppercase">Mã DVN</label><input id="edit_s_code" class="w-full bg-gray-100 border p-3 rounded text-sm" readonly></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Tên Shop</label><input id="edit_s_name" class="w-full border p-3 rounded text-sm" placeholder="Tên"></div><div class="flex gap-2"><div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Khu vực</label><input id="edit_s_area" class="w-full border p-3 rounded text-sm" placeholder="Khu vực"></div><div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Mã SVN</label><input id="edit_s_svn" class="w-full border p-3 rounded text-sm bg-purple-50 border-purple-200" placeholder="Mã SVN"></div></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Tỉnh / Thành phố</label><input id="edit_s_province" class="w-full border p-3 rounded text-sm" placeholder="Tỉnh"></div><div><label class="text-[10px] font-bold text-gray-500 uppercase">Sale Phụ Trách</label><input id="edit_s_sale" class="w-full border p-3 rounded text-sm" placeholder="Sale"></div><div><label class="text-[10px] font-bold text-blue-600 uppercase">GĐ Khu Vực</label><input id="edit_s_director" class="w-full border p-3 rounded text-sm bg-blue-50 border-blue-200" placeholder="Tên Giám Đốc Khu Vực"></div><div><label class="text-[10px] font-bold text-orange-600 uppercase">GĐ Miền</label><input id="edit_s_regional_director" class="w-full border p-3 rounded text-sm bg-orange-50 border-orange-200 font-bold" placeholder="Tên Giám Đốc Miền"></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('shopEditModal')" class="flex-1 py-3 bg-gray-100 rounded font-bold">Hủy</button><button onclick="submitShopEdit()" class="flex-1 py-3 bg-blue-600 text-white rounded font-bold">Lưu Cập Nhật</button></div></div></div>
   <div id="userEditModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-2xl shadow-2xl z-50 animate-fade p-6"><h3 class="text-xl font-black text-slate-800 mb-4">Sửa Thông Tin & Quyền</h3><input type="hidden" id="edit_u_id"><div class="space-y-4"><div><label class="text-[10px] uppercase font-bold text-gray-500">Email (Không đổi)</label><input id="edit_u_email" type="text" class="w-full bg-gray-100 border p-3 rounded text-xs font-bold text-gray-500" readonly></div><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg"><label class="text-[10px] uppercase font-bold text-blue-700">Họ và Tên (Phải khớp Master Data)</label><input id="edit_u_name" type="text" class="w-full border p-2 rounded text-sm font-bold text-slate-800 bg-white mt-1 focus:border-blue-500 outline-none" placeholder="Nhập đúng tên trong file Excel..."></div><div><label class="text-[10px] uppercase font-bold text-slate-700">Vai Trò Hệ Thống</label><select id="edit_u_role" class="w-full border p-3 rounded text-sm font-bold bg-white text-slate-800"><option value="Cửa hàng">1. Nhân viên cửa hàng</option><option value="Sale">2. Sale Phụ Trách</option><option value="Giám Đốc">3. Giám Đốc Khu Vực</option><option value="Giám đốc Miền">4. Giám Đốc Miền</option><option value="Admin">5. Admin Toàn Quốc</option></select></div></div><div class="flex gap-3 mt-6"><button onclick="toggleModal('userEditModal')" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-lg text-xs">Hủy</button><button onclick="submitUserEdit()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg text-xs shadow-lg hover:bg-blue-700">Cập Nhật</button></div></div></div>
@@ -112,7 +75,8 @@
           <p class="px-4 pt-2 pb-2 text-[10px] font-black text-gray-500 uppercase tracking-widest">Báo Cáo Phân Tích</p>
           <a onclick="switchTab('dashboard')" id="tab-dashboard" class="sidebar-link active flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-pie text-blue-400 mr-3 w-5 text-center"></i> 1. Tổng Quan (Dashboard)</a>
           
-          <a onclick="switchTab('daily-input')" id="tab-daily-input" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-calendar-day text-orange-400 mr-3 w-5 text-center"></i> 1b. Theo Dõi Báo Cáo Ngày</a>
+          <!-- Menu item đổi tên -->
+          <a onclick="switchTab('daily-input')" id="tab-daily-input" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-calendar-day text-orange-400 mr-3 w-5 text-center"></i> 1b. Theo Dõi Báo Cáo</a>
           
           <a onclick="switchTab('pacing')" id="tab-pacing" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-list-check text-green-400 mr-3 w-5 text-center"></i> 2. Báo Cáo Tiến Độ</a>
           <a onclick="switchTab('analytics-full')" id="tab-analytics-full" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-line text-yellow-400 mr-3 w-5 text-center"></i> 3. Hoàn Thành Tiến Độ</a>
@@ -168,55 +132,52 @@
             </div>
         </div>
 
+        <!-- MÀN HÌNH THEO DÕI BÁO CÁO CẬP NHẬT MỚI -->
         <div id="view-daily-input" class="hidden space-y-6 animate-fade">
             <div class="bg-white p-5 rounded-2xl shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Theo Dõi Báo Cáo Hàng Ngày</h2>
-                    <p class="text-gray-400 text-xs font-medium mt-1">Bảng tổng hợp số liệu để nhân sự tiện theo dõi và cập nhật lên hệ thống công ty</p>
+                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">THEO DÕI BÁO CÁO</h2>
+                    <p id="week_label" class="text-gray-400 text-xs font-medium mt-1">Đang tính toán...</p>
                 </div>
-                <div class="flex items-center gap-4 w-full md:w-auto justify-end">
-                    <div class="flex items-center bg-green-50 border border-green-200 rounded-xl p-2 shadow-inner">
-                        <label class="text-[10px] font-black text-green-700 uppercase mr-2 ml-2">Ngày Kiểm Tra:</label>
-                        <input type="date" id="di_date" onchange="loadDailyInputData()" class="bg-white border border-green-200 text-green-800 font-bold rounded-lg p-2 text-sm outline-none">
+                <div class="flex items-center gap-4 w-full md:w-auto justify-end flex-wrap md:flex-nowrap">
+                    <!-- BỘ LỌC THEO NGÀY CẬP NHẬT MỚI -->
+                    <div class="flex items-center bg-green-50 border border-green-200 rounded-xl p-2 shadow-inner gap-2 flex-wrap sm:flex-nowrap justify-center w-full sm:w-auto">
+                        <label class="text-[10px] font-black text-green-700 uppercase ml-2">Từ ngày:</label>
+                        <input type="date" id="di_start_date" onchange="loadDailyInputData()" class="bg-white border border-green-200 text-green-800 font-bold rounded-lg p-2 text-sm outline-none">
+                        <label class="text-[10px] font-black text-green-700 uppercase ml-2">Đến ngày:</label>
+                        <input type="date" id="di_end_date" onchange="loadDailyInputData()" class="bg-white border border-green-200 text-green-800 font-bold rounded-lg p-2 text-sm outline-none">
                     </div>
-                    <button onclick="exportDailyInputExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+                    <button onclick="exportDailyInputExcel()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase tracking-wider flex items-center justify-center gap-2"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
                 </div>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-orange-500"><p class="text-[10px] text-gray-400 font-bold uppercase">S.O Toàn Chuỗi / Ngày</p><h4 id="kpi_di_so" class="text-xl font-black text-orange-600 mt-1">0</h4></div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-[10px] text-gray-400 font-bold uppercase">Tổng Lượt Khách Đến</p><h4 id="kpi_di_traffic" class="text-xl font-black text-blue-600 mt-1">0</h4></div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-purple-500"><p class="text-[10px] text-gray-400 font-bold uppercase">Lượt Khai Thác Thông Tin</p><h4 id="kpi_di_crm" class="text-xl font-black text-purple-600 mt-1">0</h4></div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-red-500"><p class="text-[10px] text-gray-400 font-bold uppercase">Shop Chưa Báo Cáo</p><h4 id="kpi_di_missing" class="text-xl font-black text-red-600 mt-1">0 Shop</h4></div>
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                 <div class="p-4 border-b font-bold text-sm bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <span class="text-slate-700 font-black uppercase text-xs tracking-wider">Danh Sách Theo Dõi Cửa Hàng</span>
                     <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <select id="di_status_filter" onchange="renderDailyInputTableFiltered()" class="bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500 shadow-inner font-bold text-slate-600">
-                            <option value="ALL">-- Tất cả trạng thái --</option>
-                            <option value="ENTERED">✅ Đã nhập số liệu</option>
-                            <option value="MISSING">❌ Không nhập (Bỏ trống)</option>
-                        </select>
                         <input type="text" id="di_search" oninput="renderDailyInputTableFiltered()" placeholder="Tìm nhanh mã hoặc tên shop..." class="bg-white border border-gray-300 p-2 rounded-lg text-xs outline-none focus:border-orange-500 w-full sm:w-64 shadow-inner">
                     </div>
                 </div>
-                <div class="overflow-x-auto max-h-[550px]">
-                    <table class="w-full text-left text-sm whitespace-nowrap font-medium">
-                        <thead class="bg-slate-100 sticky top-0 z-10 text-[10px] font-black text-gray-500 uppercase shadow-sm">
+                <div class="overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-center text-sm whitespace-nowrap font-medium border-collapse">
+                        <thead class="bg-slate-100 sticky top-0 z-10 text-[11px] font-black text-gray-700 shadow-sm border border-gray-300">
                             <tr>
-                                <th class="p-4">Cửa Hàng (Mã DVN)</th>
-                                <th class="p-4 text-center">Trạng Thái</th>
-                                <th class="p-4 text-center text-orange-700 bg-orange-50/50">S.O Ngày</th>
-                                <th class="p-4 text-center text-blue-700 bg-blue-50/50">Tổng Khách Đến</th>
-                                <th class="p-4 text-center text-purple-700 bg-purple-50/50">Khai Thác Thông Tin</th>
-                                <th class="p-4 text-center text-slate-600 bg-gray-50">Target Tuần</th>
-                                <th class="p-4 text-center text-green-700 bg-green-50">Tiến Độ Tuần</th>
+                                <th rowspan="2" class="p-3 border text-left bg-gray-50 min-w-[200px]">Cửa Hàng (Mã DVN)</th>
+                                <th rowspan="2" class="p-3 border bg-yellow-100/50">S.O</th>
+                                <th colspan="3" class="p-3 border bg-blue-50">Lưu lượng khách</th>
+                                <th colspan="2" class="p-3 border bg-purple-50">Vận hành online</th>
+                                <th rowspan="2" class="p-3 border bg-yellow-50">Tỉ lệ chốt đơn</th>
+                            </tr>
+                            <tr>
+                                <th class="p-2 border bg-blue-50/80">Lượng khách online</th>
+                                <th class="p-2 border bg-blue-50/80">Lượng khách offline</th>
+                                <th class="p-2 border bg-blue-50/80">Lượng data thu thập</th>
+                                <th class="p-2 border bg-purple-50/80">Lượng video gửi</th>
+                                <th class="p-2 border bg-purple-50/80">Livestream</th>
                             </tr>
                         </thead>
-                        <tbody id="dailyInputBody" class="divide-y divide-gray-100 text-slate-700">
-                            <tr><td colspan="7" class="p-6 text-center text-gray-400 italic">Vui lòng chọn ngày để tải dữ liệu...</td></tr>
+                        <tbody id="dailyInputBody" class="text-slate-700 border">
+                            <tr><td colspan="8" class="p-6 text-center text-gray-400 italic border">Vui lòng chọn ngày để tải dữ liệu...</td></tr>
                         </tbody>
                     </table>
                 </div>

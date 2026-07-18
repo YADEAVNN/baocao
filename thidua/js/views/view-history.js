@@ -1,11 +1,14 @@
 export const historyHTML = `
-<div class="p-4 md:p-8 fade-in max-w-[1200px] mx-auto">
+<div class="p-4 md:p-8 fade-in max-w-full mx-auto">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
             <h1 class="text-xl md:text-2xl font-black text-slate-800 uppercase whitespace-nowrap">2. Lịch sử báo cáo S.O</h1>
-            <p class="text-sm font-bold text-gray-500 mt-1">Quản lý và kiểm soát số lượng Sell-Out đã nhập</p>
+            <p class="text-sm font-bold text-gray-500 mt-1">Quản lý và kiểm soát số lượng Sell-Out dạng Ma trận (Matrix)</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+            <button onclick="window.showMissingReportsModal()" class="bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg hover:bg-red-600 transition flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-triangle-exclamation text-lg"></i> Cảnh Báo Thiếu Số
+            </button>
             <button onclick="window.exportHistoryExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap">
                 <i class="fa-solid fa-file-excel text-lg"></i> Xuất Excel S.O
             </button>
@@ -39,22 +42,35 @@ export const historyHTML = `
         </div>
     </div>
 
-    <!-- KHỐI BẢNG DỮ LIỆU S.O -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-[#F8FAFC] border-b border-gray-200 font-black text-slate-500">
-                    <tr>
-                        <th class="p-5 uppercase text-xs w-40">Ngày Thực Hiện</th>
-                        <th class="p-5 uppercase text-xs">Đại Lý / Cửa hàng</th>
-                        <th class="p-5 uppercase text-xs text-center text-[#F97316]">Tổng Số Sell-Out</th>
-                        <th class="p-5 uppercase text-xs text-center w-28">Thao Tác</th>
-                    </tr>
-                </thead>
-                <tbody id="historyBodySO" class="divide-y divide-gray-100">
-                    <!-- Dữ liệu đổ vào đây -->
-                </tbody>
-            </table>
+    <!-- KHỐI BẢNG DỮ LIỆU S.O (DẠNG MA TRẬN) -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
+        <p class="text-[10px] text-gray-400 font-bold p-3 bg-gray-50 border-b border-gray-100 italic">💡 Bấm vào ô có số liệu màu cam để chỉnh sửa/xóa báo cáo của ngày đó.</p>
+        <div class="overflow-x-auto" id="historyTableContainer">
+            <!-- Bảng ma trận sẽ được JS đổ vào đây -->
+        </div>
+    </div>
+
+    <!-- MODAL HIỂN THỊ DANH SÁCH NHẬP THIẾU -->
+    <div id="missingReportModal" class="fixed inset-0 z-[100] bg-gray-900/80 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 flex justify-between items-center border-b border-gray-100 bg-red-50">
+                <h3 class="text-lg font-black text-red-600 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO KỶ LUẬT BÁO CÁO
+                </h3>
+                <button onclick="window.closeMissingReportsModal()" class="w-8 h-8 rounded-full bg-white text-gray-500 hover:text-red-500 hover:bg-red-100 transition shadow-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto bg-red-50/30 flex-1">
+                <div id="missingReportContent" class="text-sm font-medium text-red-800 space-y-4 whitespace-pre-wrap leading-relaxed">
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-100 bg-white flex justify-end gap-3">
+                <button onclick="window.closeMissingReportsModal()" class="px-6 py-2.5 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition">Đóng lại</button>
+                <button onclick="window.copyMissingReports()" class="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition flex items-center gap-2 shadow-lg">
+                    <i class="fa-regular fa-copy"></i> COPY GỬI ZALO GROUP
+                </button>
+            </div>
         </div>
     </div>
 </div>

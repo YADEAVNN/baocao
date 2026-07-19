@@ -114,7 +114,10 @@
           
           <a onclick="switchTab('daily-input')" id="tab-daily-input" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-calendar-day text-orange-400 mr-3 w-5 text-center"></i> 1b. Theo Dõi Báo Cáo Ngày</a>
           
+          <a onclick="switchTab('sellin-entry')" id="tab-sellin-entry" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-arrow-right-to-bracket text-indigo-400 mr-3 w-5 text-center"></i> 1c. Cập Nhật Sell-In</a>
+          
           <a onclick="switchTab('pacing')" id="tab-pacing" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-list-check text-green-400 mr-3 w-5 text-center"></i> 2. Báo Cáo Tiến Độ</a>
+          
           <a onclick="switchTab('analytics-full')" id="tab-analytics-full" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-r-lg cursor-pointer"><i class="fa-solid fa-chart-line text-yellow-400 mr-3 w-5 text-center"></i> 3. Hoàn Thành Tiến Độ</a>
 
           <p class="px-4 pt-6 pb-2 text-[10px] font-black text-gray-500 uppercase tracking-widest border-t border-gray-800 mt-2">Cấu Hình Dữ Liệu</p>
@@ -217,6 +220,53 @@
                         </thead>
                         <tbody id="dailyInputBody" class="divide-y divide-gray-100 text-slate-700">
                             <tr><td colspan="7" class="p-6 text-center text-gray-400 italic">Vui lòng chọn ngày để tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-sellin-entry" class="hidden space-y-6 animate-fade">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">CẬP NHẬT TIẾN ĐỘ SELL-IN</h2>
+                    <p class="text-gray-400 text-xs font-bold mt-1 uppercase">Báo Cáo Xuất Hàng Hằng Ngày (12 Khu Vực)</p>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner">
+                        <label class="text-[10px] font-black text-gray-500 uppercase mr-2 ml-2">Ngày nhập liệu:</label>
+                        <input type="date" id="si_date" onchange="window.loadSellinData()" class="bg-white border border-gray-200 text-gray-800 font-bold rounded-lg p-2 text-sm outline-none">
+                    </div>
+                    <button class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition text-xs uppercase flex items-center gap-2"><i class="fa-solid fa-file-import"></i> Nhập File</button>
+                    <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition text-xs uppercase flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Xuất Mẫu</button>
+                    <button onclick="window.saveSellinData()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase flex items-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Lưu Số Liệu</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="overflow-x-auto max-h-[65vh]">
+                    <table class="w-full text-center text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm text-[10px] font-black uppercase text-slate-600">
+                            <tr>
+                                <th class="p-4 border-b border-r" rowspan="2">STT</th>
+                                <th class="p-4 border-b border-r text-left" rowspan="2">GĐ Khu Vực</th>
+                                <th class="p-4 border-b border-r text-left" rowspan="2">Khu Vực</th>
+                                <th class="p-4 border-b border-r" rowspan="2">Target Tháng</th>
+                                <th class="p-2 border-b border-r text-orange-600 bg-orange-50/50" colspan="2" id="si_th_date">DỮ LIỆU NGÀY: ...</th>
+                                <th class="p-4 border-b border-r" rowspan="2">Đã Thanh Toán<br><span class="text-[9px] text-gray-400">(Lũy Kế)</span></th>
+                                <th class="p-4 border-b border-r bg-yellow-50 text-yellow-700" rowspan="2">Tổng Xuất<br>Thực Tế</th>
+                                <th class="p-4 border-b border-r text-red-500" rowspan="2">Số Lượng<br>Chưa Xuất</th>
+                                <th class="p-4 border-b border-r" rowspan="2">Tỷ Lệ Đơn Hàng<br>Thanh Toán</th>
+                                <th class="p-4 border-b border-r" rowspan="2">Tỷ Lệ<br>Hoàn Thành</th>
+                                <th class="p-4 border-b text-indigo-600 bg-indigo-50/50" rowspan="2">Xếp Hạng</th>
+                            </tr>
+                            <tr>
+                                <th class="p-2 border-b border-r text-orange-600 bg-orange-50/50">Đã Thanh Toán</th>
+                                <th class="p-2 border-b border-r text-orange-600 bg-orange-50/50">Đã Xuất</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sellinBody" class="divide-y divide-gray-100 font-medium text-slate-700">
+                            <tr><td colspan="12" class="p-8 text-center text-gray-400 italic">Vui lòng chọn ngày để tải dữ liệu...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -466,25 +516,30 @@
         <div id="view-targets" class="hidden space-y-6 animate-fade">
             <div class="bg-white p-6 rounded-2xl shadow-sm border">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                    <div><h2 class="text-2xl font-black text-slate-800">THIẾT LẬP TARGET TARGET</h2></div>
+                    <div><h2 class="text-2xl font-black text-slate-800">THIẾT LẬP TARGET (THEO NVKD)</h2></div>
                     <div class="flex items-center gap-4">
-                        <div class="flex items-center bg-pink-50 border border-pink-200 rounded-xl p-2 shadow-inner"><label class="text-xs font-bold text-pink-700 uppercase mr-2 ml-2">Tháng Target:</label><input type="month" id="target_month" onchange="loadTargets()" class="bg-white border border-pink-200 text-pink-800 font-bold rounded-lg p-2 text-sm outline-none"></div>
-                        <button onclick="saveAllTargets()" class="bg-slate-900 hover:bg-[#FF4500] text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase"><i class="fa-solid fa-floppy-disk"></i> Lưu Target</button>
+                        <div class="flex items-center bg-pink-50 border border-pink-200 rounded-xl p-2 shadow-inner"><label class="text-xs font-bold text-pink-700 uppercase mr-2 ml-2">Tháng Target:</label><input type="month" id="target_month" onchange="window.loadTargets()" class="bg-white border border-pink-200 text-pink-800 font-bold rounded-lg p-2 text-sm outline-none"></div>
+                        <button onclick="window.saveAllTargets()" class="bg-slate-900 hover:bg-[#FF4500] text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-xs uppercase"><i class="fa-solid fa-floppy-disk"></i> Lưu Target</button>
                     </div>
                 </div>
                 <div class="flex flex-col md:flex-row flex-wrap gap-3 mb-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">1. Giám Đốc</label><select id="tgt_director" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-xs w-full md:w-40" onchange="updateTargetFilterChain('director')"></select></div>
-                    <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">2. Sale Phụ Trách</label><select id="tgt_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-xs w-full md:w-36" onchange="updateTargetFilterChain('sale')"></select></div>
-                    <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-purple-600 uppercase mb-1">3. Mã SVN</label><select id="tgt_svn" class="bg-purple-50 border border-purple-200 text-purple-800 font-bold rounded-lg p-2 text-xs w-full md:w-32" onchange="updateTargetFilterChain('svn')"></select></div>
-                    <div class="w-full md:w-auto flex-1"><label class="block text-[10px] font-bold text-pink-600 uppercase mb-1">🔍 Tìm theo Tên / Mã DVN</label><input type="text" id="target_search" oninput="updateTargetFilterChain('search')" placeholder="Nhập tên hoặc mã DVN..." class="bg-white border border-pink-200 text-pink-800 font-bold rounded-lg p-2 text-xs w-full outline-none"></div>
-                    <div class="w-full md:w-auto flex items-end"><button onclick="resetTargetFilters()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-2.5 rounded-xl transition"><i class="fa-solid fa-filter-circle-xmark"></i></button></div>
+                    <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">1. Giám Đốc</label><select id="tgt_director" class="bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-lg p-2 text-xs w-full md:w-48" onchange="window.updateTargetFilterChain('director')"></select></div>
+                    <div class="w-full md:w-auto"><label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">2. Sale Phụ Trách</label><select id="tgt_sale" class="bg-blue-50/50 border border-blue-100 text-blue-700 font-bold rounded-lg p-2 text-xs w-full md:w-48" onchange="window.updateTargetFilterChain('sale')"></select></div>
+                    <div class="w-full md:w-auto flex-1"><label class="block text-[10px] font-bold text-pink-600 uppercase mb-1">🔍 Tìm theo Tên NVKD / GĐ</label><input type="text" id="target_search" oninput="window.updateTargetFilterChain('search')" placeholder="Nhập tên nhân viên kinh doanh hoặc giám đốc..." class="bg-white border border-pink-200 text-pink-800 font-bold rounded-lg p-2 text-xs w-full outline-none"></div>
+                    <div class="w-full md:w-auto flex items-end"><button onclick="window.resetTargetFilters()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold px-4 py-2.5 rounded-xl transition text-xs flex items-center gap-2 shadow-sm"><i class="fa-solid fa-filter-circle-xmark"></i> Bỏ lọc</button></div>
                 </div>
                 <div class="overflow-x-auto max-h-[60vh] border border-gray-100 rounded-lg">
                     <table class="w-full text-left text-sm whitespace-nowrap">
                         <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm text-[10px] font-black text-gray-500 uppercase">
-                            <tr><th class="p-4">Cửa Hàng (DVN)</th><th class="p-4 text-center text-orange-600 bg-orange-50/50">Target S.O</th><th class="p-4 text-center text-blue-600">Báo Cáo</th><th class="p-4 text-center text-green-600 bg-green-50/50">Lượt Khách</th><th class="p-4 text-center text-pink-600">Video Gửi</th><th class="p-4 text-center text-purple-600 bg-purple-50/50">Lượt Xem</th><th class="p-4 text-center text-red-600">Livestream</th></tr>
+                            <tr>
+                                <th class="p-4 w-64">Nhân Viên Kinh Doanh (Sale)</th>
+                                <th class="p-4 w-64 text-blue-600">Giám Đốc Khu Vực</th>
+                                <th class="p-4 text-center text-blue-600 bg-blue-50/50">Target S.I</th>
+                                <th class="p-4 text-center text-orange-600 bg-orange-50/50">Target S.O</th>
+                            </tr>
                         </thead>
                         <tbody id="targetBody" class="divide-y divide-gray-100 font-medium text-slate-700"></tbody>
+                        <tfoot id="targetFooter" class="bg-slate-800 text-white font-black text-xs uppercase hidden"></tfoot>
                     </table>
                 </div>
             </div>

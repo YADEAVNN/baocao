@@ -1,4 +1,4 @@
-// File: view-sellin.js
+// File: views/view-sellin.js
 export const sellinHTML = `
 <div class="p-4 md:p-6 fade-in w-full mx-auto max-w-[1500px]">
     <div id="sellin_access_denied" class="hidden text-center mt-32">
@@ -32,9 +32,18 @@ export const sellinHTML = `
                 <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Chọn Tháng</label>
                 <input type="month" id="sellin_month" onchange="window.loadSellinData()" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-black text-slate-800 outline-none focus:border-blue-500 cursor-pointer">
             </div>
+            
+            <!-- CỤM NÚT NHẬP/XUẤT EXCEL -->
             <div class="ml-auto flex gap-2">
-                <button onclick="window.loadSellinData()" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-xl font-black text-sm uppercase hover:bg-blue-200 transition">
-                    <i class="fa-solid fa-rotate-right"></i> Làm mới
+                <input type="file" id="excel_import_file" class="hidden" accept=".xlsx, .xls" onchange="window.importSellinExcel(event)">
+                <button onclick="document.getElementById('excel_import_file').click()" class="bg-green-100 text-green-700 px-4 py-2 rounded-xl font-black text-sm uppercase hover:bg-green-200 transition shadow-sm">
+                    <i class="fa-solid fa-file-import mr-1"></i> Nhập Excel
+                </button>
+                <button onclick="window.exportSellinExcel()" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl font-black text-sm uppercase hover:bg-emerald-200 transition shadow-sm">
+                    <i class="fa-solid fa-file-export mr-1"></i> Xuất Excel
+                </button>
+                <button onclick="window.loadSellinData()" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-xl font-black text-sm uppercase hover:bg-blue-200 transition shadow-sm">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Làm mới
                 </button>
             </div>
         </div>
@@ -45,9 +54,9 @@ export const sellinHTML = `
                 <table class="w-full text-center border-collapse">
                     <thead>
                         <tr class="bg-blue-50 border-b border-blue-100 text-[11px] font-black text-slate-600 uppercase">
-                            <th class="border-r border-blue-100 p-4 w-12">STT</th>
-                            <th class="border-r border-blue-100 p-4 w-40 text-left">GĐ Khu Vực</th>
-                            <th class="border-r border-blue-100 p-4 w-32 text-left">Khu Vực</th>
+                            <th class="border-r border-blue-100 p-4 w-12 sticky left-0 bg-blue-50 z-10">STT</th>
+                            <th class="border-r border-blue-100 p-4 w-40 text-left sticky left-[48px] bg-blue-50 z-10">GĐ Khu Vực</th>
+                            <th class="border-r border-blue-100 p-4 w-32 text-left sticky left-[208px] bg-blue-50 z-10">Khu Vực</th>
                             <th class="border-r border-blue-200 p-4 w-24 bg-blue-100/50">Target Tháng</th>
                             <th class="border-r border-blue-100 p-4 w-24 bg-gray-50">Đã thanh toán<br>(Lũy kế)</th>
                             <th class="border-r border-blue-100 p-4 w-24 bg-yellow-50 text-yellow-700 shadow-inner">Xuất thực tế<br>(Lũy kế)</th>
@@ -70,9 +79,10 @@ export const sellinHTML = `
         <!-- MÀN HÌNH 2: MA TRẬN NHẬP LIỆU -->
         <div id="sellinView_matrix" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden fade-in relative">
             <p class="text-[11px] text-gray-500 font-bold p-3 bg-gray-50 border-b border-gray-200 italic">
-                💡 Bấm vào ô của ngày tương ứng để nhập/sửa số liệu THANH TOÁN và XUẤT HÀNG. Số lớn hiển thị là <span class="text-orange-600">Xuất Hàng</span>.
+                💡 Bấm vào ô của ngày tương ứng để nhập/sửa số liệu. Hoặc sử dụng nút "Nhập Excel" để tải hàng loạt lên hệ thống. Số lớn hiển thị là <span class="text-orange-600">Xuất Hàng</span>.
             </p>
-            <div class="overflow-x-auto" id="sellin_matrix_container">
+            <!-- THÊM CLASS relative w-full ĐỂ GHIM CỘT HOẠT ĐỘNG CHUẨN -->
+            <div class="overflow-x-auto relative w-full" id="sellin_matrix_container">
                 <!-- Ma trận render bằng JS -->
             </div>
         </div>

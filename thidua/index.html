@@ -7,6 +7,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Đã có sẵn thư viện SheetJS để xử lý Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -42,7 +43,6 @@
             
             <!-- Forms -->
             <div class="w-full md:w-7/12 p-10 flex flex-col justify-center relative">
-                
                 <!-- 1. Form Đăng Nhập -->
                 <div id="loginFormSection" class="max-w-xs mx-auto w-full">
                     <h3 class="text-2xl font-black text-slate-800 mb-6">Đăng Nhập</h3>
@@ -62,7 +62,6 @@
                     <h3 class="text-2xl font-black text-slate-800 mb-4">Đăng Ký Mới</h3>
                     <div class="space-y-3">
                         <input id="reg_name" type="text" class="form-input bg-gray-50" placeholder="Họ và Tên (Tên Sale/Quản lý)">
-                        <!-- Form Role đã được mở -->
                         <select id="reg_role" class="form-input bg-gray-50">
                             <option value="Sale" selected>Nhân viên Sale (NVKD)</option>
                             <option value="ASM">Quản lý khu vực (ASM)</option>
@@ -77,7 +76,6 @@
                         <a href="#" id="goLogin" class="text-gray-500 font-bold hover:text-slate-800">← Quay lại đăng nhập</a>
                     </div>
                 </div>
-
                 <p id="msg" class="text-center text-xs font-bold mt-4 h-5 text-red-500"></p>
             </div>
         </div>
@@ -117,7 +115,6 @@
                     <span class="font-bold uppercase tracking-wider">Dashboard</span>
                 </a>
 
-                <!-- KINH DOANH -->
                 <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider">Kinh Doanh</div>
                 
                 <a onclick="window.customSwitchView('sellout')" id="nav-sellout" class="nav-item">
@@ -132,13 +129,11 @@
                     <i class="fa-solid fa-chevron-right ml-auto text-xs opacity-50"></i>
                 </a>
 
-                <!-- ĐÃ THÊM NÚT LỊCH SỬ BÁO CÁO Ở ĐÂY -->
                 <a onclick="window.customSwitchView('history')" id="nav-history" class="nav-item">
                     <i class="fa-solid fa-clock-rotate-left text-teal-500 w-6"></i> 
                     <span class="font-bold">Lịch sử báo cáo</span>
                 </a>
 
-                <!-- THI ĐUA -->
                 <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider mt-4">Thi Đua</div>
                 
                 <a onclick="window.customSwitchView('game01')" id="nav-game01" class="nav-item">

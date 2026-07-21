@@ -1,8 +1,7 @@
 // ==========================================
-// MODULE: SELL-IN (S.I) - MA TRẬN NHẬP LIỆU (BẢN FIX THANH CUỘN NGANG)
+// MODULE: SELL-IN (S.I) - 2 TABS, LƯU NGẦM & EXCEL HOÀN CHỈNH
 // ==========================================
 
-// 0. HÀM KIỂM TRA QUYỀN ADMIN
 const checkIsAdmin = () => {
     try {
         const xpath = "//text()[normalize-space(translate(., 'admin', 'ADMIN'))='ADMIN']";
@@ -13,7 +12,6 @@ const checkIsAdmin = () => {
             const val = localStorage.getItem(localStorage.key(i));
             if (val && typeof val === 'string' && val.toUpperCase().includes('ADMIN')) return true;
         }
-
         for (let i = 0; i < sessionStorage.length; i++) {
             const val = sessionStorage.getItem(sessionStorage.key(i));
             if (val && typeof val === 'string' && val.toUpperCase().includes('ADMIN')) return true;
@@ -21,7 +19,7 @@ const checkIsAdmin = () => {
     } catch (error) {
         console.error("Lỗi khi kiểm tra quyền:", error);
     }
-    return false; 
+    return false;
 };
 
 let REGIONS_SI = [
@@ -39,405 +37,602 @@ let REGIONS_SI = [
     { name: "Sông Cửu Long", dir: "GD 12" }
 ];
 
-// 1. HÀM KHỞI TẠO GIAO DIỆN CHÍNH
+const getLast7Days = (endDateStr) => {
+    const end = new Date(endDateStr);
+    const days = [];
+    const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(end);
+        d.setDate(end.getDate() - i);
+        days.push({
+            fullDate: d.toISOString().split('T')[0],
+            displayDate: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`,
+            dayOfWeek: dayNames[d.getDay()]
+        });
+    }
+    return days;
+};
+
+// 1. KHỞI TẠO GIAO DIỆN
 window.renderSellInView = () => {
     const appContent = document.getElementById('app-content');
     const isAdmin = checkIsAdmin();
     
-    const adminHint = isAdmin ? `<p class="text-xs text-orange-500 italic hidden md:block"><i class="fa-solid fa-circle-info mr-1"></i> Bấm vào ô trống để nhập liệu.</p>` : '';
+    window.STATE = window.STATE || {};
+    window.STATE.activeTab = window.STATE.activeTab || 'TT'; // Mặc định mở tab Thanh Toán
+    
     const adminImportBtn = isAdmin ? `
         <input type="file" id="excel_import_si" class="hidden" accept=".xlsx, .xls" onchange="window.importSellInExcel(event)">
-        <button onclick="document.getElementById('excel_import_si').click()" class="bg-green-100 text-green-700 px-4 py-2 rounded-lg font-bold text-sm uppercase hover:bg-green-200 transition shadow-sm">
+        <button onclick="document.getElementById('excel_import_si').click()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded border border-gray-300 font-bold text-sm hover:bg-gray-200 transition">
             <i class="fa-solid fa-file-import mr-1"></i> Nhập Excel
         </button>
     ` : '';
 
     appContent.innerHTML = `
-        <div class="mb-6">
-            <h2 class="text-2xl font-black text-gray-800 tracking-tight">TIẾN ĐỘ SELL-IN (12 KHU VỰC)</h2>
-            <p class="text-gray-500 mt-1">Quản lý ma trận báo cáo: Thanh toán, Xuất thực tế & Hàng chưa xuất</p>
-        </div>
-        
-        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-gray-100 flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-3">
-                <label class="font-bold text-gray-700 text-sm">CHỌN THÁNG BÁO CÁO</label>
-                <input type="month" id="si-month-filter" class="border border-gray-300 px-4 py-2 rounded-lg font-medium text-gray-700 outline-none focus:border-blue-500 shadow-sm" onchange="window.loadSellInData()">
+        <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+            <div class="flex items-center gap-4">
+                <h2 class="text-2xl font-black text-blue-900 tracking-tight uppercase">NHẬP LIỆU SELLIN</h2>
+                <div class="flex items-center bg-white border border-gray-200 rounded-md px-3 py-1.5 shadow-sm">
+                    <i class="fa-regular fa-calendar text-blue-600 mr-2"></i>
+                    <label class="text-sm font-medium text-gray-600 mr-2">Ngày làm việc:</label>
+                    <input type="date" id="si-date-filter" class="outline-none text-sm font-bold text-gray-800 bg-transparent" onchange="window.loadSellIn7DaysData()">
+                </div>
             </div>
-            
-            ${adminHint}
-            
-            <div class="ml-auto flex gap-2">
+            <div class="flex gap-2">
                 ${adminImportBtn}
-                <button onclick="window.exportSellInExcel()" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold text-sm uppercase hover:bg-emerald-200 transition shadow-sm">
+                <button onclick="window.exportSellInExcel()" class="bg-blue-50 text-blue-700 px-4 py-2 rounded border border-blue-200 font-bold text-sm hover:bg-blue-100 transition">
                     <i class="fa-solid fa-file-export mr-1"></i> Xuất Excel
                 </button>
             </div>
         </div>
 
-        <!-- ĐÃ FIX CSS: Thêm overflow-x-auto, max-width: 100% và display: grid để ép khung chứa không bị tràn màn hình -->
-        <div id="si_matrix_container" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto relative w-full" style="max-width: 100%; display: grid;">
-            <div class="p-10 flex justify-center items-center text-blue-500 font-bold"><i class="fa-solid fa-spinner fa-spin mr-3 text-2xl"></i> Đang tải dữ liệu ma trận...</div>
+        <div id="si_tables_container" class="space-y-4">
+            <div class="p-10 flex justify-center items-center text-blue-500 font-bold">
+                <i class="fa-solid fa-spinner fa-spin mr-3 text-2xl"></i> Đang tải dữ liệu...
+            </div>
         </div>
     `;
 
-    const d = new Date();
-    const monthVal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    document.getElementById('si-month-filter').value = monthVal;
-    
-    window.loadSellInData();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('si-date-filter').value = today;
+    window.loadSellIn7DaysData();
 };
 
-// 2. HÀM TẢI DỮ LIỆU TỪ SUPABASE
-window.loadSellInData = async () => {
-    const monthInput = document.getElementById('si-month-filter').value;
-    if (!monthInput) return;
+window.switchTab = (tab) => {
+    window.STATE.activeTab = tab;
+    window.renderDualTables();
+};
 
-    const [year, month] = monthInput.split('-');
-    const startDate = `${year}-${month}-01`;
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const endDate = `${year}-${month}-${daysInMonth}`;
+// 2. TẢI DỮ LIỆU TỪ SUPABASE
+window.loadSellIn7DaysData = async () => {
+    const targetDate = document.getElementById('si-date-filter').value;
+    if (!targetDate) return;
 
-    const container = document.getElementById('si_matrix_container');
+    const days7 = getLast7Days(targetDate);
+    const startDate = days7[0].fullDate;
+    const endDate = days7[6].fullDate;
+
+    const container = document.getElementById('si_tables_container');
     container.innerHTML = '<div class="p-10 flex justify-center items-center text-blue-500 font-bold"><i class="fa-solid fa-spinner fa-spin mr-3 text-2xl"></i> Đang tải dữ liệu...</div>';
 
     try {
         const { data: reports, error: reportsErr } = await window.sb.from('daily_si_reports')
             .select('*').gte('report_date', startDate).lte('report_date', endDate);
-        
         if (reportsErr) throw reportsErr;
 
         const { data: shopsData, error: shopsErr } = await window.sb.from('shops').select('khu_vuc, gd_khu_vuc');
-        
         if (!shopsErr && shopsData && shopsData.length > 0) {
             let directorMap = {};
-            shopsData.forEach(shop => {
-                if (shop.khu_vuc && shop.gd_khu_vuc) {
-                    directorMap[shop.khu_vuc.trim().toUpperCase()] = shop.gd_khu_vuc;
-                }
-            });
-
-            REGIONS_SI = REGIONS_SI.map(region => ({
-                ...region,
-                dir: directorMap[region.name.toUpperCase()] || region.dir
-            }));
+            shopsData.forEach(shop => { if (shop.khu_vuc && shop.gd_khu_vuc) directorMap[shop.khu_vuc.trim().toUpperCase()] = shop.gd_khu_vuc; });
+            REGIONS_SI = REGIONS_SI.map(region => ({ ...region, dir: directorMap[region.name.toUpperCase()] || region.dir }));
         }
         
         window.STATE.rawHistorySI = reports || [];
-        window.STATE.siDaysInMonth = daysInMonth;
-        window.STATE.siYear = year;
-        window.STATE.siMonth = month;
+        window.STATE.days7 = days7;
+        window.STATE.targetDate = targetDate;
 
-        window.renderSellInMatrix();
-
+        window.renderDualTables();
     } catch (err) {
         console.error("Lỗi tải dữ liệu S.I:", err);
-        container.innerHTML = `<div class="p-6 bg-red-50 text-red-600 font-bold rounded-xl border border-red-200">Lỗi tải dữ liệu: ${err.message}</div>`;
+        container.innerHTML = `<div class="p-6 bg-red-50 text-red-600 font-bold rounded border border-red-200">Lỗi tải dữ liệu: ${err.message}</div>`;
     }
 };
 
-// 3. HÀM VẼ MA TRẬN
-window.renderSellInMatrix = () => {
-    const container = document.getElementById('si_matrix_container');
+// 3. VẼ GIAO DIỆN CHIA 2 TABS
+window.renderDualTables = () => {
+    const container = document.getElementById('si_tables_container');
     const reports = window.STATE.rawHistorySI || [];
-    const daysInMonth = window.STATE.siDaysInMonth || 31;
-    const year = window.STATE.siYear;
-    const month = window.STATE.siMonth;
-    
+    const days7 = window.STATE.days7;
+    const targetDate = window.STATE.targetDate;
     const isAdmin = checkIsAdmin(); 
+    const activeTab = window.STATE.activeTab;
 
-    const wSTT = 50, wKhuVuc = 160, wPhanLoai = 120, wTong = 80;
-    const lKhuVuc = wSTT;               
-    const lPhanLoai = wSTT + wKhuVuc;   
-    const lTong = wSTT + wKhuVuc + wPhanLoai; 
-
-    let thead = `
-        <tr class="border-b-2 border-gray-200 bg-gray-50 text-gray-600 text-xs uppercase text-center">
-            <th class="py-4 px-2 font-bold sticky left-0 z-20 bg-gray-50 border-r border-gray-200 min-w-[${wSTT}px] shadow-[1px_0_0_0_#e5e7eb]">STT</th>
-            <th class="py-4 px-3 font-bold sticky left-[${lKhuVuc}px] z-20 bg-gray-50 border-r border-gray-200 min-w-[${wKhuVuc}px] text-left shadow-[1px_0_0_0_#e5e7eb]">KHU VỰC</th>
-            <th class="py-4 px-2 font-bold sticky left-[${lPhanLoai}px] z-20 bg-gray-50 border-r border-gray-200 min-w-[${wPhanLoai}px] shadow-[1px_0_0_0_#e5e7eb]">PHÂN LOẠI</th>
-            <th class="py-4 px-3 font-black text-orange-600 sticky left-[${lTong}px] z-20 bg-orange-100 border-r border-gray-300 min-w-[${wTong}px] shadow-[1px_0_0_0_#e5e7eb]">TỔNG</th>
-    `;
-    
-    for (let d = 1; d <= daysInMonth; d++) {
-        thead += `<th class="py-4 px-1 min-w-[45px]">${d}</th>`;
-    }
-    thead += `</tr>`;
-
-    let tbody = '';
-
-    REGIONS_SI.forEach((region, index) => {
-        const regionReports = reports.filter(r => r.region_name === region.name);
-        
-        let sumTT = 0, sumXH = 0, sumCX = 0;
-        let dailyHtmlTT = '', dailyHtmlXH = '', dailyHtmlCX = '';
-
-        for (let d = 1; d <= daysInMonth; d++) {
-            const fullDate = `${year}-${month}-${String(d).padStart(2, '0')}`;
-            const dailyData = regionReports.find(r => r.report_date === fullDate) || { thanh_toan: 0, xuat_hang: 0, chua_xuat: 0 };
-            
-            sumTT += (dailyData.thanh_toan || 0);
-            sumXH += (dailyData.xuat_hang || 0);
-            sumCX += (dailyData.chua_xuat || 0);
-
-            const onClickFn = isAdmin ? `onclick="window.openSellInModal('${fullDate}', '${region.name}', ${dailyData.thanh_toan || 0}, ${dailyData.xuat_hang || 0}, ${dailyData.chua_xuat || 0})"` : '';
-            const cursorClass = isAdmin ? 'cursor-pointer hover:bg-slate-100' : 'cursor-default';
-            const cellClass = `${cursorClass} bg-white border border-gray-100 rounded text-sm py-1.5 font-semibold transition w-full h-full block`;
-            
-            dailyHtmlTT += `<td class="p-1 text-center"><div ${onClickFn} class="${cellClass} ${dailyData.thanh_toan > 0 ? 'text-blue-600 border-blue-200 bg-blue-50/30' : 'text-gray-300'}">${dailyData.thanh_toan > 0 ? dailyData.thanh_toan : '-'}</div></td>`;
-            dailyHtmlXH += `<td class="p-1 text-center"><div ${onClickFn} class="${cellClass} ${dailyData.xuat_hang > 0 ? 'text-green-600 border-green-200 bg-green-50/30' : 'text-gray-300'}">${dailyData.xuat_hang > 0 ? dailyData.xuat_hang : '-'}</div></td>`;
-            dailyHtmlCX += `<td class="p-1 text-center"><div ${onClickFn} class="${cellClass} ${dailyData.chua_xuat > 0 ? 'text-orange-600 border-orange-200 bg-orange-50/30' : 'text-gray-300'}">${dailyData.chua_xuat > 0 ? dailyData.chua_xuat : '-'}</div></td>`;
-        }
-
-        const tdSTT = `sticky left-0 bg-white z-10 border-r border-gray-200 text-center font-bold text-gray-500 shadow-[1px_0_0_0_#e5e7eb]`;
-        const tdKhuVuc = `sticky left-[${lKhuVuc}px] bg-white z-10 border-r border-gray-200 px-3 shadow-[1px_0_0_0_#e5e7eb]`;
-        const tdPhanLoai = `sticky left-[${lPhanLoai}px] z-10 bg-white border-r border-gray-200 text-center px-2 py-2 text-[13px] font-bold shadow-[1px_0_0_0_#e5e7eb]`;
-        const tdTong = `sticky left-[${lTong}px] z-10 bg-orange-50 border-r border-gray-300 text-center px-2 py-2 font-black text-[15px] shadow-[1px_0_0_0_#e5e7eb]`;
-
-        tbody += `
-            <tr class="border-t-2 border-gray-200 bg-white hover:bg-slate-50">
-                <td rowspan="3" class="${tdSTT}">${index + 1}</td>
-                <td rowspan="3" class="${tdKhuVuc}">
-                    <div class="font-black text-gray-800 text-[15px]">${region.name}</div>
-                    <div class="text-[12px] text-gray-500 font-medium mt-0.5"><i class="fa-regular fa-user mr-1"></i>${region.dir}</div>
-                </td>
-                <td class="${tdPhanLoai} text-blue-600 bg-blue-50/50">Thanh toán</td>
-                <td class="${tdTong} text-blue-700">${sumTT}</td>
-                ${dailyHtmlTT}
-            </tr>
-            <tr class="bg-white hover:bg-slate-50">
-                <td class="${tdPhanLoai} text-green-600 bg-green-50/50">Xuất thực tế</td>
-                <td class="${tdTong} text-green-700">${sumXH}</td>
-                ${dailyHtmlXH}
-            </tr>
-            <tr class="border-b-2 border-gray-200 bg-white hover:bg-slate-50">
-                <td class="${tdPhanLoai} text-orange-600 bg-orange-50/50">Hàng chưa xuất</td>
-                <td class="${tdTong} text-orange-700">${sumCX}</td>
-                ${dailyHtmlCX}
-            </tr>
-        `;
-    });
-
-    // ĐÃ FIX CSS: Thêm max-width: 100% để hiển thị thanh scroll trượt ngang
-    container.innerHTML = `
-        <div class="overflow-x-auto relative w-full pb-4 custom-scrollbar" style="max-width: 100%; width: 100%;">
-            <table id="table_sellin_export" class="w-full text-left border-collapse whitespace-nowrap" style="min-width: max-content;">
-                <thead>${thead}</thead>
-                <tbody>${tbody}</tbody>
-            </table>
+    const tabsHtml = `
+        <div class="flex border-b border-gray-200 mb-2 space-x-1">
+            <button onclick="window.switchTab('TT')" class="px-6 py-3 font-bold text-sm rounded-t-lg transition ${activeTab === 'TT' ? 'bg-[#004b93] text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
+                1. NHẬP ĐƠN THANH TOÁN
+            </button>
+            <button onclick="window.switchTab('XH')" class="px-6 py-3 font-bold text-sm rounded-t-lg transition ${activeTab === 'XH' ? 'bg-[#137a3f] text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
+                2. NHẬP ĐƠN PHÁT HÀNG
+            </button>
         </div>
     `;
-};
 
-// 4. HÀM MỞ MODAL NHẬP LIỆU GỘP
-window.openSellInModal = (date, regionName, currentTT, currentXH, currentCX) => {
-    const existingModal = document.getElementById('si-input-modal');
-    if (existingModal) existingModal.remove();
+    const renderDateHeaders = () => {
+        let html = '';
+        days7.forEach(d => {
+            const isWeekend = d.dayOfWeek === 'CN';
+            html += `
+                <th class="border border-gray-300 py-1.5 px-2 min-w-[70px]">
+                    <div class="${isWeekend ? 'text-red-500' : 'text-gray-700'}">${d.displayDate}</div>
+                    <div class="${isWeekend ? 'text-red-500' : 'text-gray-500'} font-medium">${d.dayOfWeek}</div>
+                </th>
+            `;
+        });
+        return html;
+    };
 
-    const formattedDate = date.split('-').reverse().join('/');
+    let tableHtml = '';
 
-    const modalHtml = `
-        <div id="si-input-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden font-sans fade-in">
-                <div class="bg-slate-800 text-white px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-lg">NHẬP LIỆU SELL-IN</h3>
-                        <p class="text-xs text-slate-300 mt-1">${regionName} | Ngày ${formattedDate}</p>
-                    </div>
-                    <button onclick="document.getElementById('si-input-modal').remove()" class="text-slate-400 hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-                
-                <div class="p-6 space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-blue-600 mb-1">1. Thanh toán</label>
-                        <input type="number" id="input-tt" value="${currentTT || ''}" placeholder="Nhập số lượng..." class="w-full border-2 border-blue-100 px-4 py-2.5 rounded-xl outline-none focus:border-blue-500 font-bold text-gray-700 bg-blue-50/30">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-green-600 mb-1">2. Xuất thực tế</label>
-                        <input type="number" id="input-xh" value="${currentXH || ''}" placeholder="Nhập số lượng..." class="w-full border-2 border-green-100 px-4 py-2.5 rounded-xl outline-none focus:border-green-500 font-bold text-gray-700 bg-green-50/30">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-orange-600 mb-1">3. Hàng chưa xuất</label>
-                        <input type="number" id="input-cx" value="${currentCX || ''}" placeholder="Nhập số lượng..." class="w-full border-2 border-orange-100 px-4 py-2.5 rounded-xl outline-none focus:border-orange-500 font-bold text-gray-700 bg-orange-50/30">
-                    </div>
-                </div>
-                
-                <div class="bg-gray-50 px-6 py-4 border-t flex justify-between gap-3">
-                    <button onclick="window.deleteSellIn('${date}', '${regionName}')" class="px-5 py-2.5 bg-red-100 text-red-600 font-bold rounded-xl hover:bg-red-200 transition">
-                        <i class="fa-solid fa-trash-can"></i> Xóa
-                    </button>
-                    <div class="flex gap-2">
-                        <button onclick="document.getElementById('si-input-modal').remove()" class="px-5 py-2.5 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition">
-                            Hủy
-                        </button>
-                        <button onclick="window.saveSellIn('${date}', '${regionName}')" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition flex items-center gap-2">
-                            <i class="fa-solid fa-floppy-disk"></i> LƯU LẠI
-                        </button>
-                    </div>
+    if (activeTab === 'TT') {
+        // ================= TAB 1: THANH TOÁN =================
+        let colTotalsTT = Array(7).fill(0);
+        let totalAllTT = 0;
+        let tbodyTT = '';
+        
+        REGIONS_SI.forEach((region, index) => {
+            let rowTotal = 0;
+            let inputsHtml = '';
+            
+            days7.forEach((d, dIndex) => {
+                const dailyData = reports.find(r => r.region_name === region.name && r.report_date === d.fullDate) || {};
+                const val = dailyData.thanh_toan || 0;
+                rowTotal += val;
+                colTotalsTT[dIndex] += val;
+
+                const inputElement = isAdmin 
+                    ? `<input type="number" value="${val === 0 ? '' : val}" onchange="window.saveInlineData('${d.fullDate}', '${region.name}', 'thanh_toan', this)" class="tt-input tt-row-${index} tt-col-${dIndex} w-full h-full text-center outline-none bg-transparent hover:bg-gray-50 focus:bg-blue-50 py-1.5 font-medium text-gray-700 transition-colors">`
+                    : `<div class="py-1.5 text-center text-gray-700">${val === 0 ? '' : val}</div>`;
+
+                inputsHtml += `<td class="border border-gray-200 p-0 h-full align-middle">${inputElement}</td>`;
+            });
+            
+            totalAllTT += rowTotal;
+            tbodyTT += `
+                <tr class="bg-white hover:bg-slate-50 transition">
+                    <td class="border border-gray-200 text-center py-2 font-medium text-gray-600">${index + 1}</td>
+                    <td class="border border-gray-200 px-3 font-medium text-gray-800 whitespace-nowrap">${region.name}</td>
+                    <td class="border border-gray-200 px-3 text-sm text-gray-600 whitespace-nowrap">${region.dir}</td>
+                    <td id="tt-row-total-${index}" class="border border-gray-200 text-center font-bold bg-yellow-50 text-gray-800 shadow-[inset_0_0_2px_rgba(0,0,0,0.05)]">${rowTotal.toLocaleString()}</td>
+                    ${inputsHtml}
+                    <td class="border border-gray-200 p-0"><input type="text" class="w-full h-full outline-none px-2 text-sm bg-transparent" ${isAdmin ? '' : 'readonly'}></td>
+                </tr>
+            `;
+        });
+
+        tableHtml = `
+            <div class="bg-white rounded-b-lg rounded-tr-lg shadow-sm border border-gray-200 overflow-hidden fade-in">
+                <div class="overflow-x-auto w-full custom-scrollbar">
+                    <table id="table_tt_export" class="w-full text-sm border-collapse min-w-max">
+                        <thead>
+                            <tr class="bg-[#004b93] text-white text-center font-semibold">
+                                <th rowspan="2" class="border border-[#003970] py-2 px-2 w-12">STT</th>
+                                <th rowspan="2" class="border border-[#003970] py-2 px-4 w-40">Tên Khu Vực</th>
+                                <th rowspan="2" class="border border-[#003970] py-2 px-4 w-40">Tên Giám Đốc</th>
+                                <th rowspan="2" class="border border-[#003970] bg-[#fff5d6] text-gray-800 py-2 px-2 w-24 leading-tight">TOTAL<br><span class="text-xs font-normal">(Đơn)</span></th>
+                                <th colspan="7" class="border border-gray-300 bg-gray-50 text-gray-700 py-1.5 uppercase text-xs">CHI TIẾT NHẬP LIỆU THEO NGÀY <span class="font-normal normal-case">(Đơn thanh toán)</span></th>
+                                <th rowspan="2" class="border border-gray-300 bg-gray-50 text-gray-700 py-2 px-4 w-40">Ghi chú</th>
+                            </tr>
+                            <tr class="bg-white text-center text-xs">${renderDateHeaders()}</tr>
+                        </thead>
+                        <tbody>${tbodyTT}</tbody>
+                        <tfoot>
+                            <tr class="bg-[#f4f7fb] font-bold text-blue-700 text-center">
+                                <td colspan="3" class="border border-gray-300 py-3 text-right px-4">TỔNG CỘNG</td>
+                                <td id="tt-grand-total" class="border border-gray-300 bg-[#fff5d6] text-orange-600">${totalAllTT.toLocaleString()}</td>
+                                ${colTotalsTT.map((total, i) => `<td id="tt-col-total-${i}" class="border border-gray-300 py-3">${total.toLocaleString()}</td>`).join('')}
+                                <td class="border border-gray-300"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
-        </div>
-    `;
+        `;
 
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('input-tt').focus();
-};
-
-// 5. HÀM LƯU DỮ LIỆU LÊN SUPABASE
-window.saveSellIn = async (date, regionName) => {
-    const valTT = parseInt(document.getElementById('input-tt').value) || 0;
-    const valXH = parseInt(document.getElementById('input-xh').value) || 0;
-    const valCX = parseInt(document.getElementById('input-cx').value) || 0;
-
-    if (valTT < 0 || valXH < 0 || valCX < 0) {
-        alert("❌ Số lượng không được nhỏ hơn 0");
-        return;
-    }
-
-    const btnSave = document.querySelector('#si-input-modal button.bg-blue-600');
-    btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG LƯU...';
-    btnSave.disabled = true;
-
-    try {
-        const { data: existingData } = await window.sb.from('daily_si_reports').select('id').eq('report_date', date).eq('region_name', regionName);
-
-        if (existingData && existingData.length > 0) {
-            const { error } = await window.sb.from('daily_si_reports').update({ thanh_toan: valTT, xuat_hang: valXH, chua_xuat: valCX }).eq('report_date', date).eq('region_name', regionName);
-            if (error) throw error;
-        } else {
-            const { error } = await window.sb.from('daily_si_reports').insert([{ report_date: date, region_name: regionName, thanh_toan: valTT, xuat_hang: valXH, chua_xuat: valCX }]);
-            if (error) throw error;
-        }
-
-        document.getElementById('si-input-modal').remove();
-        window.loadSellInData(); 
-
-    } catch (err) {
-        console.error(err);
-        alert("❌ Lỗi khi lưu dữ liệu: " + err.message);
-        btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> LƯU LẠI';
-        btnSave.disabled = false;
-    }
-};
-
-// 6. HÀM XÓA BÁO CÁO NGÀY ĐÓ
-window.deleteSellIn = async (date, regionName) => {
-    if(!confirm(`⚠️ Bạn có chắc chắn muốn xóa toàn bộ số liệu ngày ${date.split('-').reverse().join('/')} của khu vực ${regionName} không?`)) return;
-
-    try {
-        const { error } = await window.sb.from('daily_si_reports').delete().eq('report_date', date).eq('region_name', regionName);
-        if (error) throw error;
+    } else {
+        // ================= TAB 2: PHÁT HÀNG =================
+        let colTotalsXH = Array(7).fill(0);
+        let totalAllXH = 0;
+        let totalAllCX = 0;
+        let tbodyXH = '';
         
-        document.getElementById('si-input-modal').remove();
-        window.loadSellInData();
+        REGIONS_SI.forEach((region, index) => {
+            let rowTotalXH = 0;
+            let inputsHtml = '';
+            
+            const currentDayData = reports.find(r => r.region_name === region.name && r.report_date === targetDate) || {};
+            const valCX = currentDayData.chua_xuat || 0;
+            totalAllCX += valCX;
 
+            const inputCXElement = isAdmin 
+                ? `<input type="number" value="${valCX === 0 ? '' : valCX}" onchange="window.saveInlineData('${targetDate}', '${region.name}', 'chua_xuat', this)" class="cx-input cx-row-${index} w-full h-full text-center outline-none bg-transparent hover:bg-red-50 focus:bg-red-100 py-2 font-bold text-red-600 transition-colors">`
+                : `<div class="py-2 text-center text-red-600 font-bold">${valCX === 0 ? '' : valCX}</div>`;
+
+            days7.forEach((d, dIndex) => {
+                const dailyData = reports.find(r => r.region_name === region.name && r.report_date === d.fullDate) || {};
+                const val = dailyData.xuat_hang || 0;
+                rowTotalXH += val;
+                colTotalsXH[dIndex] += val;
+
+                const inputElement = isAdmin 
+                    ? `<input type="number" value="${val === 0 ? '' : val}" onchange="window.saveInlineData('${d.fullDate}', '${region.name}', 'xuat_hang', this)" class="xh-input xh-row-${index} xh-col-${dIndex} w-full h-full text-center outline-none bg-transparent hover:bg-gray-50 focus:bg-green-50 py-1.5 font-medium text-gray-700 transition-colors">`
+                    : `<div class="py-1.5 text-center text-gray-700">${val === 0 ? '' : val}</div>`;
+
+                inputsHtml += `<td class="border border-gray-200 p-0 h-full align-middle">${inputElement}</td>`;
+            });
+            
+            totalAllXH += rowTotalXH;
+            tbodyXH += `
+                <tr class="bg-white hover:bg-slate-50 transition">
+                    <td class="border border-gray-200 text-center py-2 font-medium text-gray-600">${index + 1}</td>
+                    <td class="border border-gray-200 px-3 font-medium text-gray-800 whitespace-nowrap">${region.name}</td>
+                    <td class="border border-gray-200 px-3 text-sm text-gray-600 whitespace-nowrap">${region.dir}</td>
+                    <td class="border border-gray-200 p-0 bg-[#ffe6e6]">${inputCXElement}</td>
+                    <td id="xh-row-total-${index}" class="border border-gray-200 text-center font-bold bg-[#fff5d6] text-gray-800 shadow-[inset_0_0_2px_rgba(0,0,0,0.05)]">${rowTotalXH.toLocaleString()}</td>
+                    ${inputsHtml}
+                    <td class="border border-gray-200 p-0"><input type="text" class="w-full h-full outline-none px-2 text-sm bg-transparent" ${isAdmin ? '' : 'readonly'}></td>
+                </tr>
+            `;
+        });
+
+        tableHtml = `
+            <div class="bg-white rounded-b-lg rounded-tl-lg shadow-sm border border-gray-200 overflow-hidden fade-in">
+                <div class="overflow-x-auto w-full custom-scrollbar">
+                    <table id="table_xh_export" class="w-full text-sm border-collapse min-w-max">
+                        <thead>
+                            <tr class="bg-[#137a3f] text-white text-center font-semibold">
+                                <th rowspan="2" class="border border-[#0e5c2f] py-2 px-2 w-12">STT</th>
+                                <th rowspan="2" class="border border-[#0e5c2f] py-2 px-4 w-40">Tên Khu Vực</th>
+                                <th rowspan="2" class="border border-[#0e5c2f] py-2 px-4 w-40">Tên Giám Đốc</th>
+                                <th rowspan="2" class="border border-gray-300 bg-[#fde8e8] text-gray-800 py-2 px-2 w-28 leading-tight">SỐ LƯỢNG<br>CHƯA PHÁT HÀNG<br><span class="text-xs font-normal">(Hiện tại)</span></th>
+                                <th rowspan="2" class="border border-gray-300 bg-[#fff5d6] text-gray-800 py-2 px-2 w-24 leading-tight">TOTAL<br>PHÁT HÀNG<br><span class="text-xs font-normal">(Đơn)</span></th>
+                                <th colspan="7" class="border border-gray-300 bg-gray-50 text-gray-700 py-1.5 uppercase text-xs">CHI TIẾT NHẬP LIỆU THEO NGÀY <span class="font-normal normal-case">(Đơn phát hàng)</span></th>
+                                <th rowspan="2" class="border border-gray-300 bg-gray-50 text-gray-700 py-2 px-4 w-40">Ghi chú</th>
+                            </tr>
+                            <tr class="bg-white text-center text-xs">${renderDateHeaders()}</tr>
+                        </thead>
+                        <tbody>${tbodyXH}</tbody>
+                        <tfoot>
+                            <tr class="bg-[#f0fdf4] font-bold text-green-700 text-center">
+                                <td colspan="3" class="border border-gray-300 py-3 text-right px-4">TỔNG CỘNG</td>
+                                <td id="cx-grand-total" class="border border-gray-300 bg-[#ffe6e6] text-red-600">${totalAllCX.toLocaleString()}</td>
+                                <td id="xh-grand-total" class="border border-gray-300 bg-[#fff5d6] text-orange-600">${totalAllXH.toLocaleString()}</td>
+                                ${colTotalsXH.map((total, i) => `<td id="xh-col-total-${i}" class="border border-gray-300 py-3">${total.toLocaleString()}</td>`).join('')}
+                                <td class="border border-gray-300"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = tabsHtml + tableHtml;
+};
+
+// 4. LƯU NGẦM VÀ TÍNH TỔNG TỰ ĐỘNG BẰNG JS (KHÔNG LOAD LẠI TRANG)
+window.recalculateTotals = () => {
+    const activeTab = window.STATE.activeTab;
+    
+    if (activeTab === 'TT') {
+        let grandTotal = 0;
+        let colSums = Array(7).fill(0);
+        
+        REGIONS_SI.forEach((_, rIdx) => {
+            let rowSum = 0;
+            for(let cIdx = 0; cIdx < 7; cIdx++) {
+                const el = document.querySelector(`.tt-row-${rIdx}.tt-col-${cIdx}`);
+                const val = el ? (parseInt(el.value) || 0) : 0;
+                rowSum += val;
+                colSums[cIdx] += val;
+            }
+            const rowTotalEl = document.getElementById(`tt-row-total-${rIdx}`);
+            if(rowTotalEl) rowTotalEl.innerText = rowSum.toLocaleString();
+            grandTotal += rowSum;
+        });
+        
+        for(let cIdx = 0; cIdx < 7; cIdx++) {
+            const colTotalEl = document.getElementById(`tt-col-total-${cIdx}`);
+            if(colTotalEl) colTotalEl.innerText = colSums[cIdx].toLocaleString();
+        }
+        
+        const grandTotalEl = document.getElementById(`tt-grand-total`);
+        if(grandTotalEl) grandTotalEl.innerText = grandTotal.toLocaleString();
+        
+    } else {
+        let xhGrandTotal = 0;
+        let cxGrandTotal = 0;
+        let xhColSums = Array(7).fill(0);
+        
+        REGIONS_SI.forEach((_, rIdx) => {
+            // Tính tổng Xuất hàng
+            let rowSumXH = 0;
+            for(let cIdx = 0; cIdx < 7; cIdx++) {
+                const el = document.querySelector(`.xh-row-${rIdx}.xh-col-${cIdx}`);
+                const val = el ? (parseInt(el.value) || 0) : 0;
+                rowSumXH += val;
+                xhColSums[cIdx] += val;
+            }
+            const rowTotalXHEl = document.getElementById(`xh-row-total-${rIdx}`);
+            if(rowTotalXHEl) rowTotalXHEl.innerText = rowSumXH.toLocaleString();
+            xhGrandTotal += rowSumXH;
+
+            // Tính tổng Chưa xuất (chỉ có 1 cột)
+            const cxEl = document.querySelector(`.cx-row-${rIdx}`);
+            const valCX = cxEl ? (parseInt(cxEl.value) || 0) : 0;
+            cxGrandTotal += valCX;
+        });
+        
+        for(let cIdx = 0; cIdx < 7; cIdx++) {
+            const colTotalXHEl = document.getElementById(`xh-col-total-${cIdx}`);
+            if(colTotalXHEl) colTotalXHEl.innerText = xhColSums[cIdx].toLocaleString();
+        }
+        
+        const xhGrandTotalEl = document.getElementById(`xh-grand-total`);
+        if(xhGrandTotalEl) xhGrandTotalEl.innerText = xhGrandTotal.toLocaleString();
+        
+        const cxGrandTotalEl = document.getElementById(`cx-grand-total`);
+        if(cxGrandTotalEl) cxGrandTotalEl.innerText = cxGrandTotal.toLocaleString();
+    }
+};
+
+window.saveInlineData = async (date, regionName, field, inputEl) => {
+    let val = parseInt(inputEl.value);
+    if (isNaN(val) || val < 0) {
+        val = 0;
+        inputEl.value = ''; 
+    }
+
+    // Hiệu ứng UX: Nháy màu xanh lá cây báo đã lưu cục bộ
+    inputEl.style.backgroundColor = '#dcfce3'; 
+    setTimeout(() => { inputEl.style.backgroundColor = ''; }, 500);
+
+    // Cập nhật State nội bộ để không mất dữ liệu khi chuyển tab
+    let rawData = window.STATE.rawHistorySI || [];
+    let existingRecord = rawData.find(r => r.region_name === regionName && r.report_date === date);
+    if (existingRecord) {
+        existingRecord[field] = val;
+    } else {
+        let newRec = { report_date: date, region_name: regionName, thanh_toan: 0, xuat_hang: 0, chua_xuat: 0 };
+        newRec[field] = val;
+        rawData.push(newRec);
+    }
+
+    // Tự động tính toán lại tổng trên màn hình ngay lập tức
+    window.recalculateTotals();
+
+    // Lưu ngầm lên Database (Không load lại UI)
+    try {
+        const { data: dbData } = await window.sb.from('daily_si_reports')
+            .select('id').eq('report_date', date).eq('region_name', regionName);
+
+        if (dbData && dbData.length > 0) {
+            let updateObj = {}; updateObj[field] = val;
+            await window.sb.from('daily_si_reports').update(updateObj).eq('id', dbData[0].id);
+        } else {
+            let insertObj = { report_date: date, region_name: regionName, thanh_toan: 0, xuat_hang: 0, chua_xuat: 0 };
+            insertObj[field] = val;
+            await window.sb.from('daily_si_reports').insert([insertObj]);
+        }
     } catch (err) {
-        console.error(err);
-        alert("❌ Lỗi khi xóa: " + err.message);
+        console.error("Lỗi lưu ngầm:", err);
+        inputEl.style.backgroundColor = '#fee2e2'; // Báo đỏ nếu kết nối mạng lỗi
     }
 };
 
 // ==========================================
-// TÍNH NĂNG NHẬP / XUẤT EXCEL
+// TÍNH NĂNG NHẬP / XUẤT EXCEL TỰ ĐỘNG MAP 2 TABS
 // ==========================================
+
 window.exportSellInExcel = function() {
-    let table = document.getElementById("table_sellin_export");
-    if(!table) {
-        alert("Không tìm thấy bảng dữ liệu để xuất!"); 
-        return;
+    const days7 = window.STATE.days7;
+    const reports = window.STATE.rawHistorySI || [];
+    const targetDate = window.STATE.targetDate;
+
+    if (!days7 || days7.length === 0) {
+        alert("Chưa có dữ liệu ngày để xuất!"); return;
     }
-    let workbook = XLSX.utils.table_to_book(table, {sheet: "Tien_Do_Sell_In"});
-    XLSX.writeFile(workbook, 'Bao_Cao_SellIn.xlsx');
+
+    // 1. Dựng dữ liệu Sheet 1: Thanh Toán
+    let aoaTT = [
+        ["STT", "Tên Khu Vực", "Tên Giám Đốc", "TOTAL ĐƠN", ...days7.map(d => `${d.displayDate} (${d.dayOfWeek})`)]
+    ];
+
+    REGIONS_SI.forEach((region, index) => {
+        let rowTT = [index + 1, region.name, region.dir, 0];
+        let totalTT = 0;
+        days7.forEach(d => {
+            const dailyData = reports.find(r => r.region_name === region.name && r.report_date === d.fullDate) || {};
+            const val = dailyData.thanh_toan || 0;
+            totalTT += val;
+            rowTT.push(val === 0 ? "" : val);
+        });
+        rowTT[3] = totalTT; // Cập nhật tổng
+        aoaTT.push(rowTT);
+    });
+
+    // 2. Dựng dữ liệu Sheet 2: Phát Hàng
+    let aoaXH = [
+        ["STT", "Tên Khu Vực", "Tên Giám Đốc", "CHƯA PHÁT HÀNG (HIỆN TẠI)", "TOTAL PHÁT HÀNG", ...days7.map(d => `${d.displayDate} (${d.dayOfWeek})`)]
+    ];
+
+    REGIONS_SI.forEach((region, index) => {
+        const currentDayData = reports.find(r => r.region_name === region.name && r.report_date === targetDate) || {};
+        const valCX = currentDayData.chua_xuat || 0;
+
+        let rowXH = [index + 1, region.name, region.dir, (valCX === 0 ? "" : valCX), 0];
+        let totalXH = 0;
+        days7.forEach(d => {
+            const dailyData = reports.find(r => r.region_name === region.name && r.report_date === d.fullDate) || {};
+            const val = dailyData.xuat_hang || 0;
+            totalXH += val;
+            rowXH.push(val === 0 ? "" : val);
+        });
+        rowXH[4] = totalXH; // Cập nhật tổng
+        aoaXH.push(rowXH);
+    });
+
+    // 3. Tạo file Excel và tải xuống
+    let wb = XLSX.utils.book_new();
+    let wsTT = XLSX.utils.aoa_to_sheet(aoaTT);
+    let wsXH = XLSX.utils.aoa_to_sheet(aoaXH);
+
+    // Styling cơ bản độ rộng cột
+    const wscols = [{wch: 5}, {wch: 20}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}];
+    wsTT['!cols'] = wscols;
+    wsXH['!cols'] = wscols;
+
+    XLSX.utils.book_append_sheet(wb, wsTT, "Thanh_Toan");
+    XLSX.utils.book_append_sheet(wb, wsXH, "Phat_Hang");
+    
+    XLSX.writeFile(wb, `Nhap_Lieu_SellIn_${targetDate.replace(/-/g, '')}.xlsx`);
 };
 
 window.importSellInExcel = async function(event) {
     let file = event.target.files[0];
     if (!file) return;
 
-    const container = document.getElementById('si_matrix_container');
-    container.innerHTML = '<div class="p-10 flex justify-center items-center text-blue-500 font-bold"><i class="fa-solid fa-spinner fa-spin mr-3 text-2xl"></i> Đang xử lý file Excel và đồng bộ lên hệ thống...</div>';
+    const container = document.getElementById('si_tables_container');
+    const oldHtml = container.innerHTML;
+    container.innerHTML = '<div class="p-10 flex justify-center items-center text-blue-500 font-bold"><i class="fa-solid fa-spinner fa-spin mr-3 text-2xl"></i> Đang đọc file Excel và đồng bộ lên hệ thống...</div>';
 
     let reader = new FileReader();
     reader.onload = async function(e) {
         try {
             let data = new Uint8Array(e.target.result);
             let workbook = XLSX.read(data, {type: 'array'});
-            let worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            let json_data = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-
-            const monthFilter = document.getElementById('si-month-filter').value;
-            if (!monthFilter) throw new Error("Vui lòng chọn tháng trên màn hình trước khi Import.");
-
+            
+            const days7 = window.STATE.days7;
+            const targetDate = window.STATE.targetDate;
             const validRegions = REGIONS_SI.map(r => r.name);
-            let currentRegion = "";
             let parsedData = {};
 
-            for (let r = 1; r < json_data.length; r++) {
-                let row = json_data[r];
-                if (!row || row.length === 0) continue;
+            // Hàm tạo key gộp dữ liệu
+            const initKey = (region, date) => {
+                let key = `${region}_${date}`;
+                if (!parsedData[key]) parsedData[key] = { region_name: region, report_date: date, hasData: false };
+                return key;
+            };
 
-                if (row[1] && String(row[1]).trim() !== "") {
-                    let rawText = String(row[1]).trim();
-                    let matched = validRegions.find(vr => rawText.startsWith(vr));
-                    if (matched) currentRegion = matched;
-                    else continue; 
-                }
+            // 1. Quét Sheet Thanh Toán (nếu có)
+            if (workbook.SheetNames.includes("Thanh_Toan")) {
+                let wsTT = workbook.Sheets["Thanh_Toan"];
+                let jsonTT = XLSX.utils.sheet_to_json(wsTT, {header: 1});
                 
-                if (!currentRegion) continue;
-                let phanLoai = row[2] ? String(row[2]).trim().toLowerCase() : "";
+                for (let i = 1; i < jsonTT.length; i++) {
+                    let row = jsonTT[i];
+                    if (!row || row.length === 0) continue;
+                    let rawRegion = String(row[1] || "").trim();
+                    let regionName = validRegions.find(vr => rawRegion.includes(vr));
+                    if (!regionName) continue;
 
-                for (let d = 1; d <= 31; d++) {
-                    let colIndex = 3 + d; 
-                    if (colIndex >= row.length) continue;
-
-                    let cellVal = row[colIndex];
-                    if (cellVal === "-" || cellVal === "" || cellVal == null) continue; 
-                    
-                    let val = parseInt(cellVal);
-                    if (isNaN(val)) continue;
-
-                    let fullDate = `${monthFilter}-${String(d).padStart(2, '0')}`;
-                    let key = `${currentRegion}_${fullDate}`;
-
-                    if (!parsedData[key]) {
-                        parsedData[key] = { region_name: currentRegion, report_date: fullDate, thanh_toan: 0, xuat_hang: 0, chua_xuat: 0 };
+                    // Đọc 7 ngày (Cột E đến K, tương ứng index 4 đến 10)
+                    for (let d = 0; d < 7; d++) {
+                        let val = parseInt(row[4 + d]);
+                        if (!isNaN(val)) {
+                            let key = initKey(regionName, days7[d].fullDate);
+                            parsedData[key].thanh_toan = val;
+                            parsedData[key].hasData = true;
+                        }
                     }
-
-                    if (phanLoai.includes("thanh toán")) parsedData[key].thanh_toan = val;
-                    else if (phanLoai.includes("xuất thực tế")) parsedData[key].xuat_hang = val;
-                    else if (phanLoai.includes("chưa xuất")) parsedData[key].chua_xuat = val;
                 }
             }
 
-            const [year, month] = monthFilter.split('-');
-            const daysInMonth = new Date(year, month, 0).getDate();
+            // 2. Quét Sheet Phát Hàng (nếu có)
+            if (workbook.SheetNames.includes("Phat_Hang")) {
+                let wsXH = workbook.Sheets["Phat_Hang"];
+                let jsonXH = XLSX.utils.sheet_to_json(wsXH, {header: 1});
+                
+                for (let i = 1; i < jsonXH.length; i++) {
+                    let row = jsonXH[i];
+                    if (!row || row.length === 0) continue;
+                    let rawRegion = String(row[1] || "").trim();
+                    let regionName = validRegions.find(vr => rawRegion.includes(vr));
+                    if (!regionName) continue;
+
+                    // Đọc cột "Chưa phát hàng" (Cột D, index 3) map vào targetDate
+                    let valCX = parseInt(row[3]);
+                    if (!isNaN(valCX)) {
+                        let key = initKey(regionName, targetDate);
+                        parsedData[key].chua_xuat = valCX;
+                        parsedData[key].hasData = true;
+                    }
+
+                    // Đọc 7 ngày (Cột F đến L, tương ứng index 5 đến 11)
+                    for (let d = 0; d < 7; d++) {
+                        let val = parseInt(row[5 + d]);
+                        if (!isNaN(val)) {
+                            let key = initKey(regionName, days7[d].fullDate);
+                            parsedData[key].xuat_hang = val;
+                            parsedData[key].hasData = true;
+                        }
+                    }
+                }
+            }
+
+            // Lọc bỏ những object không có dữ liệu thực tế
+            let finalDataToSave = Object.values(parsedData).filter(item => item.hasData);
+            if (finalDataToSave.length === 0) {
+                alert("⚠️ Không tìm thấy số liệu hợp lệ trong file Excel!");
+                container.innerHTML = oldHtml;
+                return;
+            }
+
+            // 3. Xử lý đồng bộ lên Supabase
+            const startDate = days7[0].fullDate;
+            const endDate = days7[6].fullDate;
             
-            const { data: existingData, error: fetchErr } = await window.sb.from('daily_si_reports')
-                .select('id, region_name, report_date')
-                .gte('report_date', `${monthFilter}-01`)
-                .lte('report_date', `${monthFilter}-${daysInMonth}`);
+            const { data: existingRecords, error: fetchErr } = await window.sb.from('daily_si_reports')
+                .select('id, region_name, report_date, thanh_toan, xuat_hang, chua_xuat')
+                .gte('report_date', startDate)
+                .lte('report_date', endDate);
             
             if (fetchErr) throw fetchErr;
 
             let existingMap = {};
-            if (existingData) {
-                existingData.forEach(row => { existingMap[`${row.region_name}_${row.report_date}`] = row.id; });
+            if (existingRecords) {
+                existingRecords.forEach(r => { existingMap[`${r.region_name}_${r.report_date}`] = r; });
             }
 
             let toInsert = [];
             let toUpdate = [];
 
-            Object.values(parsedData).forEach(newData => {
+            finalDataToSave.forEach(newData => {
                 let key = `${newData.region_name}_${newData.report_date}`;
-                if (existingMap[key]) {
-                    newData.id = existingMap[key]; 
+                let oldRec = existingMap[key];
+
+                if (oldRec) {
+                    // Cập nhật giá trị mới, giữ nguyên giá trị cũ nếu Excel không điền
+                    newData.id = oldRec.id;
+                    newData.thanh_toan = newData.thanh_toan !== undefined ? newData.thanh_toan : oldRec.thanh_toan;
+                    newData.xuat_hang = newData.xuat_hang !== undefined ? newData.xuat_hang : oldRec.xuat_hang;
+                    newData.chua_xuat = newData.chua_xuat !== undefined ? newData.chua_xuat : oldRec.chua_xuat;
+                    
+                    delete newData.hasData;
                     toUpdate.push(newData);
                 } else {
-                    toInsert.push(newData); 
+                    // Nếu là bản ghi mới hoàn toàn, set các trường thiếu về 0
+                    newData.thanh_toan = newData.thanh_toan || 0;
+                    newData.xuat_hang = newData.xuat_hang || 0;
+                    newData.chua_xuat = newData.chua_xuat || 0;
+                    
+                    delete newData.hasData;
+                    toInsert.push(newData);
                 }
             });
 
+            // Gửi lệnh lên database
             if (toInsert.length > 0) {
                 const { error: insErr } = await window.sb.from('daily_si_reports').insert(toInsert);
                 if (insErr) throw insErr;
@@ -447,20 +642,15 @@ window.importSellInExcel = async function(event) {
                 if (updErr) throw updErr;
             }
 
-            let total = toInsert.length + toUpdate.length;
-            if (total > 0) {
-                alert(`✅ Đã nhập thành công ${total} bản ghi (${toInsert.length} mới, cập nhật ${toUpdate.length})!`);
-            } else {
-                alert("⚠️ File Excel không có số liệu hợp lệ mới nào để nhập.");
-            }
-
+            alert(`✅ Đã Import thành công! Cập nhật ${toUpdate.length} dòng, Thêm mới ${toInsert.length} dòng.`);
+            
         } catch (error) {
             console.error(error);
             alert("❌ Lỗi khi xử lý file Excel: " + error.message);
         } finally {
-            window.loadSellInData();
+            event.target.value = ''; // Reset input file
+            window.loadSellIn7DaysData(); // Tải lại bảng ngay lập tức
         }
     };
     reader.readAsArrayBuffer(file);
-    event.target.value = ''; 
 };

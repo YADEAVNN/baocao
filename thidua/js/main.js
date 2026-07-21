@@ -5,7 +5,7 @@ import { api_checkSession, api_loadShopsAndLock, api_login, api_signup, api_logo
 import { entryHTML } from './views/view-entry.js';
 import { sellinHTML } from './views/view-sellin.js'; 
 import { historyHTML } from './views/view-history.js'; 
-import { targetHTML } from './views/view-target.js';
+// Đã loại bỏ import targetHTML vì giao diện Dashboard giờ đã do dashboard.js đảm nhận
 import { competitionHTML } from './views/view-competition.js';
 
 // 2. IMPORT CÁC MODULE LOGIC ĐÃ CHIA NHỎ
@@ -22,7 +22,7 @@ const viewMap = {
     'sellout': entryHTML,
     'sellin': sellinHTML,
     'history': historyHTML, 
-    'dashboard': targetHTML,
+    // Đã xóa 'dashboard': targetHTML khỏi map để nhường quyền xử lý cho Javascript động
     'leaderboard': competitionHTML,
     'game01': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Game 01 đang phát triển...</div>',
     'game02': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Game 02 đang phát triển...</div>',
@@ -33,7 +33,23 @@ const viewMap = {
 
 window.switchView = (viewId) => {
     const appContent = document.getElementById('app-content');
-    if (viewMap[viewId]) appContent.innerHTML = viewMap[viewId];
+    
+    // Nếu màn hình có cấu hình HTML tĩnh trong viewMap, thì đổ HTML vào
+    if (viewMap[viewId]) {
+        appContent.innerHTML = viewMap[viewId];
+    } else {
+        // Xóa trắng để các hàm JavaScript tự động vẽ giao diện động (như Dashboard)
+        appContent.innerHTML = '';
+    }
+
+    // 🔥 GỌI HÀM VẼ GIAO DIỆN DASHBOARD MỚI
+    if (viewId === 'dashboard') {
+        if (typeof window.renderDashboardView === 'function') {
+            window.renderDashboardView();
+        } else {
+            console.error("Lỗi: Không tìm thấy hàm renderDashboardView. Vui lòng kiểm tra đã nhúng thẻ script dashboard.js chưa.");
+        }
+    }
 
     if (viewId === 'sellout' && window.STATE?.currentUser) {
         const saleNameEl = document.getElementById('display_sale_name');
@@ -85,9 +101,6 @@ window.switchView = (viewId) => {
 
     if (window.innerWidth < 768 && typeof window.toggleSidebar === 'function') window.toggleSidebar();
     
-    if (viewId === 'dashboard' && typeof window.loadTargetDashboard === 'function') {
-        window.updateTGTFilters('init'); window.loadTargetDashboard('init');
-    }
     if (viewId === 'leaderboard' && typeof window.loadCompetitionData === 'function') window.loadCompetitionData();
 };
 
@@ -117,7 +130,7 @@ async function init() {
         if(document.getElementById('roleDisplay')) document.getElementById('roleDisplay').innerText = profile.role || "SALE";
 
         if (typeof api_loadShopsAndLock === 'function') await api_loadShopsAndLock(profile);
-        window.switchView('sellout'); 
+        window.switchView('dashboard'); 
 
     } catch (err) { 
         alert("Có lỗi khi tải ứng dụng. Vui lòng F5."); 

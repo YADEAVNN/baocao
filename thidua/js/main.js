@@ -16,13 +16,61 @@ window.STATE = STATE;
 window.sb = sb; 
 
 // ==========================================
+// HÀM CHUYỂN TAB TRONG MÀN HÌNH SELLOUT
+// ==========================================
+window.switchSelloutTab = (tab) => {
+    const btnEntry = document.getElementById('tab-btn-entry');
+    const btnHistory = document.getElementById('tab-btn-history');
+    const contentEntry = document.getElementById('tab-content-entry');
+    const contentHistory = document.getElementById('tab-content-history');
+
+    if (!btnEntry || !contentEntry) return;
+
+    if (tab === 'entry') {
+        contentEntry.classList.remove('hidden');
+        contentHistory.classList.add('hidden');
+        
+        btnEntry.className = "flex-1 py-3.5 text-sm font-black text-orange-600 border-b-[3px] border-orange-600 bg-orange-50/50 transition-all flex items-center justify-center gap-2";
+        btnHistory.className = "flex-1 py-3.5 text-sm font-bold text-gray-400 hover:text-orange-500 hover:bg-gray-50 border-b-[3px] border-transparent transition-all flex items-center justify-center gap-2";
+    } else {
+        contentEntry.classList.add('hidden');
+        contentHistory.classList.remove('hidden');
+        
+        btnHistory.className = "flex-1 py-3.5 text-sm font-black text-orange-600 border-b-[3px] border-orange-600 bg-orange-50/50 transition-all flex items-center justify-center gap-2";
+        btnEntry.className = "flex-1 py-3.5 text-sm font-bold text-gray-400 hover:text-orange-500 hover:bg-gray-50 border-b-[3px] border-transparent transition-all flex items-center justify-center gap-2";
+
+        // Cập nhật lại data ma trận khi bấm sang tab Lịch sử
+        if (typeof window.loadHistoryData === 'function') {
+            window.loadHistoryData();
+        }
+    }
+};
+
+// ==========================================
 // 3. CẤU HÌNH ROUTER (CHUYỂN TRANG)
 // ==========================================
 const viewMap = {
-    'sellout': entryHTML,
+    // ĐÃ FIX: Tạo UI Tabs cho màn hình Sellout
+    'sellout': `
+        <div class="w-full bg-white border-b border-gray-200 sticky top-0 z-[45] shadow-sm">
+            <div class="flex max-w-5xl mx-auto">
+                <button onclick="window.switchSelloutTab('entry')" id="tab-btn-entry" class="flex-1 py-3.5 text-sm font-black text-orange-600 border-b-[3px] border-orange-600 bg-orange-50/50 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i> NHẬP LIỆU SELLOUT
+                </button>
+                <button onclick="window.switchSelloutTab('history')" id="tab-btn-history" class="flex-1 py-3.5 text-sm font-bold text-gray-400 hover:text-orange-500 hover:bg-gray-50 border-b-[3px] border-transparent transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-table-cells"></i> MA TRẬN LỊCH SỬ
+                </button>
+            </div>
+        </div>
+        <div id="tab-content-entry" class="block w-full h-full pb-10">
+            ${entryHTML}
+        </div>
+        <div id="tab-content-history" class="hidden w-full h-full pb-10">
+            ${historyHTML}
+        </div>
+    `,
     'sellin': sellinHTML,
-    'history': historyHTML, 
-    // Đã xóa 'dashboard': targetHTML khỏi map để nhường quyền xử lý cho Javascript động
+    'history': historyHTML, // Giữ phòng hờ nếu cần dùng link ẩn
     'leaderboard': competitionHTML,
     'game01': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Game 01 đang phát triển...</div>',
     'game02': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Game 02 đang phát triển...</div>',
@@ -34,50 +82,61 @@ const viewMap = {
 window.switchView = (viewId) => {
     const appContent = document.getElementById('app-content');
     
-    // Nếu màn hình có cấu hình HTML tĩnh trong viewMap, thì đổ HTML vào
+    // Đổ HTML vào
     if (viewMap[viewId]) {
         appContent.innerHTML = viewMap[viewId];
     } else {
-        // Xóa trắng để các hàm JavaScript tự động vẽ giao diện động (như Dashboard)
         appContent.innerHTML = '';
     }
 
-    // 🔥 GỌI HÀM VẼ GIAO DIỆN DASHBOARD MỚI
     if (viewId === 'dashboard') {
         if (typeof window.renderDashboardView === 'function') {
             window.renderDashboardView();
         } else {
-            console.error("Lỗi: Không tìm thấy hàm renderDashboardView. Vui lòng kiểm tra đã nhúng thẻ script dashboard.js chưa.");
+            console.error("Lỗi: Không tìm thấy hàm renderDashboardView.");
         }
     }
 
+    // Khởi tạo tab Sellout & Lịch sử
     if (viewId === 'sellout' && window.STATE?.currentUser) {
+        // Reset về Tab Nhập liệu mặc định
+        if(document.getElementById('tab-btn-entry')) {
+            window.switchSelloutTab('entry');
+        }
+
+        // 1. Khởi tạo cho Form Nhập Liệu
         const saleNameEl = document.getElementById('display_sale_name');
         if (saleNameEl) saleNameEl.innerText = window.STATE.currentUser.full_name || 'NVKD Thị Trường';
         const dateInput = document.getElementById('so_daily_date');
         if (dateInput && !dateInput.value) { dateInput.value = new Date().toISOString().split('T')[0]; }
+
+        // 2. Tải sẵn dữ liệu cho Bảng Lịch Sử bên dưới (chạy ngầm)
+        setTimeout(() => {
+            const histMonthInput = document.querySelector('#tab-content-history input[type="month"]');
+            if (histMonthInput && !histMonthInput.value) {
+                const d = new Date();
+                histMonthInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            }
+
+            if (typeof window.loadHistoryData === 'function') {
+                window.updateHistoryFilters('init'); 
+                window.loadHistoryData();
+            }
+        }, 50);
     }
 
-    // ĐÃ FIX: Chuyển quyền xử lý giao diện S.I cho file sellin.js
     if (viewId === 'sellin') {
         if (typeof window.renderSellInView === 'function') {
             window.renderSellInView();
-        } else {
-            console.error("Lỗi: Không tìm thấy hàm renderSellInView.");
         }
     }
 
-    // 🔥 FIX LỖI LỊCH SỬ TRẮNG: Tự động gắn tháng khi click chuyển sang tab
     if (viewId === 'history') {
-        // Tìm ô input chọn tháng nằm bên trong nội dung lịch sử vừa được dựng
         const histMonthInput = document.querySelector('#app-content input[type="month"]');
         if (histMonthInput && !histMonthInput.value) {
             const d = new Date();
-            // Tự động gán chuỗi định dạng YYYY-MM (Ví dụ: 2026-07)
             histMonthInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         }
-
-        // Kích hoạt bộ lọc ban đầu và tải dữ liệu lên giao diện công tác
         if (typeof window.loadHistoryData === 'function') {
             window.updateHistoryFilters('init'); 
             window.loadHistoryData();

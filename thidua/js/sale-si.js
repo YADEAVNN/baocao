@@ -30,7 +30,7 @@ function getActiveSalesSI() {
 }
 
 // ==========================================
-// 1. LƯU DỮ LIỆU NHẬP S.I LÊN SUPABASE
+// 1. LƯU DỮ LIỆU NHẬP S.I LÊN SUPABASE (GAME_SI_REPORTS)
 // ==========================================
 window.submitSIReport = async () => {
     const date = document.getElementById('si_daily_date').value;
@@ -48,22 +48,31 @@ window.submitSIReport = async () => {
     btn.disabled = true;
 
     try {
+        // Tự động tìm khu vực của NVKD từ danh sách shop đã phân công
+        let assignedRegion = 'Chưa rõ';
+        if (window.STATE.globalAssignedShops && window.STATE.globalAssignedShops.length > 0) {
+            const myShop = window.STATE.globalAssignedShops.find(s => s.sale_name === user.full_name);
+            if (myShop) {
+                assignedRegion = myShop.area || myShop.khu_vuc || myShop.region || 'Chưa rõ';
+            }
+        }
+
         const payload = {
             report_date: date,
             sale_name: user.full_name,
             thanh_toan: Number(tt),
             xuat_hang: Number(xh),
             note: note,
-            region_name: user.region || 'Chưa rõ'
+            region_name: user.region || assignedRegion
         };
 
-        const { data: exist } = await sb.from('daily_si_reports')
+        const { data: exist } = await sb.from('game_si_reports')
             .select('id').eq('report_date', date).eq('sale_name', user.full_name).maybeSingle();
 
         if (exist) {
-            await sb.from('daily_si_reports').update(payload).eq('id', exist.id);
+            await sb.from('game_si_reports').update(payload).eq('id', exist.id);
         } else {
-            await sb.from('daily_si_reports').insert([payload]);
+            await sb.from('game_si_reports').insert([payload]);
         }
 
         alert("✅ Đã lưu kết quả S.I thành công!");
@@ -153,7 +162,7 @@ window.updateHistorySIFilters = (action) => {
 };
 
 // ==========================================
-// 3. TẢI VÀ VẼ MA TRẬN S.I
+// 3. TẢI VÀ VẼ MA TRẬN S.I TỪ BẢNG GAME_SI_REPORTS
 // ==========================================
 window.loadHistorySIData = async () => {
     const monthInput = document.getElementById('filter_month_si')?.value;
@@ -183,19 +192,23 @@ window.loadHistorySIData = async () => {
         const startDate = `${year}-${month}-01`;
         const endDate = `${year}-${month}-${daysInMonth}`;
         
-        const { data: siData } = await sb.from('daily_si_reports')
+        const { data: siData } = await sb.from('game_si_reports')
             .select('*')
             .gte('report_date', startDate)
             .lte('report_date', endDate);
 
-        if(!siData || siData.length === 0 || activeSales.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${daysInMonth + 3}" class="p-8 text-center text-gray-400 font-bold">Chưa có dữ liệu S.I phù hợp với bộ lọc</td></tr>`;
+        // ĐÃ FIX: Chỉ chặn khi không tìm thấy danh sách NVKD
+        if(activeSales.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${daysInMonth + 3}" class="p-8 text-center text-gray-400 font-bold">Không tìm thấy danh sách NVKD phù hợp với bộ lọc</td></tr>`;
             return;
         }
 
+        // Đảm bảo safeSiData luôn là một mảng kể cả khi database trống
+        const safeSiData = siData || [];
+
         let bodyHTML = '';
         activeSales.forEach(sName => {
-            const saleReports = siData.filter(r => r.sale_name === sName);
+            const saleReports = safeSiData.filter(r => r.sale_name === sName);
             let totalTT = 0;
             let totalXH = 0;
             
@@ -254,7 +267,7 @@ window.editHistorySI = async (fullDate, saleName, fieldType, currentTotal) => {
     const val = input.trim().toUpperCase();
 
     try {
-        const { data: existingData } = await window.sb.from('daily_si_reports')
+        const { data: existingData } = await window.sb.from('game_si_reports')
             .select('*').eq('report_date', fullDate).eq('sale_name', saleName).maybeSingle();
 
         if (val === 'X') {
@@ -265,9 +278,9 @@ window.editHistorySI = async (fullDate, saleName, fieldType, currentTotal) => {
                 
                 const otherField = fieldType === 'thanh_toan' ? 'xuat_hang' : 'thanh_toan';
                 if ((existingData[otherField] || 0) === 0) {
-                    await window.sb.from('daily_si_reports').delete().eq('id', existingData.id);
+                    await window.sb.from('game_si_reports').delete().eq('id', existingData.id);
                 } else {
-                    await window.sb.from('daily_si_reports').update(payload).eq('id', existingData.id);
+                    await window.sb.from('game_si_reports').update(payload).eq('id', existingData.id);
                 }
             }
             alert(`✅ Đã XÓA số lượng ${fieldNameVN} ngày ${fullDate}!`);
@@ -279,17 +292,27 @@ window.editHistorySI = async (fullDate, saleName, fieldType, currentTotal) => {
             payload[fieldType] = newTotal;
 
             if (existingData) {
-                await window.sb.from('daily_si_reports').update(payload).eq('id', existingData.id);
+                await window.sb.from('game_si_reports').update(payload).eq('id', existingData.id);
             } else {
                 const currentUser = window.STATE.currentUser;
+                
+                // Tự động tìm khu vực
+                let assignedRegion = 'Chưa rõ';
+                if (window.STATE.globalAssignedShops && window.STATE.globalAssignedShops.length > 0) {
+                    const myShop = window.STATE.globalAssignedShops.find(s => s.sale_name === saleName);
+                    if (myShop) {
+                        assignedRegion = myShop.area || myShop.khu_vuc || myShop.region || 'Chưa rõ';
+                    }
+                }
+
                 payload.report_date = fullDate;
                 payload.sale_name = saleName;
-                payload.region_name = currentUser?.region || 'Chưa rõ';
+                payload.region_name = currentUser?.region || assignedRegion;
                 
                 const otherField = fieldType === 'thanh_toan' ? 'xuat_hang' : 'thanh_toan';
                 payload[otherField] = 0;
                 
-                await window.sb.from('daily_si_reports').insert([payload]);
+                await window.sb.from('game_si_reports').insert([payload]);
             }
             alert(`✅ Đã LƯU số lượng ${fieldNameVN} mới: ${newTotal}`);
         }
@@ -319,7 +342,7 @@ window.exportHistorySIExcel = async () => {
         const startDate = `${year}-${month}-01`;
         const endDate = `${year}-${month}-${daysInMonth}`;
         
-        const { data: siData } = await window.sb.from('daily_si_reports')
+        const { data: siData } = await window.sb.from('game_si_reports')
             .select('*').gte('report_date', startDate).lte('report_date', endDate);
 
         let csvContent = "\uFEFF"; 
@@ -359,7 +382,7 @@ window.exportHistorySIExcel = async () => {
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
-        link.setAttribute("download", `Bao_Cao_SellIn_${month}_${year}.csv`);
+        link.setAttribute("download", `Bao_Cao_SellIn_ThiDua_${month}_${year}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -397,7 +420,7 @@ window.showMissingReportsModalSI = async () => {
     try {
         const startDate = `${yearStr}-${monthStr}-01`;
         const endDate = `${yearStr}-${monthStr}-${String(daysInMonth).padStart(2, '0')}`;
-        const { data: siData } = await window.sb.from('daily_si_reports')
+        const { data: siData } = await window.sb.from('game_si_reports')
             .select('*').gte('report_date', startDate).lte('report_date', endDate);
 
         let missingData = [];

@@ -7,9 +7,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Đã có sẵn thư viện SheetJS để xử lý Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <!-- Thư viện ApexCharts dùng cho Dashboard -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -27,6 +25,7 @@
         .nav-item.active { background-color: #1f2937; color: #fff; border-left-color: #F97316; }
         .form-input { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px; font-weight: 600; font-size: 16px; color: #1e293b; transition: 0.2s; outline: none; }
         .form-input:focus { border-color: #F97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+        .erp-tab-btn { transition: all 0.3s ease; }
     </style>
 </head>
 
@@ -50,26 +49,20 @@
                     <h3 class="text-2xl font-black text-slate-800 mb-6">Đăng Nhập</h3>
                     <div class="space-y-4">
                         <input id="email" type="email" class="form-input bg-gray-50" placeholder="Email nhân viên">
-                        
-                        <!-- Ô NHẬP MẬT KHẨU CÓ THÊM NÚT MẮT -->
                         <div class="relative w-full">
                             <input id="password" type="password" class="form-input bg-gray-50 pr-10" placeholder="Mật khẩu">
                             <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-[#F97316] transition-colors">
                                 <i class="fa-solid fa-eye" id="eye-icon"></i>
                             </button>
                         </div>
-                        
                         <button id="btnLogin" class="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm uppercase tracking-wider">Truy cập</button>
                     </div>
                     <div class="mt-6 text-center text-xs text-gray-400">
-                        <!-- CỤM NÚT QUÊN & ĐỔI MẬT KHẨU -->
                         <div class="flex items-center justify-center gap-4 mb-2">
                             <button type="button" onclick="document.getElementById('change-pass-modal').classList.remove('hidden')" class="hover:underline text-gray-500 font-bold transition">Đổi mật khẩu?</button>
                             <span class="text-gray-300">|</span>
-                            <!-- Đã thêm ID btn-forgot-pass vào nút này -->
                             <a href="#" id="btn-forgot-pass" class="hover:underline text-gray-500 font-bold inline-block">Quên mật khẩu?</a>
                         </div>
-                        
                         <span>Chưa có tài khoản?</span> <a href="#" id="goSignup" class="text-[#F97316] font-bold hover:underline">Đăng ký ngay</a>
                     </div>
                 </div>
@@ -78,9 +71,9 @@
                 <div id="signupFormSection" class="hidden max-w-xs mx-auto w-full">
                     <h3 class="text-2xl font-black text-slate-800 mb-4">Đăng Ký Mới</h3>
                     <div class="space-y-3">
-                        <input id="reg_name" type="text" class="form-input bg-gray-50" placeholder="Họ và Tên (Tên Sale/Quản lý)">
+                        <input id="reg_name" type="text" class="form-input bg-gray-50" placeholder="Họ và Tên">
                         <select id="reg_role" class="form-input bg-gray-50">
-                            <option value="Sale" selected>Nhân viên Sale (NVKD)</option>
+                            <option value="Sale" selected>Nhân viên Kinh doanh (NVKD)</option>
                             <option value="ASM">Quản lý khu vực (ASM)</option>
                             <option value="RSM">Giám đốc miền (RSM)</option>
                             <option value="Admin">Quản trị viên (Admin)</option>
@@ -132,23 +125,27 @@
                     <span class="font-bold uppercase tracking-wider">TRANG CHỦ</span>
                 </a>
 
-                <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider">Kinh Doanh</div>
+                <!-- MENU ERP MỚI -->
+                <a onclick="window.customSwitchView('erp')" id="nav-erp" class="nav-item">
+                    <i class="fa-solid fa-chart-pie text-indigo-500 w-6"></i> 
+                    <span class="font-bold">Hệ thống ERP</span>
+                    <i class="fa-solid fa-chevron-right ml-auto text-xs opacity-50"></i>
+                </a>
+
+                <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider mt-2">Kinh Doanh</div>
                 
-                <!-- 1. Tab Sellout (Sale) -->
                 <a onclick="window.customSwitchView('sellout')" id="nav-sellout" class="nav-item">
                     <i class="fa-solid fa-bullseye text-[#F97316] w-6"></i> 
                     <span class="font-bold">Sellout & Lịch Sử</span>
                     <i class="fa-solid fa-chevron-right ml-auto text-xs opacity-50"></i>
                 </a>
                 
-                <!-- 2. Tab Sellin (Mới - Dành cho Sale nhập liệu) -->
                 <a onclick="window.customSwitchView('sale_si')" id="nav-sale_si" class="nav-item">
                     <i class="fa-solid fa-box-open text-blue-500 w-6"></i> 
-                    <span class="font-bold">Sellin & Lịch Sử (Sale)</span>
+                    <span class="font-bold">Sellin & Lịch Sử (NVKD)</span>
                     <i class="fa-solid fa-chevron-right ml-auto text-xs opacity-50"></i>
                 </a>
 
-                <!-- 3. Tab Sellin (Cũ - Dành cho Admin xem Ma trận 12 Khu vực) -->
                 <a onclick="window.customSwitchView('sellin')" id="nav-sellin" class="nav-item">
                     <i class="fa-solid fa-table-list text-teal-500 w-6"></i> 
                     <span class="font-bold">Quản lý Sellin (Admin)</span>
@@ -157,13 +154,11 @@
 
                 <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider mt-4">Thi Đua</div>
                 
-                <!-- Đưa Bảng Xếp Hạng lên đầu tiên trong nhóm Thi Đua -->
                 <a onclick="window.customSwitchView('leaderboard')" id="nav-leaderboard" class="nav-item">
                     <i class="fa-solid fa-chart-simple text-purple-500 w-6"></i> 
                     <span class="font-bold">Bảng xếp hạng</span>
                 </a>
 
-                <!-- Gom nhóm Hệ thống Game -->
                 <div>
                     <button onclick="toggleGameMenu()" class="w-full text-left nav-item outline-none bg-transparent border-0 justify-between">
                         <div class="flex items-center">
@@ -173,35 +168,29 @@
                         <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" id="icon-game-menu"></i>
                     </button>
                     
-                    <!-- Menu con thả xuống (Mặc định ẩn) -->
                     <div id="submenu-game" class="hidden flex-col bg-[#1a2332]">
                         <a onclick="window.customSwitchView('game01')" id="nav-game01" class="nav-item pl-12 py-2.5">
                             <i class="fa-regular fa-user text-orange-400 w-6 text-xs"></i> 
                             <span class="font-bold text-xs">Game 01 - Solo</span>
                         </a>
-                        
                         <a onclick="window.customSwitchView('game02')" id="nav-game02" class="nav-item pl-12 py-2.5">
                             <i class="fa-solid fa-users text-red-500 w-6 text-xs"></i> 
                             <span class="font-bold text-xs">Game 02 - 6 Khu Vực</span>
                         </a>
-                        
                         <a onclick="window.customSwitchView('game03')" id="nav-game03" class="nav-item pl-12 py-2.5">
                             <i class="fa-solid fa-trophy text-yellow-500 w-6 text-xs"></i> 
                             <span class="font-bold text-xs">Game 03 - Toàn Quốc</span>
                         </a>
-
                         <a onclick="window.customSwitchView('fund')" id="nav-fund" class="nav-item pl-12 py-2.5">
                             <i class="fa-solid fa-wallet text-green-500 w-6 text-xs"></i> 
                             <span class="font-bold text-xs">Quỹ đóng góp</span>
                         </a>
-
                         <a onclick="window.customSwitchView('reward')" id="nav-reward" class="nav-item pl-12 py-2.5">
                             <i class="fa-solid fa-gift text-pink-500 w-6 text-xs"></i> 
                             <span class="font-bold text-xs">Lịch sử thưởng</span>
                         </a>
                     </div>
                 </div>
-
             </nav>
             
             <div class="p-4 bg-[#0f1523] border-t border-gray-800">
@@ -211,13 +200,17 @@
             </div>
         </aside>
 
-        <!-- Container -->
+        <!-- Container Chính -->
         <main class="flex-1 overflow-y-auto bg-[#F8FAFC] relative pt-20 md:pt-0">
+            <!-- App Content cũ -->
             <div id="app-content" class="w-full h-full"></div>
+
+            <!-- CHỈ CẦN THẺ DIV RỖNG NÀY CHO MÀN HÌNH ERP -->
+            <div id="erp-view" class="hidden w-full h-full"></div>
         </main>
     </div>
 
-    <!-- KHUNG MODAL ĐỔI MẬT KHẨU NHANH (Mặc định ẩn) -->
+    <!-- KHUNG MODAL ĐỔI MẬT KHẨU NHANH -->
     <div id="change-pass-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-md p-6 fade-in">
             <h3 class="font-bold text-lg text-gray-800 mb-4 border-b pb-2">ĐỔI MẬT KHẨU NHANH</h3>
@@ -235,18 +228,30 @@
         </div>
     </div>
 
-    <!-- KHAI BÁO FILE JAVASCRIPT DASHBOARD MỚI TẠO Ở ĐÂY -->
+    <!-- CÁC SCRIPT CHÍNH -->
     <script src="./js/dashboard.js"></script>
-
-    <!-- Script kết nối module -->
+    <script src="./js/erp/erp-controller.js"></script>
+    <script src="./js/erp/erp-market.js"></script>
     <script type="module" src="./js/main.js"></script>
 
     <script>
+        // Cập nhật hàm switchView để load ERP linh hoạt
         window.customSwitchView = (view) => {
-            if (typeof window.switchView === 'function') window.switchView(view);
+            if (view === 'erp') {
+                document.getElementById('app-content').classList.add('hidden');
+                document.getElementById('erp-view').classList.remove('hidden');
+                
+                // Gọi hàm nạp HTML từ erp-controller.js
+                if (typeof window.initErpModule === 'function') {
+                    window.initErpModule();
+                }
+            } else {
+                document.getElementById('erp-view').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                if (typeof window.switchView === 'function') window.switchView(view);
+            }
         };
 
-        // Hàm xử lý đóng/mở tab Hệ thống Game
         function toggleGameMenu() {
             const submenu = document.getElementById('submenu-game');
             const icon = document.getElementById('icon-game-menu');
@@ -262,101 +267,68 @@
             }
         }
 
-        // Xử lý sự kiện Ẩn/Hiện mật khẩu ở ô Đăng nhập
         document.getElementById('toggle-password')?.addEventListener('click', function () {
             const passInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eye-icon');
             
             if (passInput.type === 'password') {
-                passInput.type = 'text'; // Hiện chữ
+                passInput.type = 'text'; 
                 eyeIcon.classList.remove('fa-eye');
-                eyeIcon.classList.add('fa-eye-slash'); // Đổi icon thành gạch chéo
+                eyeIcon.classList.add('fa-eye-slash'); 
             } else {
-                passInput.type = 'password'; // Ẩn chữ
+                passInput.type = 'password'; 
                 eyeIcon.classList.remove('fa-eye-slash');
                 eyeIcon.classList.add('fa-eye');
             }
         });
 
-        // ==========================================
-        // CÁC TÍNH NĂNG LIÊN QUAN ĐẾN QUÊN & ĐỔI MẬT KHẨU
-        // ==========================================
-
-        // 1. Bắt lỗi không cho Đăng ký nếu mật khẩu dưới 6 ký tự
         document.getElementById('btnSignup')?.addEventListener('click', (e) => {
             const regPass = document.getElementById('reg_pass').value;
             if (regPass && regPass.length < 6) {
-                e.stopImmediatePropagation(); // Chặn việc gọi sang Supabase ở main.js
+                e.stopImmediatePropagation(); 
                 alert("Mật khẩu đăng ký không được dưới 6 ký tự!");
             }
         });
 
-        // 2. Xử lý tính năng Quên Mật Khẩu (Gửi link về Email)
         document.getElementById('btn-forgot-pass')?.addEventListener('click', async (e) => {
-            e.preventDefault(); // Ngăn trình duyệt nhảy trang
-
+            e.preventDefault(); 
             const emailInput = document.getElementById('email').value.trim();
 
             if (!emailInput) {
                 return alert("Vui lòng nhập Email của bạn vào ô 'Email nhân viên' phía trên, sau đó bấm 'Quên mật khẩu?' để nhận link khôi phục.");
             }
-
             try {
-                // Sử dụng Supabase để gửi link đặt lại mật khẩu
                 const { error } = await window.sb.auth.resetPasswordForEmail(emailInput);
-
                 if (error) throw error;
-
                 alert("✅ Hệ thống đã gửi link đặt lại mật khẩu đến:\n" + emailInput + "\n\nVui lòng kiểm tra Hộp thư đến (hoặc mục Spam).");
             } catch (err) {
                 alert("❌ Lỗi gửi email: " + err.message);
             }
         });
 
-        // 3. Xử lý tính năng Đổi Mật Khẩu nhanh
         document.getElementById('btn-confirm-change-pass')?.addEventListener('click', async () => {
             const email = document.getElementById('cp-email').value.trim();
             const oldPass = document.getElementById('cp-old-pass').value.trim();
             const newPass = document.getElementById('cp-new-pass').value.trim();
             const btn = document.getElementById('btn-confirm-change-pass');
 
-            if (!email || !oldPass || !newPass) {
-                return alert("Vui lòng điền đầy đủ thông tin!");
-            }
-            if (newPass.length < 6) {
-                return alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
-            }
+            if (!email || !oldPass || !newPass) return alert("Vui lòng điền đầy đủ thông tin!");
+            if (newPass.length < 6) return alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
 
             btn.innerText = "Đang xử lý...";
             btn.disabled = true;
 
             try {
-                // Bước 1: Xác thực bằng mật khẩu cũ
-                const { data: signInData, error: signInError } = await window.sb.auth.signInWithPassword({
-                    email: email,
-                    password: oldPass
-                });
-
+                const { error: signInError } = await window.sb.auth.signInWithPassword({ email, password: oldPass });
                 if (signInError) throw new Error("Mật khẩu cũ không chính xác hoặc tài khoản không tồn tại!");
-
-                // Bước 2: Cập nhật mật khẩu mới
-                const { error: updateError } = await window.sb.auth.updateUser({
-                    password: newPass
-                });
-
+                const { error: updateError } = await window.sb.auth.updateUser({ password: newPass });
                 if (updateError) throw updateError;
-
-                // Bước 3: Đăng xuất để yêu cầu dùng mật khẩu mới
                 await window.sb.auth.signOut();
-                
                 alert("✅ Đổi mật khẩu thành công! Vui lòng đăng nhập lại bằng mật khẩu mới.");
                 document.getElementById('change-pass-modal').classList.add('hidden');
-                
-                // Clear form
                 document.getElementById('cp-email').value = '';
                 document.getElementById('cp-old-pass').value = '';
                 document.getElementById('cp-new-pass').value = '';
-
             } catch (err) {
                 alert("❌ Lỗi: " + err.message);
             } finally {

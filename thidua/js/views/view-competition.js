@@ -122,7 +122,6 @@ window.renderSaleLeaderboard = async () => {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-sm text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải dữ liệu...</td></tr>';
 
     try {
-        // ĐÃ FIX: Lấy tháng từ Input để truy vấn chính xác
         let monthVal = document.getElementById('lb_month_filter')?.value;
         if (!monthVal) {
             const today = new Date();
@@ -134,7 +133,6 @@ window.renderSaleLeaderboard = async () => {
         const month = parseInt(monthStr);
         const daysInMonth = new Date(year, month, 0).getDate();
         
-        // ĐÃ FIX: Chuyển đổi truy vấn ngày từ .like() sang .gte() và .lte() để Supabase không bị lỗi
         const startDate = `${yearStr}-${monthStr}-01`;
         const endDate = `${yearStr}-${monthStr}-${String(daysInMonth).padStart(2, '0')}`;
 
@@ -149,8 +147,9 @@ window.renderSaleLeaderboard = async () => {
             reports = resSO.data || [];
             targetData = resTarget.data || [];
         } else {
+            // Lấy dữ liệu thi đua S.I từ bảng game_si_reports
             const [resSI, resTarget] = await Promise.all([
-                window.sb.from('daily_si_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
+                window.sb.from('game_si_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
                 window.sb.from('monthly_sale_targets').select('*')
             ]);
             reports = resSI.data || [];

@@ -1,16 +1,43 @@
 // ==========================================
 // PHẦN 1: LOGIC FORM NHẬP LIỆU HÀNG NGÀY
 // ==========================================
-// BẠN HÃY DÁN LẠI CODE XỬ LÝ NÚT "GỬI BÁO CÁO" CŨ CỦA BẠN VÀO ĐÂY
-// (Ví dụ: window.submitSO = async () => { ... })
+// (Giữ nguyên logic code xử lý nút "GỬI BÁO CÁO" cũ của bạn ở đây)
 
 
+// ==========================================
+// HÀM HỖ TRỢ: LỌC DANH SÁCH NVKD THEO PHÂN QUYỀN (RBAC)
+// ==========================================
+function getActiveSalesSO() {
+    const selects = document.querySelectorAll('#app-content select');
+    const dirFilter = selects[0]?.value || "";
+    const saleFilter = selects[1]?.value || "";
+    
+    const currentUser = window.STATE.currentUser;
+    const role = currentUser?.role || '';
+    const name = currentUser?.full_name || '';
+    let shops = window.STATE.globalAssignedShops || [];
 
+    if (role === 'Admin') {
+        // Admin xem tất cả, có thể lọc theo GĐ hoặc NVKD
+        if (dirFilter) shops = shops.filter(s => s.director_name === dirFilter);
+        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
+        return [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
+    } 
+    else if (role === 'RSM' || role === 'Giám đốc' || role.toLowerCase().includes('giám đốc') || role.toLowerCase().includes('gđ')) {
+        // Giám đốc chỉ xem danh sách NVKD thuộc quản lý của mình
+        shops = shops.filter(s => s.director_name === name);
+        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
+        return [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
+    } 
+    else {
+        // NVKD thị trường chỉ xem báo cáo của chính mình
+        return [name];
+    }
+}
 
 // ==========================================
 // PHẦN 2: LOGIC LỊCH SỬ BÁO CÁO S.O (MATRIX) - ĐÃ FIX TRIỆT ĐỂ
 // ==========================================
-
 window.loadHistoryData = async () => {
     let monthInput = document.querySelector('#app-content input[type="month"]') || document.querySelector('#app-content input');
     
@@ -82,7 +109,17 @@ window.updateHistoryFilters = (action) => {
     const saleSelect = selects[1]; 
     const shopSelect = selects[2]; 
 
-    const shops = window.STATE.globalAssignedShops || [];
+    let shops = window.STATE.globalAssignedShops || [];
+    const currentUser = window.STATE.currentUser;
+    const role = currentUser?.role || '';
+    const name = currentUser?.full_name || '';
+
+    // Lọc danh sách gốc dựa trên quyền (Role) trước khi đổ vào Dropdown
+    if (role === 'RSM' || role === 'Giám đốc' || role.toLowerCase().includes('giám đốc') || role.toLowerCase().includes('gđ')) {
+        shops = shops.filter(s => s.director_name === name);
+    } else if (role !== 'Admin') {
+        shops = shops.filter(s => s.sale_name === name);
+    }
 
     if (action === 'init') {
         if (dirSelect) {
@@ -91,7 +128,8 @@ window.updateHistoryFilters = (action) => {
             dirSelect.onchange = () => window.updateHistoryFilters('dir_changed');
         }
         if (saleSelect) {
-            saleSelect.innerHTML = '<option value="">-- Tất cả NVKD --</option>';
+            const sales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
+            saleSelect.innerHTML = '<option value="">-- Tất cả NVKD --</option>' + sales.map(s => `<option value="${s}">${s}</option>`).join('');
             saleSelect.onchange = () => window.updateHistoryFilters('sale_changed');
         }
         if (shopSelect) {
@@ -102,6 +140,7 @@ window.updateHistoryFilters = (action) => {
         const btnReset = Array.from(document.querySelectorAll('#app-content button')).find(b => b.innerText.includes('Bỏ Lọc'));
         if (btnReset) btnReset.onclick = () => {
             if(dirSelect) dirSelect.value = "";
+            if(saleSelect) saleSelect.value = "";
             window.updateHistoryFilters('init');
             window.renderHistoryMatrix();
         };
@@ -137,26 +176,12 @@ window.renderHistoryMatrix = () => {
     const container = document.getElementById('history_matrix_container');
     if (!container) return;
 
-    const selects = document.querySelectorAll('#app-content select');
-    const dirFilter = selects[0]?.value || "";
-    const saleFilter = selects[1]?.value || "";
-
     const daysInMonth = window.STATE.historyDaysInMonth || 31;
     const year = window.STATE.historyYear;
     const month = window.STATE.historyMonth;
 
-    let activeSales = [];
-    const currentUser = window.STATE.currentUser;
-    
-    if (currentUser?.role !== 'Admin') {
-        activeSales = [currentUser?.full_name];
-    } else {
-        let shops = window.STATE.globalAssignedShops || [];
-        if (dirFilter) shops = shops.filter(s => s.director_name === dirFilter);
-        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
-        activeSales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
-    }
-
+    // Sử dụng hàm getActiveSalesSO() để lấy danh sách NVKD dựa trên Phân quyền
+    let activeSales = getActiveSalesSO();
     const reports = window.STATE.rawHistorySO || [];
 
     let thead = `<tr class="border-b border-gray-100"><th class="py-4 px-3 sticky left-0 bg-white z-20 min-w-[200px] font-bold text-slate-500 shadow-[1px_0_0_0_#e2e8f0]">CHIẾN BINH (NVKD)</th>`;
@@ -233,14 +258,12 @@ window.editHistorySO = async (fullDate, saleName, currentTotal) => {
                 .eq('sale_name', saleName);
 
             if (existingData && existingData.length > 0) {
-                // Đã có dữ liệu -> Cập nhật
                 const { error } = await window.sb.from('daily_so_reports')
                     .update({ total_so: newTotal })
                     .eq('report_date', fullDate)
                     .eq('sale_name', saleName);
                 if (error) throw error;
             } else {
-                // Chưa có dữ liệu -> Thêm mới (ĐÃ FIX: Chỉ gửi các cột chắc chắn có trong bảng)
                 const { error } = await window.sb.from('daily_so_reports')
                     .insert([{
                         report_date: fullDate,
@@ -253,7 +276,6 @@ window.editHistorySO = async (fullDate, saleName, currentTotal) => {
             alert(`✅ Đã LƯU số lượng mới: ${newTotal}`);
         }
 
-        // Gọi lại hàm để reload ma trận
         if (typeof window.loadHistoryData === 'function') {
             window.loadHistoryData();
         }
@@ -263,6 +285,7 @@ window.editHistorySO = async (fullDate, saleName, currentTotal) => {
         alert("❌ Có lỗi xảy ra khi thao tác: " + err.message);
     }
 };
+
 // ------------------------------------------
 // 5. TÍNH NĂNG XUẤT EXCEL (CSV)
 // ------------------------------------------
@@ -272,31 +295,16 @@ window.exportHistoryExcel = () => {
     const month = window.STATE.historyMonth;
     const reports = window.STATE.rawHistorySO || [];
     
-    // Lấy danh sách NVKD đang hiển thị trên bảng
-    const selects = document.querySelectorAll('#app-content select');
-    const dirFilter = selects[0]?.value || "";
-    const saleFilter = selects[1]?.value || "";
-    let activeSales = [];
-    const currentUser = window.STATE.currentUser;
-    
-    if (currentUser?.role !== 'Admin') {
-        activeSales = [currentUser?.full_name];
-    } else {
-        let shops = window.STATE.globalAssignedShops || [];
-        if (dirFilter) shops = shops.filter(s => s.director_name === dirFilter);
-        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
-        activeSales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
-    }
+    // Áp dụng hàm getActiveSalesSO() để xuất đúng dữ liệu theo bộ lọc
+    let activeSales = getActiveSalesSO();
 
     if (activeSales.length === 0) {
         alert("❌ Không có dữ liệu NVKD nào để xuất!");
         return;
     }
 
-    // Xây dựng nội dung file CSV
-    let csvContent = "\uFEFF"; // Thêm BOM để Excel đọc được tiếng Việt có dấu
+    let csvContent = "\uFEFF"; 
     
-    // Tạo Dòng Header (Tiêu đề)
     let header = ["CHIEN BINH (NVKD)"];
     for (let d = 1; d <= daysInMonth; d++) {
         header.push(`Ngay ${d}`);
@@ -304,10 +312,9 @@ window.exportHistoryExcel = () => {
     header.push("TONG THANG");
     csvContent += header.join(",") + "\n";
 
-    // Tạo các dòng Dữ liệu
     activeSales.forEach(saleName => {
         const saleReports = reports.filter(r => r.sale_name === saleName);
-        let row = [`"${saleName}"`]; // Bọc tên trong ngoặc kép để tránh lỗi dấu phẩy
+        let row = [`"${saleName}"`]; 
         let totalMonth = 0;
 
         for (let d = 1; d <= daysInMonth; d++) {
@@ -322,7 +329,6 @@ window.exportHistoryExcel = () => {
         csvContent += row.join(",") + "\n";
     });
 
-    // Tạo file và kích hoạt tải xuống
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -342,27 +348,14 @@ window.showMissingReportsModal = () => {
     const month = window.STATE.historyMonth;
     const reports = window.STATE.rawHistorySO || [];
     
-    const selects = document.querySelectorAll('#app-content select');
-    const dirFilter = selects[0]?.value || "";
-    const saleFilter = selects[1]?.value || "";
-    let activeSales = [];
-    const currentUser = window.STATE.currentUser;
+    // Lấy danh sách đang hiển thị thông qua getActiveSalesSO
+    let activeSales = getActiveSalesSO();
     
-    if (currentUser?.role !== 'Admin') {
-        activeSales = [currentUser?.full_name];
-    } else {
-        let shops = window.STATE.globalAssignedShops || [];
-        if (dirFilter) shops = shops.filter(s => s.director_name === dirFilter);
-        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
-        activeSales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
-    }
-    
-    // Tính toán số ngày cần kiểm tra
     const today = new Date();
     let checkUntilDay = window.STATE.historyDaysInMonth;
     
     if (parseInt(year) === today.getFullYear() && parseInt(month) === today.getMonth() + 1) {
-        checkUntilDay = today.getDate() - 1; // Kiểm tra đến ngày hôm qua
+        checkUntilDay = today.getDate() - 1; 
         if (checkUntilDay === 0) checkUntilDay = 1; 
     } else if (parseInt(year) > today.getFullYear() || (parseInt(year) === today.getFullYear() && parseInt(month) > today.getMonth() + 1)) {
         alert("Tháng này ở tương lai, chưa có dữ liệu để kiểm tra.");
@@ -370,7 +363,7 @@ window.showMissingReportsModal = () => {
     }
 
     let missingData = [];
-    let textForClipboard = `⚠️ CẢNH BÁO KỶ LUẬT BÁO CÁO (Tính đến ngày ${String(checkUntilDay).padStart(2, '0')}/${month})\n\n`;
+    let textForClipboard = `⚠️ CẢNH BÁO NHIỆM VỤ BÁO CÁO SELL-OUT (Tính đến ngày ${String(checkUntilDay).padStart(2, '0')}/${month})\n\n`;
 
     activeSales.forEach(saleName => {
         const saleReports = reports.filter(r => r.sale_name === saleName);
@@ -381,7 +374,6 @@ window.showMissingReportsModal = () => {
             const dailyData = saleReports.filter(r => r.report_date === fullDate);
             
             if (dailyData.length === 0) {
-                // Định dạng ngày theo kiểu dd/mm
                 missingDays.push(`${String(d).padStart(2, '0')}/${month}`);
             }
         }
@@ -397,22 +389,20 @@ window.showMissingReportsModal = () => {
     });
 
     if (missingData.length === 0) {
-        alert(`✅ TUYỆT VỜI! Tất cả NVKD trên bảng đã báo cáo đầy đủ (tính đến ngày ${checkUntilDay}/${month}).`);
+        alert(`✅ TUYỆT VỜI! Tất cả NVKD trên bảng đã hoàn thành nhiệm vụ báo cáo S.O đầy đủ (tính đến ngày ${checkUntilDay}/${month}).`);
         return;
     }
 
-    // Xóa modal cũ nếu đang mở
     const existingModal = document.getElementById('custom-missing-modal');
     if (existingModal) existingModal.remove();
 
-    // Dựng khung HTML cho Modal bằng TailwindCSS
     let modalHtml = `
-        <div id="custom-missing-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+        <div id="custom-missing-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
             <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-3xl overflow-hidden flex flex-col font-sans">
                 <!-- Header -->
                 <div class="bg-red-50 text-red-600 px-6 py-4 flex items-center justify-between border-b border-red-100">
                     <h3 class="font-bold text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO KỶ LUẬT BÁO CÁO
+                        <i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO NHIỆM VỤ BÁO CÁO
                     </h3>
                     <button onclick="document.getElementById('custom-missing-modal').remove()" class="text-red-400 hover:text-red-700 hover:bg-red-200 rounded-full w-8 h-8 flex items-center justify-center transition">
                         <i class="fa-solid fa-xmark"></i>
@@ -423,7 +413,6 @@ window.showMissingReportsModal = () => {
                 <div class="p-6 max-h-[60vh] overflow-y-auto text-base">
     `;
 
-    // Render danh sách NVKD thiếu số
     missingData.forEach(item => {
         modalHtml += `
             <div class="mb-5 last:mb-0">
@@ -451,21 +440,17 @@ window.showMissingReportsModal = () => {
         </div>
     `;
 
-    // Chèn modal vào cuối thẻ body
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-    // Gắn sự kiện cho nút COPY
     document.getElementById('btn-copy-zalo').onclick = () => {
         navigator.clipboard.writeText(textForClipboard).then(() => {
             const btn = document.getElementById('btn-copy-zalo');
             const originalText = btn.innerHTML;
             
-            // Đổi style khi copy thành công
             btn.innerHTML = '<i class="fa-solid fa-check"></i> ĐÃ COPY THÀNH CÔNG';
             btn.classList.remove('bg-red-600', 'hover:bg-red-700');
             btn.classList.add('bg-green-600', 'hover:bg-green-700');
             
-            // Trả lại trạng thái cũ sau 2.5 giây
             setTimeout(() => {
                 btn.innerHTML = originalText;
                 btn.classList.add('bg-red-600', 'hover:bg-red-700');

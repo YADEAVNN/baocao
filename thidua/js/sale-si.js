@@ -1,6 +1,35 @@
 import { sb, STATE } from './config.js';
 
 // ==========================================
+// HÀM HỖ TRỢ: LỌC DANH SÁCH NVKD THEO PHÂN QUYỀN
+// ==========================================
+function getActiveSalesSI() {
+    const dirFilter = document.getElementById('filter_rsm_si')?.value || "";
+    const saleFilter = document.getElementById('filter_sale_si')?.value || "";
+    
+    const currentUser = window.STATE.currentUser;
+    const role = currentUser?.role || '';
+    const name = currentUser?.full_name || '';
+    let shops = window.STATE.globalAssignedShops || [];
+
+    if (role === 'Admin') {
+        if (dirFilter) shops = shops.filter(s => s.director_name === dirFilter);
+        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
+        return [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
+    } 
+    else if (role === 'RSM' || role === 'Giám đốc' || role.toLowerCase().includes('giám đốc') || role.toLowerCase().includes('gđ')) {
+        // Giám đốc chỉ xem được danh sách NVKD thuộc quản lý của mình
+        shops = shops.filter(s => s.director_name === name);
+        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
+        return [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
+    } 
+    else {
+        // NVKD thị trường chỉ xem được chính mình
+        return [name];
+    }
+}
+
+// ==========================================
 // 1. LƯU DỮ LIỆU NHẬP S.I LÊN SUPABASE
 // ==========================================
 window.submitSIReport = async () => {
@@ -66,7 +95,18 @@ window.updateHistorySIFilters = (action) => {
     const dirSelect = document.getElementById('filter_rsm_si');
     const saleSelect = document.getElementById('filter_sale_si');
     const shopSelect = document.getElementById('filter_svn_si');
-    const shops = window.STATE.globalAssignedShops || [];
+    
+    let shops = window.STATE.globalAssignedShops || [];
+    const currentUser = window.STATE.currentUser;
+    const role = currentUser?.role || '';
+    const name = currentUser?.full_name || '';
+
+    // Lọc danh sách gốc dựa trên quyền (Role)
+    if (role === 'RSM' || role === 'Giám đốc' || role.toLowerCase().includes('giám đốc') || role.toLowerCase().includes('gđ')) {
+        shops = shops.filter(s => s.director_name === name);
+    } else if (role !== 'Admin') {
+        shops = shops.filter(s => s.sale_name === name);
+    }
 
     if (action === 'init') {
         if (dirSelect) {
@@ -75,35 +115,37 @@ window.updateHistorySIFilters = (action) => {
             dirSelect.onchange = () => window.updateHistorySIFilters('dir_changed');
         }
         if (saleSelect) {
-            saleSelect.innerHTML = '<option value="">-- Tất cả NVKD --</option>';
+            const sales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
+            saleSelect.innerHTML = '<option value="">-- Tất cả NVKD --</option>' + sales.map(s => `<option value="${s}">${s}</option>`).join('');
             saleSelect.onchange = () => window.updateHistorySIFilters('sale_changed');
         }
         if (shopSelect) {
-            shopSelect.innerHTML = '<option value="">-- Tất cả SVN --</option>';
+            const svns = [...new Set(shops.map(s => s.shop_code).filter(Boolean))];
+            shopSelect.innerHTML = '<option value="">-- Tất cả SVN --</option>' + svns.map(s => `<option value="${s}">${s}</option>`).join('');
             shopSelect.onchange = () => window.loadHistorySIData();
         }
     }
 
     if (action === 'dir_changed') {
         const selectedDir = dirSelect?.value;
-        let filteredShops = shops;
-        if (selectedDir) filteredShops = shops.filter(s => s.director_name === selectedDir);
+        if (selectedDir) shops = shops.filter(s => s.director_name === selectedDir);
         
         if (saleSelect) {
-            const sales = [...new Set(filteredShops.map(s => s.sale_name).filter(Boolean))];
+            const sales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
             saleSelect.innerHTML = '<option value="">-- Tất cả NVKD --</option>' + sales.map(s => `<option value="${s}">${s}</option>`).join('');
         }
-        if (shopSelect) shopSelect.innerHTML = '<option value="">-- Tất cả SVN --</option>';
         window.loadHistorySIData();
     }
 
     if (action === 'sale_changed') {
+        const selectedDir = dirSelect?.value;
+        if (selectedDir) shops = shops.filter(s => s.director_name === selectedDir);
+        
         const selectedSale = saleSelect?.value;
-        let filteredShops = shops;
-        if (selectedSale) filteredShops = shops.filter(s => s.sale_name === selectedSale);
+        if (selectedSale) shops = shops.filter(s => s.sale_name === selectedSale);
         
         if (shopSelect) {
-            const svns = [...new Set(filteredShops.map(s => s.shop_code).filter(Boolean))];
+            const svns = [...new Set(shops.map(s => s.shop_code).filter(Boolean))];
             shopSelect.innerHTML = '<option value="">-- Tất cả SVN --</option>' + svns.map(s => `<option value="${s}">${s}</option>`).join('');
         }
         window.loadHistorySIData();
@@ -117,9 +159,6 @@ window.loadHistorySIData = async () => {
     const monthInput = document.getElementById('filter_month_si')?.value;
     if(!monthInput) return;
     
-    const dirFilter = document.getElementById('filter_rsm_si')?.value || "";
-    const saleFilter = document.getElementById('filter_sale_si')?.value || "";
-
     const tbody = document.getElementById('si_matrix_body');
     const thead = document.getElementById('si_matrix_head');
     if(!tbody || !thead) return;
@@ -137,17 +176,8 @@ window.loadHistorySIData = async () => {
 
     tbody.innerHTML = `<tr><td colspan="${daysInMonth + 3}" class="p-8 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải dữ liệu Ma trận...</td></tr>`;
 
-    let activeSales = [];
-    const currentUser = window.STATE.currentUser;
-    
-    if (currentUser?.role !== 'Admin') {
-        activeSales = [currentUser?.full_name];
-    } else {
-        let shops = window.STATE.globalAssignedShops || [];
-        if (dirFilter) shops = shops.filter(s => s.director_name === dirFilter);
-        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
-        activeSales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
-    }
+    // Gọi hàm trung tâm để lấy danh sách NVKD hợp lệ
+    let activeSales = getActiveSalesSI();
 
     try {
         const startDate = `${year}-${month}-01`;
@@ -279,23 +309,10 @@ window.exportHistorySIExcel = async () => {
     const monthInput = document.getElementById('filter_month_si')?.value;
     if(!monthInput) return alert("Vui lòng chọn tháng!");
     
-    const dirFilter = document.getElementById('filter_rsm_si')?.value || "";
-    const saleFilter = document.getElementById('filter_sale_si')?.value || "";
-
     const [year, month] = monthInput.split('-');
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    let activeSales = [];
-    const currentUser = window.STATE.currentUser;
-    if (currentUser?.role !== 'Admin') {
-        activeSales = [currentUser?.full_name];
-    } else {
-        let shops = window.STATE.globalAssignedShops || [];
-        if (dirFilter) shops = shops.filter(s => s.director_name === dirFilter);
-        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
-        activeSales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
-    }
-
+    let activeSales = getActiveSalesSI();
     if (activeSales.length === 0) return alert("Không có dữ liệu NVKD để xuất!");
 
     try {
@@ -360,28 +377,16 @@ window.showMissingReportsModalSI = async () => {
     const monthInput = document.getElementById('filter_month_si')?.value;
     if(!monthInput) return;
     
-    const dirFilter = document.getElementById('filter_rsm_si')?.value || "";
-    const saleFilter = document.getElementById('filter_sale_si')?.value || "";
     const [yearStr, monthStr] = monthInput.split('-');
     const year = parseInt(yearStr);
     const month = parseInt(monthStr);
 
-    let activeSales = [];
-    const currentUser = window.STATE.currentUser;
-    if (currentUser?.role !== 'Admin') {
-        activeSales = [currentUser?.full_name];
-    } else {
-        let shops = window.STATE.globalAssignedShops || [];
-        if (dirFilter) shops = shops.filter(s => s.director_name === dirFilter);
-        if (saleFilter) shops = shops.filter(s => s.sale_name === saleFilter);
-        activeSales = [...new Set(shops.map(s => s.sale_name).filter(Boolean))];
-    }
+    let activeSales = getActiveSalesSI();
 
     const today = new Date();
     const daysInMonth = new Date(year, month, 0).getDate();
     let checkUntilDay = daysInMonth;
     
-    // Nếu là tháng hiện tại, kiểm tra đến ngày hôm qua
     if (year === today.getFullYear() && month === today.getMonth() + 1) {
         checkUntilDay = today.getDate() - 1; 
         if (checkUntilDay === 0) checkUntilDay = 1; 
@@ -406,7 +411,6 @@ window.showMissingReportsModalSI = async () => {
                 const fullDate = `${yearStr}-${monthStr}-${String(d).padStart(2, '0')}`;
                 const dailyData = saleReports.find(r => r.report_date === fullDate);
                 
-                // Cảnh báo nếu KHÔNG có data, HOẶC cả Thanh Toán và Xuất Hàng đều bằng 0
                 if (!dailyData || (Number(dailyData.thanh_toan||0) === 0 && Number(dailyData.xuat_hang||0) === 0)) {
                     missingDays.push(`${String(d).padStart(2, '0')}/${monthStr}`);
                 }
@@ -422,7 +426,6 @@ window.showMissingReportsModalSI = async () => {
             return alert(`✅ TUYỆT VỜI! Tất cả NVKD trên bảng đã báo cáo S.I đầy đủ (tính đến ngày ${checkUntilDay}/${monthStr}).`);
         }
 
-        // Tạo Modal hiển thị cảnh báo
         const existingModal = document.getElementById('custom-missing-modal-si');
         if (existingModal) existingModal.remove();
 
@@ -465,7 +468,6 @@ window.showMissingReportsModalSI = async () => {
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-        // Xử lý nút Copy Zalo
         document.getElementById('btn-copy-zalo-si').onclick = () => {
             navigator.clipboard.writeText(textForClipboard).then(() => {
                 const btn = document.getElementById('btn-copy-zalo-si');

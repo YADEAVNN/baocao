@@ -1,5 +1,5 @@
 // ==========================================
-// MODULE: SELL-IN (S.I) - ĐÃ TỐI ƯU TỐC ĐỘ GÕ (DEBOUNCE)
+// MODULE: SELL-IN (S.I) - ĐÃ FIX AUTO TÍNH SỐ CHƯA PHÁT HÀNG
 // ==========================================
 
 const checkIsAdmin = () => {
@@ -54,16 +54,14 @@ const getDaysInMonth = (year, month) => {
     return days;
 };
 
-// --- HÀM TỐI ƯU TỐC ĐỘ GÕ (DEBOUNCE) ---
 let recalculateTimer;
 window.debouncedRecalculate = () => {
     clearTimeout(recalculateTimer);
     recalculateTimer = setTimeout(() => {
         window.recalculateTotals();
-    }, 400); // Chờ 400ms sau khi ngừng gõ mới chạy hàm tính tổng
+    }, 400); 
 };
 
-// 1. KHỞI TẠO GIAO DIỆN CHÍNH
 window.renderSellInView = () => {
     const appContent = document.getElementById('app-content');
     const isAdmin = checkIsAdmin();
@@ -136,7 +134,6 @@ window.renderSellInView = () => {
     window.loadSellInMonthData();
 };
 
-// 2. TẢI DỮ LIỆU TỪ SUPABASE
 window.loadSellInMonthData = async () => {
     const monthVal = document.getElementById('si-month-filter').value;
     if (!monthVal) return;
@@ -172,7 +169,6 @@ window.loadSellInMonthData = async () => {
     }
 };
 
-// 3. VẼ GIAO DIỆN BẢNG
 window.renderMonthTables = () => {
     const container = document.getElementById('si_tables_container');
     const reports = window.STATE.rawHistorySI || [];
@@ -199,9 +195,7 @@ window.renderMonthTables = () => {
         const baseData = reports.find(r => r.region_name === region.name && r.report_date === baseDate) || {};
         const valTargetTT = baseData.target_tt || 0;
         const valTargetPH = baseData.target_ph || 0;
-        const valCX = baseData.chua_xuat || 0;
 
-        // Tích hợp oninput="window.debouncedRecalculate()"
         const inputTargetTT = isAdmin 
             ? `<input type="number" value="${valTargetTT === 0 ? '' : valTargetTT}" oninput="window.debouncedRecalculate()" data-region="${region.name}" class="target-tt-input w-full text-center py-2 font-bold text-orange-700 bg-transparent outline-none">`
             : `<div class="py-2 text-center font-bold text-orange-700">${valTargetTT === 0 ? '0' : valTargetTT.toLocaleString()}</div>`;
@@ -210,9 +204,8 @@ window.renderMonthTables = () => {
             ? `<input type="number" value="${valTargetPH === 0 ? '' : valTargetPH}" oninput="window.debouncedRecalculate()" data-region="${region.name}" class="target-ph-input w-full text-center py-2 font-bold text-green-700 bg-transparent outline-none">`
             : `<div class="py-2 text-center font-bold text-green-700">${valTargetPH === 0 ? '0' : valTargetPH.toLocaleString()}</div>`;
 
-        const inputCXElement = isAdmin 
-            ? `<input type="number" value="${valCX === 0 ? '' : valCX}" oninput="window.debouncedRecalculate()" data-region="${region.name}" class="cx-input w-full text-center py-2 font-bold text-red-600 bg-transparent outline-none">`
-            : `<div class="py-2 text-center font-bold text-red-600">${valCX === 0 ? '0' : valCX.toLocaleString()}</div>`;
+        // ĐÃ FIX: Chuyển Chưa Xuất (Chưa Phát Hàng) thành Text tĩnh, ko cho nhập
+        const inputCXElement = `<div id="cx-row-val-${index}" class="py-2 text-center font-bold text-red-600" data-region="${region.name}">0</div>`;
 
         let inputsTT = '';
         let inputsPH = '';
@@ -340,7 +333,7 @@ window.renderMonthTables = () => {
             <div class="col-span-2 text-[11px] text-gray-500 border border-gray-200 rounded p-3 bg-gray-50 leading-relaxed">
                 <span class="font-bold text-gray-700">GHI CHÚ:</span><br>
                 • <span class="font-semibold">TARGET THÁNG:</span> Chỉ tiêu Sellin được giao trong tháng<br>
-                • <span class="font-semibold">SỐ LƯỢNG CHƯA PHÁT HÀNG:</span> Số lượng đơn đã TT nhưng chưa phát hàng<br>
+                • <span class="font-semibold">SỐ LƯỢNG CHƯA PHÁT HÀNG:</span> Auto tính = Target Tháng - Total Phát Hàng<br>
                 • <span class="font-semibold">TOTAL PHÁT HÀNG:</span> Lũy kế số lượng đã phát hàng trong tháng
             </div>
             <div class="border border-orange-200 rounded p-4 text-center shadow-sm bg-white">
@@ -361,7 +354,6 @@ window.renderMonthTables = () => {
     window.recalculateTotals();
 };
 
-// 4. HÀM TÍNH TỔNG DỮ LIỆU
 window.recalculateTotals = () => {
     const daysArray = window.STATE.daysArray;
     let totalTargetTT = 0; let grandTotalTT = 0; let colSumsTT = Array(daysArray.length).fill(0);
@@ -376,6 +368,7 @@ window.recalculateTotals = () => {
         totalTargetTT += tTT;
         totalTargetPH += tPH;
 
+        // Tính tổng Thanh toán
         let rowSumTT = 0;
         const ttInputs = document.querySelectorAll(`.tt-input[data-region="${reg.name}"]`);
         ttInputs.forEach((el, cIdx) => {
@@ -387,6 +380,7 @@ window.recalculateTotals = () => {
         if(elTotalTT) elTotalTT.innerText = rowSumTT.toLocaleString();
         grandTotalTT += rowSumTT;
 
+        // Tính tổng Phát hàng
         let rowSumPH = 0;
         const phInputs = document.querySelectorAll(`.ph-input[data-region="${reg.name}"]`);
         phInputs.forEach((el, cIdx) => {
@@ -398,8 +392,15 @@ window.recalculateTotals = () => {
         if(elTotalPH) elTotalPH.innerText = rowSumPH.toLocaleString();
         grandTotalPH += rowSumPH;
 
-        const elCX = document.querySelectorAll('.cx-input')[rIdx];
-        grandTotalCX += elCX ? (parseInt(elCX.value) || 0) : 0;
+        // ĐÃ FIX: Tính Chưa Phát Hàng = Target - Total Phát Hàng
+        let cxVal = tPH - rowSumPH;
+        const elCX = document.getElementById(`cx-row-val-${rIdx}`);
+        if (elCX) {
+            elCX.innerText = cxVal.toLocaleString();
+            // Đổi màu nếu âm (Vượt Target)
+            elCX.className = cxVal < 0 ? "py-2 text-center font-bold text-green-600" : "py-2 text-center font-bold text-red-600";
+        }
+        grandTotalCX += cxVal;
     });
 
     colSumsTT.forEach((sum, i) => { const el = document.getElementById(`tt-col-total-${i}`); if(el) el.innerText = sum.toLocaleString(); });
@@ -409,14 +410,18 @@ window.recalculateTotals = () => {
     colSumsPH.forEach((sum, i) => { const el = document.getElementById(`ph-col-total-${i}`); if(el) el.innerText = sum.toLocaleString(); });
     const ftPHTarget = document.getElementById('ph-sum-target'); if(ftPHTarget) ftPHTarget.innerText = totalTargetPH.toLocaleString();
     const ftPHGrand = document.getElementById('ph-grand-total'); if(ftPHGrand) ftPHGrand.innerText = grandTotalPH.toLocaleString();
-    const ftCXGrand = document.getElementById('cx-grand-total'); if(ftCXGrand) ftCXGrand.innerText = grandTotalCX.toLocaleString();
+    
+    const ftCXGrand = document.getElementById('cx-grand-total'); 
+    if(ftCXGrand) {
+        ftCXGrand.innerText = grandTotalCX.toLocaleString();
+        ftCXGrand.className = grandTotalCX < 0 ? "py-3 px-2 text-center border-r text-green-700 bg-red-50" : "py-3 px-2 text-center border-r text-red-600 bg-red-50";
+    }
 
-    const boxTarget = document.getElementById('summary-target'); if(boxTarget) boxTarget.innerText = totalTargetTT.toLocaleString();
+    const boxTarget = document.getElementById('summary-target'); if(boxTarget) boxTarget.innerText = totalTargetPH.toLocaleString(); // Hiển thị Target PH
     const boxTT = document.getElementById('summary-tt'); if(boxTT) boxTT.innerText = grandTotalTT.toLocaleString();
     const boxPH = document.getElementById('summary-ph'); if(boxPH) boxPH.innerText = grandTotalPH.toLocaleString();
 };
 
-// 5. LƯU BATCH (FIX LỖI NULL ID UPSERT SUPABASE)
 window.saveAllData = async () => {
     const btnSave = document.getElementById('btn-save-si');
     const originalText = btnSave.innerHTML;
@@ -438,12 +443,22 @@ window.saveAllData = async () => {
         REGIONS_SI.forEach(reg => {
             const elTgTT = document.querySelector(`.target-tt-input[data-region="${reg.name}"]`);
             const elTgPH = document.querySelector(`.target-ph-input[data-region="${reg.name}"]`);
-            const elCX = document.querySelector(`.cx-input[data-region="${reg.name}"]`);
             
             let key = initKey(reg.name, baseDate);
+            let target_ph = elTgPH ? (parseInt(elTgPH.value) || 0) : 0;
+            
+            // Tính số Chưa phát hàng để lưu DB
+            let totalPH = 0;
+            document.querySelectorAll(`.ph-input[data-region="${reg.name}"]`).forEach(inp => {
+                totalPH += parseInt(inp.value) || 0;
+            });
+            let chua_xuat = target_ph - totalPH;
+
             if (elTgTT) { dataMap[key].target_tt = parseInt(elTgTT.value) || 0; dataMap[key].hasData = true; }
-            if (elTgPH) { dataMap[key].target_ph = parseInt(elTgPH.value) || 0; dataMap[key].hasData = true; }
-            if (elCX) { dataMap[key].chua_xuat = parseInt(elCX.value) || 0; dataMap[key].hasData = true; }
+            if (elTgPH) { dataMap[key].target_ph = target_ph; dataMap[key].hasData = true; }
+            
+            dataMap[key].chua_xuat = chua_xuat;
+            dataMap[key].hasData = true;
         });
 
         document.querySelectorAll('.tt-input').forEach(input => {
@@ -518,9 +533,6 @@ window.saveAllData = async () => {
     }
 };
 
-// ==========================================
-// 6. TÍNH NĂNG XUẤT / NHẬP EXCEL (HỖ TRỢ THÁNG & TARGET)
-// ==========================================
 window.exportSellInExcel = function() {
     const daysArray = window.STATE.daysArray;
     const reports = window.STATE.rawHistorySI || [];
@@ -546,13 +558,14 @@ window.exportSellInExcel = function() {
         aoaTT.push(rowTT);
 
         // Row XH
-        let rowXH = [index + 1, region.name, region.dir, (baseData.target_ph || 0), (baseData.chua_xuat || 0), 0];
+        let rowXH = [index + 1, region.name, region.dir, (baseData.target_ph || 0), 0, 0];
         let totalPH = 0;
         daysArray.forEach(d => {
             const data = reports.find(r => r.region_name === region.name && r.report_date === d.fullDate) || {};
             totalPH += data.xuat_hang || 0;
             rowXH.push(data.xuat_hang ? data.xuat_hang : "");
         });
+        rowXH[4] = (baseData.target_ph || 0) - totalPH; // Tự tính lại lúc xuất
         rowXH[5] = totalPH; 
         aoaXH.push(rowXH);
     });
@@ -576,7 +589,6 @@ window.importSellInExcel = async function(event) {
     if (!file) return;
 
     const container = document.getElementById('si_tables_container');
-    const oldHtml = container.innerHTML;
     container.innerHTML = '<div class="p-10 flex justify-center items-center text-orange-500 font-bold"><i class="fa-solid fa-spinner fa-spin mr-3 text-2xl"></i> Đang đọc file Excel...</div>';
 
     let reader = new FileReader();
@@ -631,19 +643,25 @@ window.importSellInExcel = async function(event) {
                     if (!regionName) continue;
                     
                     let valTgPH = parseInt(row[3]);
-                    let valCX = parseInt(row[4]);
                     
                     let keyBase = initKey(regionName, baseDate);
                     if (!isNaN(valTgPH)) { parsedData[keyBase].target_ph = valTgPH; parsedData[keyBase].hasData = true; }
-                    if (!isNaN(valCX)) { parsedData[keyBase].chua_xuat = valCX; parsedData[keyBase].hasData = true; }
 
+                    let totalRowPH = 0;
                     for (let d = 0; d < daysArray.length; d++) {
                         let val = parseInt(row[6 + d]);
                         if (!isNaN(val)) {
                             let key = initKey(regionName, daysArray[d].fullDate);
                             parsedData[key].xuat_hang = val;
                             parsedData[key].hasData = true;
+                            totalRowPH += val;
                         }
+                    }
+                    
+                    // Auto tính chưa phát hàng khi import
+                    if (!isNaN(valTgPH)) {
+                        parsedData[keyBase].chua_xuat = valTgPH - totalRowPH;
+                        parsedData[keyBase].hasData = true;
                     }
                 }
             }

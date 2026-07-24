@@ -1,5 +1,5 @@
 // ==========================================
-// MODULE: DASHBOARD PHÂN TÍCH TỔNG QUAN (BẢN FINAL FULL TÍNH NĂNG ĐÃ FIX LỖI)
+// MODULE: DASHBOARD PHÂN TÍCH TỔNG QUAN
 // ==========================================
 
 const safeNumber = (value) => {
@@ -53,12 +53,11 @@ window.renderDashboardView = async (targetMonthParam) => {
     `;
 
     try {
-        // GỌI DỮ LIỆU
         const [resSI, resSO, resTarget, resShops] = await Promise.all([
             window.sb.from('daily_si_reports').select('*'),
             window.sb.from('daily_so_reports').select('*'),
             window.sb.from('monthly_sale_targets').select('*'),
-            window.sb.from('master_shop_list').select('*') // Mapping bằng master_shop_list để lấy chuẩn Area
+            window.sb.from('master_shop_list').select('*') 
         ]);
 
         const siReports = resSI.data || [];
@@ -66,15 +65,11 @@ window.renderDashboardView = async (targetMonthParam) => {
         const targetData = resTarget.data || [];
         const shopsData = resShops.data || [];
 
-        // KHỞI TẠO TỪ ĐIỂN MAPPING (TÊN NVKD -> KHU VỰC)
         const saleToRegionMap = {};
         shopsData.forEach(shop => {
             const saleName = norm(shop.sale_name || shop.sale || shop.nhan_vien || shop.ten_nvkd || shop.nvkd); 
             const regionName = norm(shop.area || shop.khu_vuc || shop.region); 
-            
-            if (saleName && regionName) {
-                saleToRegionMap[saleName] = regionName;
-            }
+            if (saleName && regionName) saleToRegionMap[saleName] = regionName;
         });
 
         const siRegions = ["Tây Bắc Bộ", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ", "Nam Trung Bộ", "Tây Nguyên", "Đông Nam", "Hồ Chí Minh", "Tây Nam", "Sông Cửu Long"];
@@ -86,33 +81,24 @@ window.renderDashboardView = async (targetMonthParam) => {
         let regionMapSO = {};
         soRegions.forEach(reg => regionMapSO[norm(reg)] = { name: reg, target: 0, actual: 0 });
 
-        // TỔNG HỢP DATA NVKD CHO WIDGET BÊN DƯỚI
         let saleStats = {};
 
-        // CỘNG DỒN KẾ HOẠCH TỪ BẢNG TARGET
+        // CỘNG DỒN KẾ HOẠCH TỪ BẢNG TARGET (CHỈ CHO S.O)
         targetData.forEach(row => {
-            const tSI = safeNumber(row.target_si);
+            // ĐÃ FIX: Lọc Kế hoạch S.O chính xác theo cột "report_month" trên Database của bạn
+            const rowMonth = row.report_month;
+            if (rowMonth && !rowMonth.startsWith(currentMonthStr)) return;
+
             const tSO = safeNumber(row.target_so);
-            
             const saleNameTarget = norm(row.sale_name);
             const rawSaleName = row.sale_name || "Chưa rõ";
             
-            // Xử lý Target cho từng NVKD
             if (saleNameTarget) {
                 if (!saleStats[saleNameTarget]) saleStats[saleNameTarget] = { name: rawSaleName, target: 0, actual: 0 };
                 saleStats[saleNameTarget].target += tSO;
             }
 
             const mappedRegion = saleToRegionMap[saleNameTarget] || norm(row.area || row.khu_vuc);
-
-            for (const reg of siRegions) {
-                const nReg = norm(reg);
-                if (mappedRegion.includes(nReg) || (nReg === "tây bắc bộ" && mappedRegion.includes("tây bắc"))) {
-                    regionMapSI[nReg].target += tSI;
-                    break;
-                }
-            }
-
             for (const reg of soRegions) {
                 const nReg = norm(reg);
                 if (mappedRegion.includes(nReg) || (nReg === "tây bắc" && mappedRegion.includes("tây bắc"))) {
@@ -122,17 +108,28 @@ window.renderDashboardView = async (targetMonthParam) => {
             }
         });
 
-        // CỘNG DỒN THỰC TẾ S.I
+        // XỬ LÝ DỮ LIỆU S.I
+        const baseDateSI = `${currentMonthStr}-01`;
         siReports.forEach(row => {
-            // ĐÃ FIX: Chỉ lấy dữ liệu của tháng đang lọc
             if (row.report_date && !row.report_date.startsWith(currentMonthStr)) return;
 
             const mappedRegion = norm(row.region_name || row.khu_vuc);
-            const val = safeNumber(row.xuat_hang);
 
+            // 1. Lấy Target Phát hàng từ ngày mùng 1 do Admin nhập
+            if (row.report_date === baseDateSI && row.target_ph) {
+                for (const reg of siRegions) {
+                    const nReg = norm(reg);
+                    if (mappedRegion === nReg) {
+                        regionMapSI[nReg].target += safeNumber(row.target_ph);
+                        break;
+                    }
+                }
+            }
+
+            // 2. Lấy số lượng thực tế phát hàng
+            const val = safeNumber(row.xuat_hang);
             for (const reg of siRegions) {
                 const nReg = norm(reg);
-                // ĐÃ FIX: So sánh tuyệt đối (===) để lọc dữ liệu rác, tính đúng tổng S.I
                 if (mappedRegion === nReg) {
                     regionMapSI[nReg].actual += val;
                     break;
@@ -142,16 +139,12 @@ window.renderDashboardView = async (targetMonthParam) => {
 
         // CỘNG DỒN THỰC TẾ S.O
         soReports.forEach(row => {
-            // ĐÃ FIX: Chỉ lấy dữ liệu S.O của tháng đang lọc
             if (row.report_date && !row.report_date.startsWith(currentMonthStr)) return;
 
             const saleNameTarget = norm(row.sale_name);
-            
-            // ĐÃ FIX: Map khu vực dựa vào Tên Sale (vì bảng daily_so_reports ko lưu khu vực)
             const mappedRegion = saleToRegionMap[saleNameTarget] || norm(row.region_name || row.khu_vuc);
             const val = safeNumber(row.total_so || row.so_luong || row.ban_ra || 0);
 
-            // Cập nhật cho Vùng (Bảng Miền Bắc)
             for (const reg of soRegions) {
                 const nReg = norm(reg);
                 if (mappedRegion.includes(nReg) || (nReg === "tây bắc" && mappedRegion.includes("tây bắc"))) {
@@ -160,14 +153,12 @@ window.renderDashboardView = async (targetMonthParam) => {
                 }
             }
 
-            // Cập nhật cho cá nhân NVKD (Dành cho 5 Widget bên dưới)
             if (saleNameTarget) {
                 if (!saleStats[saleNameTarget]) saleStats[saleNameTarget] = { name: row.sale_name, target: 0, actual: 0 };
                 saleStats[saleNameTarget].actual += val;
             }
         });
 
-        // XỬ LÝ DỮ LIỆU BẢNG & TỔNG
         const sellInData = siRegions.map((reg, index) => {
             const item = regionMapSI[norm(reg)];
             const diff = item.actual - item.target;
@@ -202,18 +193,15 @@ window.renderDashboardView = async (targetMonthParam) => {
         const totalSOActual = sellOutData.reduce((sum, r) => sum + r.actual, 0);
         const totalSODiff = totalSOActual - totalSOTarget;
 
-        // XỬ LÝ DỮ LIỆU CHO 5 WIDGET BÊN DƯỚI
         let saleArr = Object.values(saleStats).map(s => {
             s.diff = s.actual - s.target;
             return s;
         });
         
-        // Sắp xếp top
         let top5Vuot = saleArr.filter(s => s.diff > 0).sort((a,b) => b.diff - a.diff).slice(0, 5);
         let top5Cham = saleArr.filter(s => s.diff < 0).sort((a,b) => a.diff - b.diff).slice(0, 5);
         let chamRegions = sellOutData.filter(r => r.diff < 0);
 
-        // RENDER GIAO DIỆN
         appContent.innerHTML = `
             <div class="bg-slate-50 min-h-screen pb-10 p-4 md:p-6 fade-in">
                 <!-- HEADER -->
@@ -361,7 +349,6 @@ window.renderDashboardView = async (targetMonthParam) => {
                 
                 <!-- WIDGETS CẢNH BÁO & XẾP HẠNG -->
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
-                    <!-- Card 1 -->
                     <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex flex-col h-44">
                         <h4 class="text-xs font-black text-gray-700 uppercase mb-3">Nhịp độ NVKD - Sell Out</h4>
                         <div class="flex-1 flex items-center justify-center">
@@ -373,7 +360,6 @@ window.renderDashboardView = async (targetMonthParam) => {
                         <a href="#" onclick="window.customSwitchView('leaderboard')" class="text-blue-500 text-xs font-bold hover:underline mt-2 text-center block w-full">Xem danh sách chi tiết <i class="fa-solid fa-arrow-right ml-1"></i></a>
                     </div>
 
-                    <!-- Card 2 -->
                     <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex flex-col h-44">
                         <h4 class="text-xs font-black text-gray-700 uppercase mb-3 text-center">Top 5 NVKD Vượt Nhịp</h4>
                         <div class="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
@@ -386,7 +372,6 @@ window.renderDashboardView = async (targetMonthParam) => {
                         </div>
                     </div>
 
-                    <!-- Card 3 -->
                     <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex flex-col h-44">
                         <h4 class="text-xs font-black text-gray-700 uppercase mb-3 text-center">Top 5 NVKD Chậm Nhất</h4>
                         <div class="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
@@ -399,7 +384,6 @@ window.renderDashboardView = async (targetMonthParam) => {
                         </div>
                     </div>
 
-                    <!-- Card 4 -->
                     <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex flex-col h-44">
                         <h4 class="text-xs font-black text-gray-700 uppercase mb-2">Cảnh Báo Nhịp Độ</h4>
                         <div class="flex-1 overflow-y-auto custom-scrollbar text-[11px] leading-relaxed">
@@ -414,7 +398,6 @@ window.renderDashboardView = async (targetMonthParam) => {
                         </div>
                     </div>
 
-                    <!-- Card 5 -->
                     <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex flex-col h-44">
                         <h4 class="text-xs font-black text-gray-700 uppercase mb-3">Xu Hướng Nhịp Độ Miền</h4>
                         <div class="flex-1 flex flex-col justify-end w-full">
@@ -425,7 +408,6 @@ window.renderDashboardView = async (targetMonthParam) => {
             </div>
         `;
 
-        // Vẽ biểu đồ
         setTimeout(() => {
             if (typeof ApexCharts === 'undefined') return;
 
@@ -441,12 +423,10 @@ window.renderDashboardView = async (targetMonthParam) => {
                 }).render();
             };
 
-            // Biểu đồ trên bảng
             sellOutData.forEach((row, i) => renderSparkline(`so-spark-${i}`, row.sparkline, row.diff >= 0 ? '#10b981' : '#ef4444'));
             renderSparkline('so-spark-total', [0, 0, 0, 0, 0, 0, totalSOActual], totalSODiff >= 0 ? '#10b981' : '#ef4444');
             sellInData.forEach((row, i) => renderSparkline(`si-spark-${i}`, row.sparkline, row.diff >= 0 ? '#10b981' : '#ef4444'));
             
-            // Biểu đồ Widget cuối cùng (Tạo một đường đồ thị mô phỏng xu hướng dẫn đến số thực tế hiện tại)
             const trendData = [0, totalSOActual * 0.2, totalSOActual * 0.5, totalSOActual * 0.8, totalSOActual];
             renderSparkline('trend-sparkline-mb', trendData, totalSODiff >= 0 ? '#10b981' : '#ef4444');
 

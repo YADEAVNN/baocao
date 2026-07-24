@@ -119,24 +119,24 @@
 
                 <div class="px-6 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider">Kinh Doanh</div>
                 
-                <!-- Đổi tên tab Sellout -->
+                <!-- 1. Tab Sellout (Sale) -->
                 <a onclick="window.customSwitchView('sellout')" id="nav-sellout" class="nav-item">
                     <i class="fa-solid fa-bullseye text-[#F97316] w-6"></i> 
                     <span class="font-bold">Sellout & Lịch Sử</span>
                     <i class="fa-solid fa-chevron-right ml-auto text-xs opacity-50"></i>
                 </a>
-
-                <!-- Xóa/Comment menu Lịch sử báo cáo cũ -->
-                <!-- 
-                <a onclick="window.customSwitchView('history')" id="nav-history" class="nav-item">
-                    <i class="fa-solid fa-clock-rotate-left text-teal-500 w-6"></i> 
-                    <span class="font-bold">Lịch sử báo cáo</span>
-                </a>
-                -->
                 
+                <!-- 2. Tab Sellin (Mới - Dành cho Sale nhập liệu) -->
+                <a onclick="window.customSwitchView('sale_si')" id="nav-sale_si" class="nav-item">
+                    <i class="fa-solid fa-box-open text-blue-500 w-6"></i> 
+                    <span class="font-bold">Sellin & Lịch Sử (Sale)</span>
+                    <i class="fa-solid fa-chevron-right ml-auto text-xs opacity-50"></i>
+                </a>
+
+                <!-- 3. Tab Sellin (Cũ - Dành cho Admin xem Ma trận 12 Khu vực) -->
                 <a onclick="window.customSwitchView('sellin')" id="nav-sellin" class="nav-item">
-                    <i class="fa-solid fa-arrow-trend-up text-blue-500 w-6"></i> 
-                    <span class="font-bold">Sellin</span>
+                    <i class="fa-solid fa-table-list text-teal-500 w-6"></i> 
+                    <span class="font-bold">Quản lý Sellin (Admin)</span>
                     <i class="fa-solid fa-chevron-right ml-auto text-xs opacity-50"></i>
                 </a>
 

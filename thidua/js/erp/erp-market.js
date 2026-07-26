@@ -164,6 +164,9 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
     const norm = (str) => str ? str.toString().trim().toLowerCase() : "";
     const soRegions = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ"];
     const siRegions = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ", "Nam Trung Bộ", "Tây Nguyên", "Đông Nam", "Hồ Chí Minh", "Tây Nam", "Sông Cửu Long"];
+    
+    // Định nghĩa các vùng thuộc Miền Bắc
+    const mienBacRegions = ["tây bắc", "hà nội", "đông bắc", "hồng hà", "bắc trung bộ", "trung trung bộ"];
 
     function getNormalizedRegion(rawReg) {
         const nReg = norm(rawReg);
@@ -204,46 +207,77 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         }
     });
 
+    // ===============================================
+    // ĐÃ FIX: XỬ LÝ DỮ LIỆU TỪ BẢNG ADMIN (daily_si)
+    // ===============================================
     dataSI.forEach(r => {
-        const val = safeNum(r.xuat_hang); 
-        const paidVal = safeNum(r.thanh_toan);
         const isBaseDate = r.report_date === baseDateSI;
-        
         const sName = norm(r.sale_name);
         const rawReg = saleToRegionMap[sName] || r.region_name || r.khu_vuc || 'Khác';
         const regAll = getNormalizedRegion(rawReg);
+        const isMienBac = mienBacRegions.includes(norm(regAll));
 
         if (!res.regions[regAll]) res.regions[regAll] = { name: regAll, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0, si_game_act: 0 };
-        res.regions[regAll].si_act += val; 
-        res.regions[regAll].si_paid += paidVal;
         
+        // 1. LUÔN LẤY MỤC TIÊU (TARGET) TỪ ADMIN CHO TẤT CẢ KHU VỰC
         if (isBaseDate && r.target_ph) {
             res.regions[regAll].si_tar += safeNum(r.target_ph);
+            if (soRegions.includes(regAll)) {
+                res.si_target += safeNum(r.target_ph);
+            }
         }
 
-        if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
-        res.daily[r.report_date].si += val; 
+        // 2. NẾU LÀ MIỀN NAM -> LẤY SỐ LIỆU THỰC TẾ TỪ ADMIN
+        if (!isMienBac) {
+            const val = safeNum(r.xuat_hang); 
+            const paidVal = safeNum(r.thanh_toan);
 
-        if (soRegions.includes(regAll)) {
-            res.si_total += val;
-            if (r.report_date === todayStr) res.si_today += val;
-            if (r.report_date === yesterdayStr) res.si_yest += val;
-            if (isBaseDate && r.target_ph) res.si_target += safeNum(r.target_ph);
+            res.regions[regAll].si_act += val; 
+            res.regions[regAll].si_paid += paidVal;
+
+            if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
+            res.daily[r.report_date].si += val; 
+
+            if (soRegions.includes(regAll)) { // Mặc dù Miền Nam không có trong soRegions, giữ cấu trúc cũ an toàn
+                res.si_total += val;
+                if (r.report_date === todayStr) res.si_today += val;
+                if (r.report_date === yesterdayStr) res.si_yest += val;
+            }
         }
     });
 
+    // ===============================================
+    // ĐÃ FIX: XỬ LÝ DỮ LIỆU TỪ BẢNG SALE (game_si)
+    // ===============================================
     dataGameSI.forEach(r => {
         const val = safeNum(r.xuat_hang); 
+        const paidVal = safeNum(r.thanh_toan);
         const sName = norm(r.sale_name);
         const rawReg = saleToRegionMap[sName] || r.region_name || r.khu_vuc || 'Khác';
         const regAll = getNormalizedRegion(rawReg);
+        const isMienBac = mienBacRegions.includes(norm(regAll));
 
         if (!res.regions[regAll]) res.regions[regAll] = { name: regAll, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0, si_game_act: 0 };
-        res.regions[regAll].si_game_act += val;
+        res.regions[regAll].si_game_act += val; // Vẫn lưu riêng cho rank Sale
 
         if (r.sale_name) {
             if (!res.sales[r.sale_name]) res.sales[r.sale_name] = { name: r.sale_name, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
             res.sales[r.sale_name].si_act += val;
+        }
+
+        // NẾU LÀ MIỀN BẮC -> LẤY SỐ LIỆU THỰC TẾ TỪ SALE NHẬP LIỆU
+        if (isMienBac) {
+            res.regions[regAll].si_act += val; 
+            res.regions[regAll].si_paid += paidVal;
+
+            if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
+            res.daily[r.report_date].si += val; 
+
+            if (soRegions.includes(regAll)) {
+                res.si_total += val;
+                if (r.report_date === todayStr) res.si_today += val;
+                if (r.report_date === yesterdayStr) res.si_yest += val;
+            }
         }
     });
 
@@ -285,7 +319,6 @@ function renderCards(agg) {
     let si_today_color = si_today_diff >= 0 ? 'text-emerald-500' : 'text-rose-500';
     let si_today_icon = si_today_diff >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     
-    // Thêm whitespace-nowrap để không rớt chữ xuống dòng trên mobile
     document.getElementById('kpi-si-today-diff').innerHTML = `
         <span class="${si_today_color} font-black text-sm tracking-tight flex items-center gap-1 whitespace-nowrap">
             <i class="fa-solid ${si_today_icon} text-[10px]"></i> ${Math.round(Math.abs(si_today_diff))}%

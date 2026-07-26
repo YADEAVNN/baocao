@@ -33,7 +33,7 @@ window.renderErpSalePersonal = async () => {
         const mEndStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
         const currentMonthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
 
-        // 4. Fetch Dữ Liệu Từ Supabase
+        // 4. Fetch Dữ Liệu Từ Supabase (S.I luôn lấy từ game_si_reports do Sale nhập)
         const [soRes, siRes, tgtRes] = await Promise.all([
             window.sb.from('daily_so_reports').select('*').eq('sale_name', saleName).gte('report_date', mStartStr).lte('report_date', mEndStr),
             window.sb.from('game_si_reports').select('*').eq('sale_name', saleName).gte('report_date', mStartStr).lte('report_date', mEndStr),
@@ -45,19 +45,17 @@ window.renderErpSalePersonal = async () => {
         const tgtData = tgtRes.data || [];
 
         // 5. Tính toán Kế Hoạch (Target Tháng)
-        let targetSO = 0, targetSI = 0, targetTT = 0;
+        let targetSO = 0, targetSI = 0;
         tgtData.forEach(t => {
             const tMonth = t.report_month || t.month;
             if (tMonth && tMonth.startsWith(currentMonthPrefix)) {
                 targetSO += Number(t.target_so || 0);
                 targetSI += Number(t.target_si || t.target_ph || 0);
-                targetTT += Number(t.target_tt || 0);
             }
         });
 
         if (targetSO === 0) targetSO = 300; 
         if (targetSI === 0) targetSI = 400;
-        if (targetTT === 0) targetTT = 500;
 
         // 6. Tính toán Thực Đạt (Actuals)
         let actualSO = 0, actualSI = 0, actualTT = 0;
@@ -83,7 +81,6 @@ window.renderErpSalePersonal = async () => {
         
         const pctSI = Math.min(100, Math.round((actualSI / targetSI) * 100));
         const pctSO = Math.min(100, Math.round((actualSO / targetSO) * 100));
-        const pctTT = Math.min(100, Math.round((actualTT / targetTT) * 100));
 
         const avgPaceSI = (actualSI / daysPassed).toFixed(1);
         const avgPaceSO = (actualSO / daysPassed).toFixed(1);
@@ -440,9 +437,9 @@ window.renderErpSalePersonal = async () => {
                                 <div class="flex flex-col items-center bg-white px-1">
                                     <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-2 shadow-sm border border-purple-100"><i class="fa-solid fa-clipboard-check text-xl"></i></div>
                                     <div class="text-[10px] font-black uppercase mb-2 text-slate-800">ĐƠN TT</div>
-                                    <div class="text-[9px] text-gray-400 font-medium">Mục tiêu<br><span class="font-bold text-slate-800">${targetTT.toLocaleString('vi-VN')} xe</span></div>
-                                    <div class="text-[9px] text-gray-400 font-medium mt-1.5">Đã đạt<br><span class="font-bold text-slate-800">${actualTT.toLocaleString('vi-VN')} xe</span></div>
-                                    <div class="text-xs font-black text-purple-600 mt-1 bg-purple-50 px-2 py-0.5 rounded">${pctTT}%</div>
+                                    <div class="text-[9px] text-gray-400 font-medium mt-1.5 text-center">
+                                        Đã đạt<br><span class="text-base font-black text-purple-600">${actualTT.toLocaleString('vi-VN')} xe</span>
+                                    </div>
                                 </div>
                                 <i class="fa-solid fa-chevron-right text-gray-300 text-sm bg-white"></i>
                                 

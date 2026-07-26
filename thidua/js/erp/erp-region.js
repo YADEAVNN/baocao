@@ -89,7 +89,7 @@ window.initErpRegion = async function() {
                                         ĐƠN THANH TOÁN
                                     </div>
                                     <div class="text-3xl font-black text-slate-800 mb-2" id="reg-val-tt">0 <span class="text-sm font-bold text-gray-400">xe</span></div>
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Lũy kế tháng (Admin)</div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Lũy kế tháng (Thực tế)</div>
                                     <div class="absolute bottom-0 left-0 w-full h-1 bg-indigo-500 rounded-b-2xl"></div>
                                 </div>
                                 <div class="hidden md:block text-gray-300"><i class="fa-solid fa-arrow-right-long text-2xl"></i></div>
@@ -100,7 +100,7 @@ window.initErpRegion = async function() {
                                         PHÁT HÀNG (SELLIN)
                                     </div>
                                     <div class="text-3xl font-black text-slate-800 mb-2" id="reg-val-si">0 <span class="text-sm font-bold text-gray-400">xe</span></div>
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Lũy kế tháng (Admin)</div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Lũy kế tháng (Thực tế)</div>
                                     <div class="absolute bottom-0 left-0 w-full h-1 bg-blue-500 rounded-b-2xl"></div>
                                 </div>
                                 <div class="hidden md:block text-gray-300"><i class="fa-solid fa-arrow-right-long text-2xl"></i></div>
@@ -193,7 +193,7 @@ window.initErpRegion = async function() {
                             </div>
                         </div>
 
-                        <!-- 3. DUAL PACE TIMELINE (UPDATED: SPLIT CHARTS) -->
+                        <!-- 3. DUAL PACE TIMELINE -->
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                             <div class="flex justify-between items-center mb-5">
                                 <h3 class="text-sm font-black text-blue-800 uppercase flex items-center gap-2">
@@ -432,30 +432,55 @@ window.loadDataRegionTab = async function() {
             return false;
         });
 
-        const targetFiltered = rawTarget.filter(t => salesInRegion.has(norm(t.sale_name)));
-        const gameSiFiltered = rawGameSI.filter(r => salesInRegion.has(norm(r.sale_name)));
+        const targetFiltered = rawTarget.filter(t => {
+            const sNorm = norm(t.sale_name);
+            if (salesInRegion.has(sNorm)) return true;
+            if (getNormalizedRegion(t.area || t.khu_vuc || t.region_name) === regionFilterNorm) {
+                if (sNorm) salesInRegion.add(sNorm);
+                return true;
+            }
+            return false;
+        });
 
-        // 4. Khởi tạo biến tính toán Aggregate
+        const gameSiFiltered = rawGameSI.filter(r => {
+            const sNorm = norm(r.sale_name);
+            if (salesInRegion.has(sNorm)) return true;
+            if (getNormalizedRegion(r.region_name || r.khu_vuc) === regionFilterNorm) {
+                if (sNorm) salesInRegion.add(sNorm);
+                return true;
+            }
+            return false;
+        });
+
+        // ===============================================
+        // ĐÃ FIX: PHÂN TÁCH LOGIC BẮC/NAM CHUẨN XÁC VÀ SỬA CASE SENSITIVE
+        // ===============================================
         let totalTarSI = 0, totalTarSO = 0;
         let totalActTT = 0, totalActSI = 0, totalActSO = 0;
         const saleStats = {};
         const dailyStats = Array.from({length: daysInMonth}, (_, i) => ({ day: i+1, si: 0, so: 0 }));
 
-        // A. Tính tổng Admin S.I
+        const mienBacRegions = ["tây bắc", "hà nội", "đông bắc", "hồng hà", "bắc trung bộ", "trung trung bộ"];
+        const isMienBac = mienBacRegions.includes(norm(regionFilterNorm)); // Đã Fix case sensitive
+
+        // A. Tính tổng Admin S.I (Target luôn lấy từ Admin, Actual chỉ cộng nếu là miền Nam)
         const baseDateSI = `${year}-${month}-01`;
         siFiltered.forEach(r => {
             if(r.report_date === baseDateSI) {
                 totalTarSI += Number(r.target_ph) || 0;
             }
-            const tt = Number(r.thanh_toan) || 0;
-            const xh = Number(r.xuat_hang) || 0;
 
-            totalActTT += tt;
-            totalActSI += xh;
+            if (!isMienBac) {
+                const tt = Number(r.thanh_toan) || 0;
+                const xh = Number(r.xuat_hang) || 0;
 
-            const dayNum = parseInt(r.report_date.slice(-2));
-            if(dayNum >= 1 && dayNum <= daysInMonth) {
-                dailyStats[dayNum-1].si += xh;
+                totalActTT += tt;
+                totalActSI += xh;
+
+                const dayNum = parseInt(r.report_date.slice(-2));
+                if(dayNum >= 1 && dayNum <= daysInMonth) {
+                    dailyStats[dayNum-1].si += xh;
+                }
             }
         });
 
@@ -490,13 +515,25 @@ window.loadDataRegionTab = async function() {
             }
         });
 
-        // D. Lấy Số liệu Game S.I của Sale
+        // D. Lấy Số liệu Game S.I của Sale (Chỉ cộng vào tổng Khu vực nếu là Miền Bắc)
         gameSiFiltered.forEach(r => {
             const xh = Number(r.xuat_hang) || 0;
+            const tt = Number(r.thanh_toan) || 0;
+            
             const sName = r.sale_name ? r.sale_name.trim() : null;
             if (sName) {
                 if (!saleStats[sName]) saleStats[sName] = { name: sName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
                 saleStats[sName].actSI += xh;
+            }
+
+            if (isMienBac) {
+                totalActTT += tt;
+                totalActSI += xh;
+
+                const dayNum = parseInt(r.report_date.slice(-2));
+                if(dayNum >= 1 && dayNum <= daysInMonth) {
+                    dailyStats[dayNum-1].si += xh;
+                }
             }
         });
 
@@ -590,7 +627,7 @@ window.loadDataRegionTab = async function() {
             }).join('');
         }
 
-        // 9. Update Chart 3: Dual Pace (UPDATED TRUYỀN THÊM TARGET SI)
+        // 9. Update Chart 3: Dual Pace
         updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, daysPassed);
 
         if(lastUpdate) {
@@ -604,7 +641,6 @@ window.loadDataRegionTab = async function() {
     }
 };
 
-// HÀM RENDER CHART ĐÃ ĐƯỢC TÁCH RA LÀM 2 BẢNG (SI & SO ĐỘC LẬP)
 function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, daysPassed) {
     if (window.regChartSI) window.regChartSI.destroy();
     if (window.regChartSO) window.regChartSO.destroy();
@@ -638,7 +674,7 @@ function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, da
         stroke: { width: [3, 2], curve: 'straight', dashArray: [0, 4] },
         dataLabels: {
             enabled: true,
-            enabledOnSeries: [0], // Bật số cho đường "Thực đạt"
+            enabledOnSeries: [0],
             style: { fontSize: '9px', fontWeight: 'bold' },
             background: { enabled: true, opacity: 0.8, borderRadius: 2 },
             offsetY: -5,

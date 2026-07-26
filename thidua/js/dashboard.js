@@ -53,17 +53,20 @@ window.renderDashboardView = async (targetMonthParam) => {
     `;
 
     try {
-        const [resSI, resSO, resTarget, resShops] = await Promise.all([
+        // ĐÃ FIX: Thêm bảng game_si_reports để lấy số thực tế miền Bắc do Sale nhập
+        const [resSI, resSO, resTarget, resShops, resGameSI] = await Promise.all([
             window.sb.from('daily_si_reports').select('*'),
             window.sb.from('daily_so_reports').select('*'),
             window.sb.from('monthly_sale_targets').select('*'),
-            window.sb.from('master_shop_list').select('*') 
+            window.sb.from('master_shop_list').select('*'),
+            window.sb.from('game_si_reports').select('*')
         ]);
 
         const siReports = resSI.data || [];
         const soReports = resSO.data || [];
         const targetData = resTarget.data || [];
         const shopsData = resShops.data || [];
+        const gameSiReports = resGameSI.data || [];
 
         const saleToRegionMap = {};
         shopsData.forEach(shop => {
@@ -85,7 +88,6 @@ window.renderDashboardView = async (targetMonthParam) => {
 
         // CỘNG DỒN KẾ HOẠCH TỪ BẢNG TARGET (CHỈ CHO S.O)
         targetData.forEach(row => {
-            // ĐÃ FIX: Lọc Kế hoạch S.O chính xác theo cột "report_month" trên Database của bạn
             const rowMonth = row.report_month;
             if (rowMonth && !rowMonth.startsWith(currentMonthStr)) return;
 
@@ -108,31 +110,58 @@ window.renderDashboardView = async (targetMonthParam) => {
             }
         });
 
-        // XỬ LÝ DỮ LIỆU S.I
+        // ==========================================
+        // ĐÃ FIX: XỬ LÝ DỮ LIỆU S.I (PHÂN TÁCH BẮC/NAM)
+        // ==========================================
+        const mienBacRegions = ["tây bắc bộ", "tây bắc", "hà nội", "đông bắc", "hồng hà", "bắc trung bộ", "trung trung bộ"];
         const baseDateSI = `${currentMonthStr}-01`;
+
+        // 1. XỬ LÝ DỮ LIỆU S.I TỪ ADMIN (Bảng daily_si_reports)
         siReports.forEach(row => {
             if (row.report_date && !row.report_date.startsWith(currentMonthStr)) return;
 
             const mappedRegion = norm(row.region_name || row.khu_vuc);
+            const isMienBac = mienBacRegions.some(reg => mappedRegion.includes(reg));
 
-            // 1. Lấy Target Phát hàng từ ngày mùng 1 do Admin nhập
+            // A. Lấy Target Phát hàng từ ngày mùng 1 do Admin nhập (Cho TẤT CẢ 12 khu vực)
             if (row.report_date === baseDateSI && row.target_ph) {
                 for (const reg of siRegions) {
                     const nReg = norm(reg);
-                    if (mappedRegion === nReg) {
+                    if (mappedRegion === nReg || mappedRegion.includes(nReg)) {
                         regionMapSI[nReg].target += safeNumber(row.target_ph);
                         break;
                     }
                 }
             }
 
-            // 2. Lấy số lượng thực tế phát hàng
-            const val = safeNumber(row.xuat_hang);
-            for (const reg of siRegions) {
-                const nReg = norm(reg);
-                if (mappedRegion === nReg) {
-                    regionMapSI[nReg].actual += val;
-                    break;
+            // B. Lấy số lượng thực tế phát hàng TỪ ADMIN (CHỈ CHO MIỀN NAM)
+            if (!isMienBac) {
+                const val = safeNumber(row.xuat_hang);
+                for (const reg of siRegions) {
+                    const nReg = norm(reg);
+                    if (mappedRegion === nReg || mappedRegion.includes(nReg)) {
+                        regionMapSI[nReg].actual += val;
+                        break;
+                    }
+                }
+            }
+        });
+
+        // 2. XỬ LÝ DỮ LIỆU S.I TỪ SALE NHẬP LIỆU (Bảng game_si_reports) - CHỈ CHO MIỀN BẮC
+        gameSiReports.forEach(row => {
+            if (row.report_date && !row.report_date.startsWith(currentMonthStr)) return;
+
+            const mappedRegion = saleToRegionMap[norm(row.sale_name)] || norm(row.region_name || row.khu_vuc);
+            const isMienBac = mienBacRegions.some(reg => mappedRegion.includes(reg));
+
+            if (isMienBac) {
+                const val = safeNumber(row.xuat_hang);
+                for (const reg of siRegions) {
+                    const nReg = norm(reg);
+                    if (mappedRegion === nReg || mappedRegion.includes(nReg)) {
+                        regionMapSI[nReg].actual += val;
+                        break;
+                    }
                 }
             }
         });

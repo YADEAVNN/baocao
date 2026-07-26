@@ -47,8 +47,15 @@ export function renderUserTableFiltered() {
     tbody.innerHTML = filtered.map(u => {
         const areaInfo = getAreaBySaleName(u.full_name);
         const areaDisplay = areaInfo ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200 text-xs font-bold">${areaInfo}</span>` : `<span class="text-gray-400 italic text-xs">Chưa gán shop</span>`;
+        
+        // Đoạn code FIX LỖI hiển thị email "null"
+        const displayEmail = (u.email && u.email !== 'null') ? u.email : '<span class="italic text-gray-400">Chưa cập nhật email</span>';
+        
         return `<tr class="hover:bg-slate-50 border-b">
-            <td class="p-4"><div class="font-bold text-slate-800">${u.full_name || '...'}</div><div class="text-xs text-gray-500">${u.email}</div></td>
+            <td class="p-4">
+                <div class="font-bold text-slate-800">${u.full_name || '...'}</div>
+                <div class="text-xs text-gray-500 mt-1">${displayEmail}</div>
+            </td>
             <td class="p-4">${areaDisplay}</td>
             <td class="p-4"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold border border-blue-100">${u.role || 'Sale'}</span></td>
             <td class="p-4 text-center"><span class="px-2 py-1 rounded text-[10px] font-black uppercase ${u.is_approved ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">${u.is_approved ? 'Hoạt Động' : 'Đã Khóa'}</span></td>
@@ -195,6 +202,10 @@ export function initAdminEvents() {
                         area: getVal(row, 'khu vực') !== undefined ? getVal(row, 'khu vực') : old.area,
                         svn_code: valSvn !== undefined ? String(valSvn).trim() : old.svn_code,
                         shop_name: getVal(row, 'tên đại lý', 'tên shop') !== undefined ? getVal(row, 'tên đại lý', 'tên shop') : old.shop_name,
+                        
+                        // FIX LỖI: THÊM CỘT SALE PHỤ TRÁCH VÀO DỮ LIỆU ĐỒNG BỘ
+                        sale_name: getVal(row, 'sale phụ trách', 'sale') !== undefined ? getVal(row, 'sale phụ trách', 'sale') : old.sale_name,
+                        
                         director_name: getVal(row, 'giám đốc', 'gđ khu vực', 'giám đốc vùng') !== undefined ? getVal(row, 'giám đốc', 'gđ khu vực', 'giám đốc vùng') : old.director_name,
                         regional_director: getVal(row, 'gđ miền', 'giám đốc miền', 'regional director') !== undefined ? getVal(row, 'gđ miền', 'giám đốc miền', 'regional director') : old.regional_director,
                         province: getVal(row, 'tỉnh/thành', 'tỉnh') !== undefined ? getVal(row, 'tỉnh/thành', 'tỉnh') : old.province,

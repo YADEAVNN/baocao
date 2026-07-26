@@ -29,37 +29,36 @@ window.initErpModule = async function() {
 };
 
 window.switchErpTab = function(tabName) {
-    // 1. Ẩn tất cả các nội dung tab
-    document.getElementById('erp-tab-market')?.classList.add('hidden');
-    document.getElementById('erp-tab-region')?.classList.add('hidden');
-    document.getElementById('erp-tab-sale')?.classList.add('hidden');
-
-    // 2. Reset style của tất cả các nút tab
-    const btns = document.querySelectorAll('.erp-tab-btn');
-    btns.forEach(btn => {
-        btn.classList.remove('text-[#F97316]', 'border-[#F97316]');
-        btn.classList.add('text-gray-500', 'border-transparent');
+    // 1. Ẩn tất cả Tab
+    ['market', 'region', 'sale'].forEach(tab => {
+        const el = document.getElementById(`erp-tab-${tab}`);
+        if (el) el.classList.add('hidden');
     });
 
-    // 3. Hiển thị nội dung tab được chọn
-    const activeTab = document.getElementById(`erp-tab-${tabName}`);
-    if (activeTab) {
-        activeTab.classList.remove('hidden');
-    }
+    // 2. Reset style tất cả nút Tab
+    const btns = document.querySelectorAll('.erp-tab-btn');
+    btns.forEach(btn => {
+        btn.classList.remove('text-[#F97316]', 'border-[#F97316]', 'font-black');
+        btn.classList.add('text-gray-400', 'border-transparent', 'font-bold');
+    });
 
-    // 4. Đổi màu nút tab được chọn (Active state)
+    // 3. Hiển thị nội dung Tab được chọn
+    const activeTab = document.getElementById(`erp-tab-${tabName}`);
+    if (activeTab) activeTab.classList.remove('hidden');
+
+    // 4. Highlight nút Tab được chọn
     const activeBtn = document.getElementById(`tab-btn-${tabName}`);
     if (activeBtn) {
-        activeBtn.classList.remove('text-gray-500', 'border-transparent');
-        activeBtn.classList.add('text-[#F97316]', 'border-[#F97316]');
+        activeBtn.classList.remove('text-gray-400', 'border-transparent', 'font-bold');
+        activeBtn.classList.add('text-[#F97316]', 'border-[#F97316]', 'font-black');
     }
 
-    // 5. Kích hoạt render dữ liệu tương ứng cho từng tab
-    if (tabName === 'market' && window.initErpMarket) {
+    // 5. Gọi hàm khởi tạo riêng cho từng Tab
+    if (tabName === 'market' && typeof window.initErpMarket === 'function') {
         window.initErpMarket();
-    } else if (tabName === 'region' && window.initErpRegion) {
+    } else if (tabName === 'region' && typeof window.initErpRegion === 'function') {
         window.initErpRegion();
-    } else if (tabName === 'sale' && window.initErpSale) {
+    } else if (tabName === 'sale' && typeof window.initErpSale === 'function') {
         window.initErpSale();
     }
 };

@@ -1,6 +1,7 @@
 // ==========================================
 // TRUNG TÂM ĐIỀU HÀNH ERP - DATA DRIVEN
 // ĐỒNG BỘ LOGIC KẾT HỢP DỮ LIỆU ĐIỀU HÀNH (ADMIN) & THI ĐUA (SALE)
+// ĐÃ TỐI ƯU GIAO DIỆN MOBILE (RESPONSIVE SCROLL)
 // ==========================================
 
 const fmt = (num) => Math.round(Number(num || 0)).toLocaleString('vi-VN');
@@ -284,8 +285,9 @@ function renderCards(agg) {
     let si_today_color = si_today_diff >= 0 ? 'text-emerald-500' : 'text-rose-500';
     let si_today_icon = si_today_diff >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     
+    // Thêm whitespace-nowrap để không rớt chữ xuống dòng trên mobile
     document.getElementById('kpi-si-today-diff').innerHTML = `
-        <span class="${si_today_color} font-black text-sm tracking-tight flex items-center gap-1">
+        <span class="${si_today_color} font-black text-sm tracking-tight flex items-center gap-1 whitespace-nowrap">
             <i class="fa-solid ${si_today_icon} text-[10px]"></i> ${Math.round(Math.abs(si_today_diff))}%
         </span> 
         <span class="text-slate-400 text-xs font-medium ml-1.5 whitespace-nowrap">vs hôm qua (${fmt(agg.si_yest)})</span>
@@ -302,7 +304,7 @@ function renderCards(agg) {
     let si_acc_icon = paceSI >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     
     document.getElementById('kpi-si-accum-diff').innerHTML = `
-        <span class="${si_acc_color} font-black text-sm tracking-tight flex items-center gap-1">
+        <span class="${si_acc_color} font-black text-sm tracking-tight flex items-center gap-1 whitespace-nowrap">
             <i class="fa-solid ${si_acc_icon} text-[10px]"></i> ${Math.round(Math.abs(paceSI))}%
         </span> 
         <span class="text-slate-400 text-xs font-medium ml-1.5 whitespace-nowrap">vs tiến độ chuẩn</span>
@@ -320,7 +322,7 @@ function renderCards(agg) {
     let so_today_icon = so_today_diff >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     
     document.getElementById('kpi-so-today-diff').innerHTML = `
-        <span class="${so_today_color} font-black text-sm tracking-tight flex items-center gap-1">
+        <span class="${so_today_color} font-black text-sm tracking-tight flex items-center gap-1 whitespace-nowrap">
             <i class="fa-solid ${so_today_icon} text-[10px]"></i> ${Math.round(Math.abs(so_today_diff))}%
         </span> 
         <span class="text-slate-400 text-xs font-medium ml-1.5 whitespace-nowrap">vs hôm qua (${fmt(agg.so_yest)})</span>
@@ -337,7 +339,7 @@ function renderCards(agg) {
     let so_acc_icon = paceSO >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     
     document.getElementById('kpi-so-accum-diff').innerHTML = `
-        <span class="${so_acc_color} font-black text-sm tracking-tight flex items-center gap-1">
+        <span class="${so_acc_color} font-black text-sm tracking-tight flex items-center gap-1 whitespace-nowrap">
             <i class="fa-solid ${so_acc_icon} text-[10px]"></i> ${Math.round(Math.abs(paceSO))}%
         </span> 
         <span class="text-slate-400 text-xs font-medium ml-1.5 whitespace-nowrap">vs tiến độ chuẩn</span>
@@ -423,14 +425,14 @@ function renderGauges(agg) {
     document.getElementById('g-si-pace-act').innerText = fmt(siPaceAct);
     const elSiDiff = document.getElementById('g-si-pace-diff');
     elSiDiff.innerText = (siPaceDiff > 0 ? '+' : '') + fmt(siPaceDiff) + ' xe/ngày';
-    elSiDiff.className = siPaceDiff >= 0 ? "text-sm font-black text-emerald-500" : "text-sm font-black text-rose-500";
+    elSiDiff.className = siPaceDiff >= 0 ? "text-sm font-black text-emerald-500 whitespace-nowrap" : "text-sm font-black text-rose-500 whitespace-nowrap";
 
     document.getElementById('g-so-days-left').innerText = dLeft;
     document.getElementById('g-so-pace-need').innerText = fmt(soPaceNeed);
     document.getElementById('g-so-pace-act').innerText = fmt(soPaceAct);
     const elSoDiff = document.getElementById('g-so-pace-diff');
     elSoDiff.innerText = (soPaceDiff > 0 ? '+' : '') + fmt(soPaceDiff) + ' xe/ngày';
-    elSoDiff.className = soPaceDiff >= 0 ? "text-sm font-black text-emerald-500" : "text-sm font-black text-rose-500";
+    elSoDiff.className = soPaceDiff >= 0 ? "text-sm font-black text-emerald-500 whitespace-nowrap" : "text-sm font-black text-rose-500 whitespace-nowrap";
 
     renderMainGaugeChart('gauge-si', siPct, '#3b82f6');
     renderMainGaugeChart('gauge-so', soPct, '#22c55e');
@@ -457,6 +459,19 @@ function renderMainGaugeChart(id, val, color) {
     };
     erpCharts[id] = new ApexCharts(document.querySelector(`#${id}`), opts); 
     erpCharts[id].render();
+}
+
+function autoScrollTable(tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if(tbody) {
+        const table = tbody.closest('table');
+        if(table) {
+            table.classList.add('min-w-max', 'whitespace-nowrap');
+            if (table.parentElement && !table.parentElement.classList.contains('overflow-x-auto')) {
+                table.parentElement.classList.add('overflow-x-auto', 'w-full', 'custom-scrollbar');
+            }
+        }
+    }
 }
 
 function renderRegionTable(agg) {
@@ -496,25 +511,27 @@ function renderRegionTable(agg) {
 
         return `
         <tr class="hover:bg-slate-50 transition border-b border-gray-100">
-            <td class="py-3 px-3 font-bold flex gap-2 sticky left-0 bg-white shadow-[1px_0_0_0_#f1f5f9]"><span class="text-gray-400 font-medium">${i+1}</span> <span class="text-slate-700">${r.name}</span></td>
+            <td class="py-3 px-3 font-bold flex items-center gap-2 sticky left-0 bg-white shadow-[1px_0_0_0_#f1f5f9] whitespace-nowrap z-10 min-w-[130px]"><span class="text-gray-400 font-medium">${i+1}</span> <span class="text-slate-700">${r.name}</span></td>
             
-            <td class="py-3 px-2 text-center text-gray-500 font-medium">${fmt(r.si_tar)}</td>
-            <td class="py-3 px-2 text-center text-slate-800 font-bold">${fmt(r.si_act)}</td>
-            <td class="py-3 px-2 text-center font-black ${siPctColor}">${siPct}%</td>
-            <td class="py-3 px-2 text-center text-gray-600 font-medium">${fmt(siPaceNeed)}</td>
-            <td class="py-3 px-2 text-center text-gray-800 font-bold">${fmt(siPaceAct)}</td>
-            <td class="py-3 px-2 text-center font-bold ${siPaceDiff >= 0 ? 'text-emerald-500' : 'text-rose-500'}">${siPaceDiff > 0 ? '+' : ''}${siPaceDiff}</td>
+            <td class="py-3 px-2 text-center text-gray-500 font-medium whitespace-nowrap">${fmt(r.si_tar)}</td>
+            <td class="py-3 px-2 text-center text-slate-800 font-bold whitespace-nowrap">${fmt(r.si_act)}</td>
+            <td class="py-3 px-2 text-center font-black ${siPctColor} whitespace-nowrap">${siPct}%</td>
+            <td class="py-3 px-2 text-center text-gray-600 font-medium whitespace-nowrap">${fmt(siPaceNeed)}</td>
+            <td class="py-3 px-2 text-center text-gray-800 font-bold whitespace-nowrap">${fmt(siPaceAct)}</td>
+            <td class="py-3 px-2 text-center font-bold ${siPaceDiff >= 0 ? 'text-emerald-500' : 'text-rose-500'} whitespace-nowrap">${siPaceDiff > 0 ? '+' : ''}${siPaceDiff}</td>
             
-            <td class="py-3 px-2 text-center text-gray-500 font-medium border-l border-gray-100">${fmt(r.so_tar)}</td>
-            <td class="py-3 px-2 text-center text-slate-800 font-bold">${fmt(r.so_act)}</td>
-            <td class="py-3 px-2 text-center font-black ${soPctColor}">${soPct}%</td>
-            <td class="py-3 px-2 text-center text-gray-600 font-medium">${fmt(soPaceNeed)}</td>
-            <td class="py-3 px-2 text-center text-gray-800 font-bold">${fmt(soPaceAct)}</td>
-            <td class="py-3 px-2 text-center font-bold ${soPaceDiff >= 0 ? 'text-emerald-500' : 'text-rose-500'}">${soPaceDiff > 0 ? '+' : ''}${soPaceDiff}</td>
+            <td class="py-3 px-2 text-center text-gray-500 font-medium border-l border-gray-100 whitespace-nowrap">${fmt(r.so_tar)}</td>
+            <td class="py-3 px-2 text-center text-slate-800 font-bold whitespace-nowrap">${fmt(r.so_act)}</td>
+            <td class="py-3 px-2 text-center font-black ${soPctColor} whitespace-nowrap">${soPct}%</td>
+            <td class="py-3 px-2 text-center text-gray-600 font-medium whitespace-nowrap">${fmt(soPaceNeed)}</td>
+            <td class="py-3 px-2 text-center text-gray-800 font-bold whitespace-nowrap">${fmt(soPaceAct)}</td>
+            <td class="py-3 px-2 text-center font-bold ${soPaceDiff >= 0 ? 'text-emerald-500' : 'text-rose-500'} whitespace-nowrap">${soPaceDiff > 0 ? '+' : ''}${soPaceDiff}</td>
             
-            <td class="py-3 px-3 text-center align-middle"><span class="${badge} px-3 py-1 rounded text-[10px] font-black uppercase">${status}</span></td>
+            <td class="py-3 px-3 text-center align-middle whitespace-nowrap"><span class="${badge} px-3 py-1 rounded text-[10px] font-black uppercase">${status}</span></td>
         </tr>`;
     }).join('') || '<tr><td colspan="14" class="text-center py-8 text-gray-500">Chưa có dữ liệu vùng</td></tr>';
+
+    autoScrollTable('erp-region-table-body');
 }
 
 function renderTopSales(salesObj) {
@@ -538,11 +555,11 @@ function renderTopSales(salesObj) {
         let pctClass = s.si_pct >= 100 ? 'text-emerald-600' : (s.si_pct >= 75 ? 'text-orange-500' : 'text-rose-500');
         return `
         <tr class="hover:bg-blue-50/50 transition border-b border-gray-50">
-            <td class="py-2.5 px-3 font-black ${rankClass} sticky left-0 bg-white shadow-[1px_0_0_0_#f8fafc]">${i+1}</td>
-            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-normal min-w-[120px]">${s.name}</td>
-            <td class="py-2.5 px-2 text-center font-medium text-gray-500">${fmt(s.si_tar)}</td>
-            <td class="py-2.5 px-2 text-center font-bold text-blue-600 bg-blue-50/50">${fmt(s.si_act || 0)}</td>
-            <td class="py-2.5 px-3 text-right font-black ${pctClass}">${Math.round(s.si_pct)}%</td>
+            <td class="py-2.5 px-3 font-black ${rankClass} sticky left-0 bg-white shadow-[1px_0_0_0_#f8fafc] whitespace-nowrap z-10">${i+1}</td>
+            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-nowrap min-w-[120px]">${s.name}</td>
+            <td class="py-2.5 px-2 text-center font-medium text-gray-500 whitespace-nowrap">${fmt(s.si_tar)}</td>
+            <td class="py-2.5 px-2 text-center font-bold text-blue-600 bg-blue-50/50 whitespace-nowrap">${fmt(s.si_act || 0)}</td>
+            <td class="py-2.5 px-3 text-right font-black ${pctClass} whitespace-nowrap">${Math.round(s.si_pct)}%</td>
         </tr>`;
     }).join('') || '<tr><td colspan="5" class="text-center py-8 text-gray-400">Không có dữ liệu</td></tr>';
 
@@ -551,16 +568,19 @@ function renderTopSales(salesObj) {
         let pctClass = s.so_pct >= 100 ? 'text-emerald-600' : (s.so_pct >= 75 ? 'text-orange-500' : 'text-rose-500');
         return `
         <tr class="hover:bg-green-50/50 transition border-b border-gray-50">
-            <td class="py-2.5 px-3 font-black ${rankClass} sticky left-0 bg-white shadow-[1px_0_0_0_#f8fafc]">${i+1}</td>
-            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-normal min-w-[120px]">${s.name}</td>
-            <td class="py-2.5 px-2 text-center font-medium text-gray-500">${fmt(s.so_tar)}</td>
-            <td class="py-2.5 px-2 text-center font-bold text-green-600 bg-green-50/50">${fmt(s.so_act)}</td>
-            <td class="py-2.5 px-3 text-right font-black ${pctClass}">${Math.round(s.so_pct)}%</td>
+            <td class="py-2.5 px-3 font-black ${rankClass} sticky left-0 bg-white shadow-[1px_0_0_0_#f8fafc] whitespace-nowrap z-10">${i+1}</td>
+            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-nowrap min-w-[120px]">${s.name}</td>
+            <td class="py-2.5 px-2 text-center font-medium text-gray-500 whitespace-nowrap">${fmt(s.so_tar)}</td>
+            <td class="py-2.5 px-2 text-center font-bold text-green-600 bg-green-50/50 whitespace-nowrap">${fmt(s.so_act)}</td>
+            <td class="py-2.5 px-3 text-right font-black ${pctClass} whitespace-nowrap">${Math.round(s.so_pct)}%</td>
         </tr>`;
     }).join('') || '<tr><td colspan="5" class="text-center py-8 text-gray-400">Không có dữ liệu</td></tr>';
 
     document.getElementById('erp-top-si-body').innerHTML = renderRowSI(siSales);
     document.getElementById('erp-top-so-body').innerHTML = renderRowSO(soSales);
+
+    autoScrollTable('erp-top-si-body');
+    autoScrollTable('erp-top-so-body');
 }
 
 function render12RegionSIChart(regionsObj) {
@@ -584,22 +604,24 @@ function render12RegionSIChart(regionsObj) {
         
         return `
         <tr class="hover:bg-blue-50/50 transition border-b border-gray-50">
-            <td class="py-2.5 px-1 text-center font-black ${rankClass}">${i+1}</td>
-            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-normal min-w-[90px]">${r.name}</td>
-            <td class="py-2.5 px-2 text-center font-black text-blue-600">${fmt(r.si_act || 0)}</td>
-            <td class="py-2.5 px-4">
+            <td class="py-2.5 px-1 text-center font-black ${rankClass} whitespace-nowrap">${i+1}</td>
+            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-nowrap min-w-[100px]">${r.name}</td>
+            <td class="py-2.5 px-2 text-center font-black text-blue-600 whitespace-nowrap">${fmt(r.si_act || 0)}</td>
+            <td class="py-2.5 px-4 min-w-[130px]">
                 <div class="flex items-center gap-3">
                     <div class="relative w-full h-[14px] bg-slate-100 rounded-sm flex items-center shadow-inner">
                         <div class="absolute top-0 left-0 h-full bg-blue-500 rounded-sm z-10 transition-all duration-700" style="width: ${barWidth}%"></div>
                         <div class="absolute top-[-3px] bottom-[-3px] border-l border-dashed border-orange-500 z-20" style="left: 100%;"></div>
                     </div>
-                    <span class="text-[10px] font-black text-slate-700 w-12 text-right">${Math.round(r.pct)}%</span>
+                    <span class="text-[10px] font-black text-slate-700 w-12 text-right whitespace-nowrap">${Math.round(r.pct)}%</span>
                 </div>
             </td>
-            <td class="py-2.5 px-2 text-right font-black ${r.missing > 0 ? 'text-rose-500' : 'text-emerald-500'}">${r.missing > 0 ? fmt(r.missing) : '0'}</td>
+            <td class="py-2.5 px-2 text-right font-black ${r.missing > 0 ? 'text-rose-500' : 'text-emerald-500'} whitespace-nowrap">${r.missing > 0 ? fmt(r.missing) : '0'}</td>
         </tr>
         `;
     }).join('') || '<tr><td colspan="5" class="text-center py-6 text-gray-400">Không có dữ liệu khu vực</td></tr>';
+
+    autoScrollTable('erp-12-region-si-body');
 }
 
 function renderLineCharts(dailyObj, startStr, endStr) {
@@ -786,7 +808,6 @@ function createSellinSelloutAnomalyAlert(agg) {
     };
 }
 
-// Tách hàm kiểm tra nộp dữ liệu S.I (Game Thi Đua)
 function createStaleSIAlert(agg, rawData, filters) {
     const vnTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
     const currentHour = vnTime.getHours();
@@ -804,7 +825,6 @@ function createStaleSIAlert(agg, rawData, filters) {
     const reportedSales = new Set();
     (rawData.gameSi || []).forEach(r => { if (r.report_date === filters.end) reportedSales.add(r.sale_name); });
 
-    // Chỉ xét các sale có mục tiêu S.I (tức là có tham gia thi đua/chỉ tiêu)
     const activeSales = Object.values(agg.sales).filter(s => s.si_tar > 0);
     const missingSales = activeSales.filter(s => !reportedSales.has(s.name)).map(s => ({ name: s.name, target: s.si_tar }));
 
@@ -821,7 +841,6 @@ function createStaleSIAlert(agg, rawData, filters) {
     };
 }
 
-// Tách hàm kiểm tra nộp dữ liệu S.O (Daily SO)
 function createStaleSOAlert(agg, rawData, filters) {
     const vnTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
     const currentHour = vnTime.getHours();
@@ -839,7 +858,6 @@ function createStaleSOAlert(agg, rawData, filters) {
     const reportedSales = new Set();
     (rawData.so || []).forEach(r => { if (r.report_date === filters.end) reportedSales.add(r.sale_name); });
 
-    // Chỉ xét các sale có mục tiêu S.O
     const activeSales = Object.values(agg.sales).filter(s => s.so_tar > 0);
     const missingSales = activeSales.filter(s => !reportedSales.has(s.name)).map(s => ({ name: s.name, target: s.so_tar }));
 
@@ -890,7 +908,6 @@ window.buildDashboardAlerts = function({ summary, regions, sales, dailyData, raw
     const anomalyAlert = createSellinSelloutAnomalyAlert(summary);
     if(anomalyAlert) alerts.push(anomalyAlert);
 
-    // THÊM: 2 Cảnh báo tách rời cho S.I và S.O
     const staleSIAlert = createStaleSIAlert(summary, rawData, selectedFilters);
     if(staleSIAlert) alerts.push(staleSIAlert);
 
@@ -899,8 +916,6 @@ window.buildDashboardAlerts = function({ summary, regions, sales, dailyData, raw
 
     const overAlert = createOverTargetAlert(summary);
     if(overAlert) alerts.push(overAlert);
-
-    // Đã XÓA: qualityAlert (Cảnh báo dữ liệu bất thường)
 
     const levelScore = { 'critical': 1, 'warning': 2, 'success': 3, 'info': 4 };
     alerts.sort((a, b) => {
@@ -969,7 +984,7 @@ window.showDashboardAlertDetails = function(alertId) {
     const d = alertData.details;
 
     if (d && d.data && d.data.length > 0) {
-        tableHtml += `<table class="w-full text-left text-xs whitespace-nowrap border-collapse">`;
+        tableHtml += `<table class="w-full text-left text-xs whitespace-nowrap min-w-max border-collapse">`;
         tableHtml += `<thead class="bg-gray-100 text-gray-600 font-bold uppercase text-[10px]"><tr>`;
         d.columns.forEach(col => { tableHtml += `<th class="py-2 px-3 border-b border-gray-200">${col}</th>`; });
         tableHtml += `</tr></thead><tbody class="divide-y divide-gray-100 text-slate-700">`;
@@ -977,18 +992,18 @@ window.showDashboardAlertDetails = function(alertId) {
         d.data.forEach((row, i) => {
             tableHtml += `<tr class="${i%2===0?'bg-white':'bg-slate-50'}">`;
             if (d.type === 'table_region' || d.type === 'table_sale' || d.type === 'table_success') {
-                tableHtml += `<td class="py-2.5 px-3 font-bold">${row.name}</td>`;
-                tableHtml += `<td class="py-2.5 px-3 font-black text-blue-600">${fmtNum(row.actual)}</td>`;
-                tableHtml += `<td class="py-2.5 px-3 font-medium text-gray-500">${fmtNum(row.target)}</td>`;
-                tableHtml += `<td class="py-2.5 px-3 font-bold text-orange-600">${fmtPct(row.rate)}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-bold whitespace-nowrap">${row.name}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-black text-blue-600 whitespace-nowrap">${fmtNum(row.actual)}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-medium text-gray-500 whitespace-nowrap">${fmtNum(row.target)}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-bold text-orange-600 whitespace-nowrap">${fmtPct(row.rate)}</td>`;
             } else if (d.type === 'table_anomaly') {
-                tableHtml += `<td class="py-2.5 px-3 font-bold">${row.name}</td>`;
-                tableHtml += `<td class="py-2.5 px-3 font-bold text-blue-600">${fmtPct(row.siRate)}</td>`;
-                tableHtml += `<td class="py-2.5 px-3 font-bold text-green-600">${fmtPct(row.soRate)}</td>`;
-                tableHtml += `<td class="py-2.5 px-3 font-black text-red-500">${fmtPct(row.gap)}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-bold whitespace-nowrap">${row.name}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-bold text-blue-600 whitespace-nowrap">${fmtPct(row.siRate)}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-bold text-green-600 whitespace-nowrap">${fmtPct(row.soRate)}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-black text-red-500 whitespace-nowrap">${fmtPct(row.gap)}</td>`;
             } else if (d.type === 'table_missing') {
-                tableHtml += `<td class="py-2.5 px-3 font-bold text-red-600">${row.name}</td>`;
-                tableHtml += `<td class="py-2.5 px-3 font-medium text-gray-500">${fmtNum(row.target)}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-bold text-red-600 whitespace-nowrap">${row.name}</td>`;
+                tableHtml += `<td class="py-2.5 px-3 font-medium text-gray-500 whitespace-nowrap">${fmtNum(row.target)}</td>`;
             }
             tableHtml += `</tr>`;
         });
@@ -996,12 +1011,12 @@ window.showDashboardAlertDetails = function(alertId) {
     } else if (d.type === 'progress') {
         tableHtml = `
             <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-xl">
-                <div><span class="text-gray-500">Thực đạt:</span> <span class="font-black text-blue-600">${fmtNum(d.actual)}</span></div>
-                <div><span class="text-gray-500">Mục tiêu:</span> <span class="font-black text-slate-800">${fmtNum(d.target)}</span></div>
-                <div><span class="text-gray-500">Nhịp độ cần đạt:</span> <span class="font-black text-orange-500">${fmtNum(Math.ceil(d.reqPace))} xe/ngày</span></div>
-                <div><span class="text-gray-500">Nhịp độ thực tế:</span> <span class="font-black ${d.actPace >= d.reqPace ? 'text-green-500' : 'text-red-500'}">${fmtNum(Math.ceil(d.actPace))} xe/ngày</span></div>
+                <div><span class="text-gray-500">Thực đạt:</span> <span class="font-black text-blue-600 whitespace-nowrap">${fmtNum(d.actual)}</span></div>
+                <div><span class="text-gray-500">Mục tiêu:</span> <span class="font-black text-slate-800 whitespace-nowrap">${fmtNum(d.target)}</span></div>
+                <div><span class="text-gray-500">Nhịp độ cần đạt:</span> <span class="font-black text-orange-500 whitespace-nowrap">${fmtNum(Math.ceil(d.reqPace))} xe/ngày</span></div>
+                <div><span class="text-gray-500">Nhịp độ thực tế:</span> <span class="font-black ${d.actPace >= d.reqPace ? 'text-green-500' : 'text-red-500'} whitespace-nowrap">${fmtNum(Math.ceil(d.actPace))} xe/ngày</span></div>
                 <div class="col-span-2 pt-2 border-t border-gray-200 mt-2">
-                    <span class="text-gray-500">Dự báo cuối kỳ đạt:</span> <span class="font-black ${d.forecast >= 100 ? 'text-green-500' : 'text-red-500'}">${fmtPct(d.forecast)}</span>
+                    <span class="text-gray-500">Dự báo cuối kỳ đạt:</span> <span class="font-black ${d.forecast >= 100 ? 'text-green-500' : 'text-red-500'} whitespace-nowrap">${fmtPct(d.forecast)}</span>
                 </div>
             </div>`;
     } else {

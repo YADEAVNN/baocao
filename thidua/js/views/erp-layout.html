@@ -1,192 +1,192 @@
 <div class="w-full pb-20 bg-[#F8FAFC] min-h-screen text-slate-800 font-sans">
     
     <!-- HEADER -->
-    <div class="bg-white px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm border-b border-gray-200 sticky top-0 z-[60]">
-        <div class="flex items-center gap-4 mb-4 md:mb-0">
-            <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">TRUNG TÂM ĐIỀU HÀNH</h1>
-            <span class="text-sm font-semibold text-gray-400 border-l-2 border-gray-200 pl-4">Tổng quan hiệu suất kinh doanh</span>
+    <div class="bg-white px-4 py-3 md:px-6 md:py-4 flex flex-col md:flex-row justify-between items-center shadow-sm border-b border-gray-100 gap-3 relative z-40">
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <div class="w-10 h-10 bg-orange-100 text-[#F97316] rounded-xl flex items-center justify-center text-lg shadow-inner shrink-0">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <h1 class="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tight leading-none">Trung Tâm Điều Hành</h1>
+                <span class="text-[10px] font-bold text-gray-400 tracking-wider">TỔNG QUAN HIỆU SUẤT KINH DOANH</span>
+            </div>
         </div>
         
-        <div class="flex gap-3 items-center text-sm font-bold">
-            <span class="text-gray-400 font-medium text-xs">Cập nhật: <span id="erp-last-update" class="text-gray-600 font-bold">--:-- | --/--/----</span></span>
-            <button onclick="window.initErpMarket(true)" id="btn-erp-refresh" class="bg-[#F97316] text-white px-4 py-2 rounded-lg shadow hover:bg-orange-600 transition flex items-center gap-2">
-                <i class="fa-solid fa-rotate"></i> Làm mới dữ liệu
+        <div class="flex gap-3 items-center justify-between w-full md:w-auto">
+            <span class="text-gray-400 font-medium text-[10px] md:text-xs">Cập nhật lúc: <span id="erp-last-update" class="text-gray-600 font-bold">--:--</span></span>
+            <button onclick="window.initErpMarket(true)" id="btn-erp-refresh" class="bg-[#F97316] text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg shadow-sm hover:bg-orange-600 transition flex items-center gap-2 text-xs font-bold uppercase">
+                <i class="fa-solid fa-rotate"></i> Làm mới
             </button>
         </div>
     </div>
 
     <!-- THANH ĐIỀU HƯỚNG 3 TAB -->
-    <div class="bg-white px-6 flex gap-6 border-b border-gray-200 shadow-sm relative z-50 overflow-x-auto">
-        <button onclick="window.switchErpTab('market')" id="tab-btn-market" class="erp-tab-btn py-3.5 font-black text-sm border-b-[3px] text-[#F97316] border-[#F97316] transition-all flex items-center gap-2 whitespace-nowrap">
-            <i class="fa-solid fa-earth-asia"></i> 1. THỊ TRƯỜNG TOÀN MIỀN
+    <div class="bg-white px-2 md:px-6 flex gap-2 md:gap-6 border-b border-gray-200 shadow-sm relative z-30 overflow-x-auto custom-scrollbar">
+        <button onclick="window.switchErpTab('market')" id="tab-btn-market" class="erp-tab-btn px-3 py-3 font-black text-[11px] md:text-sm border-b-[3px] text-[#F97316] border-[#F97316] transition-all flex items-center gap-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-earth-asia text-sm"></i> 1. TOÀN MIỀN
         </button>
-        <button onclick="window.switchErpTab('region')" id="tab-btn-region" class="erp-tab-btn py-3.5 font-bold text-sm border-b-[3px] text-gray-400 border-transparent hover:text-slate-700 transition-all flex items-center gap-2 whitespace-nowrap">
-            <i class="fa-solid fa-map-location-dot"></i> 2. PHÂN TÍCH KHU VỰC
+        <button onclick="window.switchErpTab('region')" id="tab-btn-region" class="erp-tab-btn px-3 py-3 font-bold text-[11px] md:text-sm border-b-[3px] text-gray-400 border-transparent hover:text-slate-700 transition-all flex items-center gap-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-map-location-dot text-sm"></i> 2. KHU VỰC
         </button>
-        <button onclick="window.switchErpTab('sale')" id="tab-btn-sale" class="erp-tab-btn py-3.5 font-bold text-sm border-b-[3px] text-gray-400 border-transparent hover:text-slate-700 transition-all flex items-center gap-2 whitespace-nowrap">
-            <i class="fa-solid fa-user-tie"></i> 3. CÁ NHÂN SALE
+        <button onclick="window.switchErpTab('sale')" id="tab-btn-sale" class="erp-tab-btn px-3 py-3 font-bold text-[11px] md:text-sm border-b-[3px] text-gray-400 border-transparent hover:text-slate-700 transition-all flex items-center gap-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-user-tie text-sm"></i> 3. CÁ NHÂN
         </button>
     </div>
 
     <!-- WRAPPER CHỨA NỘI DUNG CÁC TAB -->
     <div class="relative w-full">
         
-        <!-- TAB 1: THỊ TRƯỜNG TOÀN MIỀN (Chứa giao diện cũ) -->
+        <!-- TAB 1: THỊ TRƯỜNG TOÀN MIỀN -->
         <div id="erp-tab-market" class="block">
             <!-- BỘ LỌC TỔNG QUAN -->
-            <div class="px-6 py-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-center">
-                    <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                        <i class="fa-regular fa-calendar text-gray-400"></i>
-                        <input type="date" id="erp-date-start" class="bg-transparent border-none text-sm font-bold text-slate-700 outline-none cursor-pointer">
-                        <span class="text-gray-400">-</span>
-                        <input type="date" id="erp-date-end" class="bg-transparent border-none text-sm font-bold text-slate-700 outline-none cursor-pointer">
+            <div class="px-4 py-4 md:px-6 md:py-5">
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-wrap md:flex-nowrap gap-3 items-center">
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-max">
+                        <i class="fa-regular fa-calendar text-gray-400 text-sm"></i>
+                        <input type="date" id="erp-date-start" class="bg-transparent border-none text-[11px] md:text-sm font-bold text-slate-700 outline-none cursor-pointer">
+                        <span class="text-gray-400 font-bold">-</span>
+                        <input type="date" id="erp-date-end" class="bg-transparent border-none text-[11px] md:text-sm font-bold text-slate-700 outline-none cursor-pointer">
                     </div>
-
-                    <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                        <span class="text-gray-500 text-xs font-semibold uppercase">Khu vực:</span>
-                        <select id="erp-region-filter" class="bg-transparent border-none text-sm font-bold text-slate-700 outline-none cursor-pointer min-w-[150px]">
-                            <option value="ALL">Toàn quốc</option>
-                        </select>
-                    </div>
+                    <!-- Đã thay thế bộ lọc Khu Vực bằng thẻ ẩn để giữ logic JS hoạt động ổn định -->
+                    <input type="hidden" id="erp-region-filter" value="ALL">
                 </div>
             </div>
 
             <!-- MAIN CONTENT TỔNG QUAN -->
-            <div id="erp-main-content" class="px-6 space-y-6 fade-in">
+            <div id="erp-main-content" class="px-4 md:px-6 space-y-4 md:space-y-6 fade-in">
                 <!-- HÀNG 1: 4 KPI CARDS -->
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative p-5 flex justify-between items-center h-[140px]">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative p-4 flex justify-between items-center">
                         <div class="z-10 w-[60%]">
-                            <h4 class="text-xs font-black text-blue-600 uppercase mb-2">SELLIN HÔM NAY</h4>
+                            <h4 class="text-[10px] md:text-xs font-black text-blue-600 uppercase mb-1">SELLIN HÔM NAY</h4>
                             <div class="flex items-baseline gap-1">
-                                <span id="kpi-si-today-val" class="text-3xl font-black text-slate-800">0</span><span class="text-xs text-gray-500 font-bold">xe</span>
+                                <span id="kpi-si-today-val" class="text-2xl md:text-3xl font-black text-slate-800">0</span><span class="text-[9px] md:text-[10px] text-gray-500 font-bold">xe</span>
                             </div>
-                            <div class="text-xs text-gray-400 mt-1 font-medium">Mục tiêu: <span id="kpi-si-today-target">0</span> xe</div>
-                            <div id="kpi-si-today-diff" class="mt-2"></div>
+                            <div class="text-[10px] text-gray-400 font-medium">Mục tiêu: <span id="kpi-si-today-target" class="font-bold">0</span> xe</div>
+                            <div id="kpi-si-today-diff" class="mt-1"></div>
                         </div>
-                        <div id="radial-kpi-1" class="z-10"></div>
+                        <div id="radial-kpi-1" class="z-10 -mr-4 -my-4"></div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative p-5 flex justify-between items-center h-[140px]">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative p-4 flex justify-between items-center">
                         <div class="z-10 w-[60%]">
-                            <h4 class="text-xs font-black text-blue-600 uppercase mb-2">SELLIN LŨY KẾ</h4>
+                            <h4 class="text-[10px] md:text-xs font-black text-blue-600 uppercase mb-1">SELLIN LŨY KẾ</h4>
                             <div class="flex items-baseline gap-1">
-                                <span id="kpi-si-accum-val" class="text-3xl font-black text-slate-800">0</span><span class="text-xs text-gray-500 font-bold">xe</span>
+                                <span id="kpi-si-accum-val" class="text-2xl md:text-3xl font-black text-slate-800">0</span><span class="text-[9px] md:text-[10px] text-gray-500 font-bold">xe</span>
                             </div>
-                            <div class="text-xs text-gray-400 mt-1 font-medium">Mục tiêu: <span id="kpi-si-accum-target">0</span> xe</div>
-                            <div id="kpi-si-accum-diff" class="mt-2"></div>
+                            <div class="text-[10px] text-gray-400 font-medium">Mục tiêu: <span id="kpi-si-accum-target" class="font-bold">0</span> xe</div>
+                            <div id="kpi-si-accum-diff" class="mt-1"></div>
                         </div>
-                        <div id="radial-kpi-2" class="z-10"></div>
+                        <div id="radial-kpi-2" class="z-10 -mr-4 -my-4"></div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative p-5 flex justify-between items-center h-[140px]">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative p-4 flex justify-between items-center">
                         <div class="z-10 w-[60%]">
-                            <h4 class="text-xs font-black text-green-600 uppercase mb-2">SELLOUT HÔM NAY</h4>
+                            <h4 class="text-[10px] md:text-xs font-black text-green-600 uppercase mb-1">SELLOUT HÔM NAY</h4>
                             <div class="flex items-baseline gap-1">
-                                <span id="kpi-so-today-val" class="text-3xl font-black text-slate-800">0</span><span class="text-xs text-gray-500 font-bold">xe</span>
+                                <span id="kpi-so-today-val" class="text-2xl md:text-3xl font-black text-slate-800">0</span><span class="text-[9px] md:text-[10px] text-gray-500 font-bold">xe</span>
                             </div>
-                            <div class="text-xs text-gray-400 mt-1 font-medium">Mục tiêu: <span id="kpi-so-today-target">0</span> xe</div>
-                            <div id="kpi-so-today-diff" class="mt-2"></div>
+                            <div class="text-[10px] text-gray-400 font-medium">Mục tiêu: <span id="kpi-so-today-target" class="font-bold">0</span> xe</div>
+                            <div id="kpi-so-today-diff" class="mt-1"></div>
                         </div>
-                        <div id="radial-kpi-3" class="z-10"></div>
+                        <div id="radial-kpi-3" class="z-10 -mr-4 -my-4"></div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative p-5 flex justify-between items-center h-[140px]">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative p-4 flex justify-between items-center">
                         <div class="z-10 w-[60%]">
-                            <h4 class="text-xs font-black text-green-600 uppercase mb-2">SELLOUT LŨY KẾ</h4>
+                            <h4 class="text-[10px] md:text-xs font-black text-green-600 uppercase mb-1">SELLOUT LŨY KẾ</h4>
                             <div class="flex items-baseline gap-1">
-                                <span id="kpi-so-accum-val" class="text-3xl font-black text-slate-800">0</span><span class="text-xs text-gray-500 font-bold">xe</span>
+                                <span id="kpi-so-accum-val" class="text-2xl md:text-3xl font-black text-slate-800">0</span><span class="text-[9px] md:text-[10px] text-gray-500 font-bold">xe</span>
                             </div>
-                            <div class="text-xs text-gray-400 mt-1 font-medium">Mục tiêu: <span id="kpi-so-accum-target">0</span> xe</div>
-                            <div id="kpi-so-accum-diff" class="mt-2"></div>
+                            <div class="text-[10px] text-gray-400 font-medium">Mục tiêu: <span id="kpi-so-accum-target" class="font-bold">0</span> xe</div>
+                            <div id="kpi-so-accum-diff" class="mt-1"></div>
                         </div>
-                        <div id="radial-kpi-4" class="z-10"></div>
+                        <div id="radial-kpi-4" class="z-10 -mr-4 -my-4"></div>
                     </div>
                 </div>
 
                 <!-- HÀNG 2: GAUGE & BẢNG ĐIỀU HÀNH -->
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 xl:col-span-5 flex flex-col">
-                        <h3 class="text-sm font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-earth-asia text-blue-500"></i> HIỆU SUẤT TOÀN MIỀN BẮC</h3>
-                        <div class="flex flex-col gap-6 flex-1">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-5 flex flex-col">
+                        <h3 class="text-xs md:text-sm font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-earth-asia text-blue-500"></i> HIỆU SUẤT TOÀN MIỀN BẮC</h3>
+                        <div class="flex flex-col gap-4 flex-1">
                             <!-- GAUGE SELLIN -->
-                            <div class="flex flex-col justify-between h-full bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                                <div class="flex justify-between items-start mb-4">
+                            <div class="flex flex-col justify-between h-full bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100">
+                                <div class="flex justify-between items-start mb-2">
                                     <div class="w-1/2 relative" id="gauge-si-container">
                                         <div class="absolute inset-0 flex flex-col items-center justify-center -mt-6">
-                                            <span class="text-[10px] font-bold text-blue-600 uppercase mb-1">Hiệu Suất Sellin</span>
+                                            <span class="text-[9px] font-bold text-blue-600 uppercase mb-1">Hiệu Suất Sellin</span>
                                         </div>
                                         <div id="gauge-si" class="-mt-2 -mb-6"></div>
                                     </div>
-                                    <div class="w-1/2 flex flex-col gap-3 text-right">
-                                        <div><div class="text-[10px] text-gray-400 font-bold uppercase">MỤC TIÊU THÁNG</div><div id="g-si-target" class="text-base font-black text-slate-800">0 xe</div></div>
-                                        <div><div class="text-[10px] text-gray-400 font-bold uppercase">ĐÃ ĐẠT</div><div id="g-si-actual" class="text-base font-black text-slate-800">0 xe</div></div>
-                                        <div><div class="text-[10px] text-gray-400 font-bold uppercase">CÒN THIẾU</div><div id="g-si-missing" class="text-base font-black text-red-500">0 xe</div></div>
+                                    <div class="w-1/2 flex flex-col gap-2.5 text-right">
+                                        <div><div class="text-[9px] text-gray-400 font-bold uppercase">MỤC TIÊU</div><div id="g-si-target" class="text-sm md:text-base font-black text-slate-800">0 xe</div></div>
+                                        <div><div class="text-[9px] text-gray-400 font-bold uppercase">ĐÃ ĐẠT</div><div id="g-si-actual" class="text-sm md:text-base font-black text-slate-800">0 xe</div></div>
+                                        <div><div class="text-[9px] text-gray-400 font-bold uppercase">CÒN THIẾU</div><div id="g-si-missing" class="text-sm md:text-base font-black text-red-500">0 xe</div></div>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-4 gap-2 text-center border-t border-gray-200 pt-3">
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Còn lại</div><div class="text-sm font-black text-slate-800"><span id="g-si-days-left">0</span> ngày</div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Nhịp độ cần đạt</div><div class="text-sm font-black text-blue-600"><span id="g-si-pace-need">0</span> xe/ngày</div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Thực tế đang đạt</div><div class="text-sm font-black text-emerald-600"><span id="g-si-pace-act">0</span> xe/ngày</div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Chênh lệch</div><div id="g-si-pace-diff" class="text-sm font-black text-red-500">0 xe/ngày</div></div>
+                                <div class="grid grid-cols-4 gap-1 text-center border-t border-gray-200 pt-3">
+                                    <div><div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Còn lại</div><div class="text-xs font-black text-slate-800"><span id="g-si-days-left">0</span> ngày</div></div>
+                                    <div><div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Cần đạt</div><div class="text-xs font-black text-blue-600"><span id="g-si-pace-need">0</span> /ngày</div></div>
+                                    <div><div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Thực tế</div><div class="text-xs font-black text-emerald-600"><span id="g-si-pace-act">0</span> /ngày</div></div>
+                                    <div><div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Chênh</div><div id="g-si-pace-diff" class="text-xs font-black text-red-500">0 /ngày</div></div>
                                 </div>
                             </div>
 
                             <!-- GAUGE SELLOUT -->
-                            <div class="flex flex-col justify-between h-full bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                                <div class="flex justify-between items-start mb-4">
+                            <div class="flex flex-col justify-between h-full bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100">
+                                <div class="flex justify-between items-start mb-2">
                                     <div class="w-1/2 relative" id="gauge-so-container">
                                         <div class="absolute inset-0 flex flex-col items-center justify-center -mt-6">
-                                            <span class="text-[10px] font-bold text-green-600 uppercase mb-1">Hiệu Suất Sellout</span>
+                                            <span class="text-[9px] font-bold text-green-600 uppercase mb-1">Hiệu Suất Sellout</span>
                                         </div>
                                         <div id="gauge-so" class="-mt-2 -mb-6"></div>
                                     </div>
-                                    <div class="w-1/2 flex flex-col gap-3 text-right">
-                                        <div><div class="text-[10px] text-gray-400 font-bold uppercase">MỤC TIÊU THÁNG</div><div id="g-so-target" class="text-base font-black text-slate-800">0 xe</div></div>
-                                        <div><div class="text-[10px] text-gray-400 font-bold uppercase">ĐÃ ĐẠT</div><div id="g-so-actual" class="text-base font-black text-slate-800">0 xe</div></div>
-                                        <div><div class="text-[10px] text-gray-400 font-bold uppercase">CÒN THIẾU</div><div id="g-so-missing" class="text-base font-black text-red-500">0 xe</div></div>
+                                    <div class="w-1/2 flex flex-col gap-2.5 text-right">
+                                        <div><div class="text-[9px] text-gray-400 font-bold uppercase">MỤC TIÊU</div><div id="g-so-target" class="text-sm md:text-base font-black text-slate-800">0 xe</div></div>
+                                        <div><div class="text-[9px] text-gray-400 font-bold uppercase">ĐÃ ĐẠT</div><div id="g-so-actual" class="text-sm md:text-base font-black text-slate-800">0 xe</div></div>
+                                        <div><div class="text-[9px] text-gray-400 font-bold uppercase">CÒN THIẾU</div><div id="g-so-missing" class="text-sm md:text-base font-black text-red-500">0 xe</div></div>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-4 gap-2 text-center border-t border-gray-200 pt-3">
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Còn lại</div><div class="text-sm font-black text-slate-800"><span id="g-so-days-left">0</span> ngày</div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Nhịp độ cần đạt</div><div class="text-sm font-black text-green-600"><span id="g-so-pace-need">0</span> xe/ngày</div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Thực tế đang đạt</div><div class="text-sm font-black text-emerald-600"><span id="g-so-pace-act">0</span> xe/ngày</div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Chênh lệch</div><div id="g-so-pace-diff" class="text-sm font-black text-red-500">0 xe/ngày</div></div>
+                                <div class="grid grid-cols-4 gap-1 text-center border-t border-gray-200 pt-3">
+                                    <div><div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Còn lại</div><div class="text-xs font-black text-slate-800"><span id="g-so-days-left">0</span> ngày</div></div>
+                                    <div><div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Cần đạt</div><div class="text-xs font-black text-green-600"><span id="g-so-pace-need">0</span> /ngày</div></div>
+                                    <div><div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Thực tế</div><div class="text-xs font-black text-emerald-600"><span id="g-so-pace-act">0</span> /ngày</div></div>
+                                    <div><div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Chênh</div><div id="g-so-pace-diff" class="text-xs font-black text-red-500">0 /ngày</div></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- BẢNG ĐIỀU HÀNH -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 xl:col-span-7 flex flex-col overflow-hidden">
-                        <h3 class="text-sm font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-500"></i> ĐIỀU HÀNH 6 KHU VỰC MIỀN BẮC</h3>
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-7 flex flex-col overflow-hidden">
+                        <h3 class="text-xs md:text-sm font-black text-slate-700 uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-500"></i> ĐIỀU HÀNH 6 KHU VỰC MIỀN BẮC</h3>
                         <div class="overflow-x-auto flex-1 custom-scrollbar">
-                            <table class="w-full text-center border-collapse whitespace-nowrap">
+                            <table class="w-full text-center border-collapse whitespace-nowrap text-xs md:text-sm">
                                 <thead>
                                     <tr>
-                                        <th rowspan="2" class="py-2 px-3 border-b border-gray-200 text-slate-600 font-bold text-xs sticky left-0 bg-white z-10 shadow-[1px_0_0_0_#f1f5f9]">Khu vực</th>
-                                        <th colspan="6" class="py-2 px-2 text-blue-600 font-black text-xs border-b border-gray-200">SELLIN</th>
-                                        <th colspan="6" class="py-2 px-2 text-green-600 font-black text-xs border-b border-gray-200 border-l border-gray-100">SELLOUT</th>
-                                        <th rowspan="2" class="py-2 px-3 align-middle border-b border-gray-200 text-slate-600 font-bold text-xs">Trạng thái</th>
+                                        <th rowspan="2" class="py-2 px-3 border-b border-gray-200 text-slate-600 font-bold sticky left-0 bg-white z-10 shadow-[1px_0_0_0_#f1f5f9]">Khu vực</th>
+                                        <th colspan="6" class="py-2 px-2 text-blue-600 font-black border-b border-gray-200">SELLIN</th>
+                                        <th colspan="6" class="py-2 px-2 text-green-600 font-black border-b border-gray-200 border-l border-gray-100">SELLOUT</th>
+                                        <th rowspan="2" class="py-2 px-3 align-middle border-b border-gray-200 text-slate-600 font-bold">Trạng thái</th>
                                     </tr>
-                                    <tr class="text-slate-500 border-b border-gray-200 font-bold text-[10px]">
+                                    <tr class="text-slate-500 border-b border-gray-200 font-bold text-[9px] md:text-[10px]">
                                         <th class="py-2 px-2 font-medium text-gray-400">Mục tiêu</th>
                                         <th class="py-2 px-2 font-medium">Đã đạt</th>
                                         <th class="py-2 px-2 font-bold text-slate-700">% HT</th>
-                                        <th class="py-2 px-2 font-medium leading-tight">Nhịp độ<br>cần đạt/ngày</th>
+                                        <th class="py-2 px-2 font-medium leading-tight">Cần đạt<br>/ngày</th>
                                         <th class="py-2 px-2 font-medium leading-tight">Thực tế<br>/ngày</th>
                                         <th class="py-2 px-2 font-medium leading-tight">Chênh<br>/ngày</th>
                                         
                                         <th class="py-2 px-2 font-medium text-gray-400 border-l border-gray-100">Mục tiêu</th>
                                         <th class="py-2 px-2 font-medium">Đã đạt</th>
                                         <th class="py-2 px-2 font-bold text-slate-700">% HT</th>
-                                        <th class="py-2 px-2 font-medium leading-tight">Nhịp độ<br>cần đạt/ngày</th>
+                                        <th class="py-2 px-2 font-medium leading-tight">Cần đạt<br>/ngày</th>
                                         <th class="py-2 px-2 font-medium leading-tight">Thực tế<br>/ngày</th>
                                         <th class="py-2 px-2 font-medium leading-tight">Chênh<br>/ngày</th>
                                     </tr>
                                 </thead>
-                                <tbody id="erp-region-table-body" class="text-slate-700 font-semibold text-xs divide-y divide-gray-100">
+                                <tbody id="erp-region-table-body" class="text-slate-700 font-semibold text-[11px] md:text-xs divide-y divide-gray-100">
                                 </tbody>
                             </table>
                         </div>
@@ -194,21 +194,20 @@
                 </div>
 
                 <!-- HÀNG 3: XẾP HẠNG SALE & THI ĐUA -->
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                    <div class="xl:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
+                    <div class="xl:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <!-- BẢNG 1: XẾP HẠNG SELLIN -->
-                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                            <h3 class="text-xs font-black text-blue-600 uppercase mb-3"><i class="fa-solid fa-medal text-blue-500"></i> XẾP HẠNG SALE - SELLIN</h3>
+                        <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                            <h3 class="text-[11px] md:text-xs font-black text-blue-600 uppercase mb-3"><i class="fa-solid fa-medal text-blue-500"></i> TOP SALE - SELLIN</h3>
                             <div class="flex-1">
-                                <div class="max-h-[235px] overflow-y-auto custom-scrollbar pr-1 border border-gray-100 rounded-lg">
-                                    <table class="w-full text-left text-xs whitespace-nowrap relative">
-                                        <thead class="text-gray-400 font-bold uppercase text-[10px] sticky top-0 bg-white z-20 shadow-[0_1px_0_0_#f1f5f9]">
+                                <div class="max-h-[235px] overflow-y-auto custom-scrollbar pr-1 border border-gray-50 rounded-lg">
+                                    <table class="w-full text-left text-[11px] md:text-xs whitespace-nowrap relative">
+                                        <thead class="text-gray-400 font-bold uppercase text-[9px] sticky top-0 bg-white z-20 shadow-[0_1px_0_0_#f1f5f9]">
                                             <tr>
-                                                <th class="py-2.5 px-3 w-8 bg-white border-b border-gray-100 sticky left-0 z-30 shadow-[1px_0_0_0_#f1f5f9]">#</th>
-                                                <th class="py-2.5 px-2 bg-white border-b border-gray-100">Sale</th>
-                                                <th class="py-2.5 px-2 bg-white border-b border-gray-100 text-center">Mục tiêu</th>
-                                                <th class="py-2.5 px-2 bg-blue-50/80 border-b border-gray-100 text-center text-blue-600">Thực đạt</th>
-                                                <th class="py-2.5 px-3 bg-white border-b border-gray-100 text-right">% HT</th>
+                                                <th class="py-2 px-2 w-6 bg-white border-b border-gray-100 sticky left-0 z-30 shadow-[1px_0_0_0_#f1f5f9]">#</th>
+                                                <th class="py-2 px-2 bg-white border-b border-gray-100">Sale</th>
+                                                <th class="py-2 px-2 bg-white border-b border-gray-100 text-center">Mục tiêu</th>
+                                                <th class="py-2 px-2 bg-blue-50 border-b border-gray-100 text-center text-blue-600">Thực đạt</th>
                                             </tr>
                                         </thead>
                                         <tbody id="erp-top-si-body" class="font-bold text-slate-700 divide-y divide-gray-50">
@@ -219,18 +218,17 @@
                         </div>
 
                         <!-- BẢNG 2: XẾP HẠNG SELLOUT -->
-                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                            <h3 class="text-xs font-black text-green-600 uppercase mb-3"><i class="fa-solid fa-medal text-green-500"></i> XẾP HẠNG SALE - SELLOUT</h3>
+                        <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                            <h3 class="text-[11px] md:text-xs font-black text-green-600 uppercase mb-3"><i class="fa-solid fa-medal text-green-500"></i> TOP SALE - SELLOUT</h3>
                             <div class="flex-1">
-                                <div class="max-h-[235px] overflow-y-auto custom-scrollbar pr-1 border border-gray-100 rounded-lg">
-                                    <table class="w-full text-left text-xs whitespace-nowrap relative">
-                                        <thead class="text-gray-400 font-bold uppercase text-[10px] sticky top-0 bg-white z-20 shadow-[0_1px_0_0_#f1f5f9]">
+                                <div class="max-h-[235px] overflow-y-auto custom-scrollbar pr-1 border border-gray-50 rounded-lg">
+                                    <table class="w-full text-left text-[11px] md:text-xs whitespace-nowrap relative">
+                                        <thead class="text-gray-400 font-bold uppercase text-[9px] sticky top-0 bg-white z-20 shadow-[0_1px_0_0_#f1f5f9]">
                                             <tr>
-                                                <th class="py-2.5 px-3 w-8 bg-white border-b border-gray-100 sticky left-0 z-30 shadow-[1px_0_0_0_#f1f5f9]">#</th>
-                                                <th class="py-2.5 px-2 bg-white border-b border-gray-100">Sale</th>
-                                                <th class="py-2.5 px-2 bg-white border-b border-gray-100 text-center">Mục tiêu</th>
-                                                <th class="py-2.5 px-2 bg-green-50/80 border-b border-gray-100 text-center text-green-600">Thực đạt</th>
-                                                <th class="py-2.5 px-3 bg-white border-b border-gray-100 text-right">% HT</th>
+                                                <th class="py-2 px-2 w-6 bg-white border-b border-gray-100 sticky left-0 z-30 shadow-[1px_0_0_0_#f1f5f9]">#</th>
+                                                <th class="py-2 px-2 bg-white border-b border-gray-100">Sale</th>
+                                                <th class="py-2 px-2 bg-white border-b border-gray-100 text-center">Mục tiêu</th>
+                                                <th class="py-2 px-2 bg-green-50 border-b border-gray-100 text-center text-green-600">Thực đạt</th>
                                             </tr>
                                         </thead>
                                         <tbody id="erp-top-so-body" class="font-bold text-slate-700 divide-y divide-gray-50">
@@ -242,25 +240,25 @@
                     </div>
 
                     <!-- BẢNG THI ĐUA 12 KHU VỰC SELLIN -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 xl:col-span-6 relative flex flex-col">
-                        <h3 class="text-xs font-black text-slate-700 uppercase flex items-center justify-between mb-4">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-chart-gantt text-blue-500"></i> THI ĐUA 12 KHU VỰC TOÀN QUỐC (SELLIN)</span>
-                            <div class="flex gap-3 text-[10px] font-bold text-gray-500">
-                                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-500 rounded-sm"></span> Thực đạt</span>
-                                <span class="flex items-center gap-1"><span class="w-4 border-b-2 border-dashed border-orange-400"></span> Mục tiêu (100%)</span>
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-6 relative flex flex-col">
+                        <h3 class="text-[11px] md:text-xs font-black text-slate-700 uppercase flex flex-wrap items-center justify-between mb-4 gap-2">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-gantt text-blue-500"></i> THI ĐUA 12 KHU VỰC (SELLIN)</span>
+                            <div class="flex gap-2 text-[9px] font-bold text-gray-500">
+                                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-blue-500 rounded-sm"></span> Thực đạt</span>
+                                <span class="flex items-center gap-1"><span class="w-3 border-b-2 border-dashed border-orange-400"></span> Mục tiêu</span>
                             </div>
                         </h3>
                         
-                        <div class="overflow-y-auto flex-1 custom-scrollbar pr-2 max-h-[235px]">
-                            <div class="min-w-[400px]">
-                                <table class="w-full text-left text-xs whitespace-nowrap relative">
-                                    <thead class="text-gray-400 font-bold uppercase text-[10px] sticky top-0 bg-white z-30 shadow-[0_1px_0_0_#f1f5f9]">
+                        <div class="overflow-y-auto flex-1 custom-scrollbar pr-1 max-h-[235px]">
+                            <div class="min-w-[350px]">
+                                <table class="w-full text-left text-[11px] md:text-xs whitespace-nowrap relative">
+                                    <thead class="text-gray-400 font-bold uppercase text-[9px] sticky top-0 bg-white z-30 shadow-[0_1px_0_0_#f1f5f9]">
                                         <tr>
-                                            <th class="py-2 px-1 text-center w-8">Hạng</th>
-                                            <th class="py-2 px-2 w-24">Khu vực</th>
-                                            <th class="py-2 px-2 text-center w-20">Thực đạt</th>
-                                            <th class="py-2 px-4 w-full">Tiến độ (So với Mục tiêu)</th>
-                                            <th class="py-2 px-2 text-right w-24">Còn thiếu</th>
+                                            <th class="py-2 px-1 text-center w-6">#</th>
+                                            <th class="py-2 px-2 w-20">Khu vực</th>
+                                            <th class="py-2 px-2 text-center w-16">Đạt</th>
+                                            <th class="py-2 px-3 w-full">Tiến độ HT</th>
+                                            <th class="py-2 px-2 text-right w-16">Thiếu</th>
                                         </tr>
                                     </thead>
                                     <tbody id="erp-12-region-si-body" class="font-semibold text-slate-700 divide-y divide-gray-50">
@@ -272,23 +270,23 @@
                 </div>
 
                 <!-- HÀNG 4: XU HƯỚNG & CẢNH BÁO -->
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 xl:col-span-4">
-                        <h3 class="text-xs font-black text-blue-600 uppercase mb-2">XU HƯỚNG SELLIN (NGÀY)</h3>
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-4">
+                        <h3 class="text-[11px] md:text-xs font-black text-blue-600 uppercase mb-2">XU HƯỚNG SELLIN (NGÀY)</h3>
                         <div id="line-si" class="h-[180px] -ml-2"></div>
                     </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 xl:col-span-4">
-                        <h3 class="text-xs font-black text-green-600 uppercase mb-2">XU HƯỚNG SELLOUT (NGÀY)</h3>
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-4">
+                        <h3 class="text-[11px] md:text-xs font-black text-green-600 uppercase mb-2">XU HƯỚNG SELLOUT (NGÀY)</h3>
                         <div id="line-so" class="h-[180px] -ml-2"></div>
                     </div>
                     
                     <!-- TRUNG TÂM CẢNH BÁO TỰ ĐỘNG -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 xl:col-span-4 flex flex-col">
-                        <h3 class="text-xs font-black text-red-600 uppercase mb-4 flex items-center gap-2" id="erp-alert-header-title">
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-4 flex flex-col">
+                        <h3 class="text-[11px] md:text-xs font-black text-red-600 uppercase mb-3 flex items-center gap-2" id="erp-alert-header-title">
                             <i class="fa-regular fa-bell"></i> TRUNG TÂM CẢNH BÁO
                         </h3>
-                        <div id="erp-warnings-container" class="space-y-3 flex-1 overflow-y-auto max-h-[220px] custom-scrollbar text-xs pr-2">
-                            <div class="flex items-center justify-center h-full"><i class="fa-solid fa-spinner fa-spin text-gray-400 text-xl"></i></div>
+                        <div id="erp-warnings-container" class="space-y-2.5 flex-1 overflow-y-auto max-h-[200px] custom-scrollbar text-[11px] pr-2">
+                            <div class="flex items-center justify-center h-full"><i class="fa-solid fa-spinner fa-spin text-gray-300 text-lg"></i></div>
                         </div>
                     </div>
                 </div>
@@ -298,306 +296,27 @@
         <!-- TAB 2: KHU VỰC -->
         <div id="erp-tab-region" class="hidden fade-in"></div>
 
-        <!-- TAB 3: SALE (GIAO DIỆN MỚI CẬP NHẬT) -->
-        <div id="erp-tab-sale" class="hidden fade-in">
-            <div class="w-full bg-white pb-28 font-sans max-w-5xl mx-auto">
-                <!-- 1. HEADER CÁ NHÂN -->
-                <div class="flex justify-between items-center p-4 border-b border-gray-100">
-                    <div class="flex items-center gap-3">
-                        <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="h-6 object-contain" alt="YADEA">
-                        <div>
-                            <h2 class="text-sm text-slate-800">Xin chào, <span class="font-black text-lg">Nguyễn Văn Thành 👋</span></h2>
-                            <p class="text-[11px] text-gray-500 font-medium">Sale - Khu vực: <span class="font-bold text-slate-700">Đông Bắc</span></p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4 items-center">
-                        <div class="relative cursor-pointer hover:bg-gray-50 p-2 rounded-full transition">
-                            <i class="fa-regular fa-bell text-xl text-slate-700"></i>
-                            <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white">3</span>
-                        </div>
-                        <div class="cursor-pointer hover:bg-gray-50 p-2 rounded-full transition">
-                            <i class="fa-regular fa-calendar text-xl text-slate-700"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. BANNER MỤC TIÊU -->
-                <div class="px-4 mt-4">
-                    <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 flex justify-between items-center text-orange-600 shadow-sm">
-                        <div class="flex items-center gap-2 text-sm font-bold">
-                            <i class="fa-solid fa-bullseye"></i> Mục tiêu: Quý 3/2026 (01/07 - 30/09)
-                        </div>
-                        <div class="text-sm font-bold">Còn 72 ngày</div>
-                    </div>
-                </div>
-
-                <div class="px-4 mt-6 space-y-6">
-                    <!-- 3. HIỆU SUẤT YÊU CẦU HÔM NAY -->
-                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
-                        <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
-                            <h3 class="text-base font-black text-slate-800 uppercase flex items-center gap-2">
-                                <i class="fa-solid fa-bullseye text-orange-500"></i> HIỆU SUẤT YÊU CẦU HÔM NAY
-                            </h3>
-                            <span class="text-[11px] text-gray-400 font-medium hidden md:block">
-                                Được tính theo mục tiêu Quý 3 và số ngày còn lại <i class="fa-solid fa-circle-info ml-1 cursor-pointer hover:text-gray-600"></i>
-                            </span>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Card Sellin -->
-                            <div class="border border-gray-200 rounded-xl p-4 md:p-5 relative overflow-hidden">
-                                <h4 class="text-blue-600 font-black text-sm mb-4">SELLIN (PHÁT HÀNG)</h4>
-                                <div class="flex justify-between items-center mb-6">
-                                    <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 border border-blue-100 shrink-0">
-                                        <i class="fa-solid fa-truck text-2xl"></i>
-                                    </div>
-                                    <div class="text-center flex-1 border-r border-gray-100 px-2">
-                                        <div class="text-[10px] text-gray-500 font-bold mb-1">Hiệu suất yêu cầu</div>
-                                        <div class="text-4xl font-black text-blue-600 leading-none">12</div>
-                                        <div class="text-[10px] text-gray-500 font-bold mt-1">xe/ngày</div>
-                                    </div>
-                                    <div class="text-center flex-1 px-2">
-                                        <div class="text-[10px] text-gray-500 font-bold mb-1">So với hôm qua</div>
-                                        <div class="text-lg font-black text-green-500 flex items-center justify-center gap-1">
-                                            <i class="fa-solid fa-arrow-down text-sm"></i> -0,6
-                                        </div>
-                                        <div class="text-[10px] font-medium text-gray-400 mt-1">Hôm qua: <span class="font-bold">12,6</span></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between text-[10px] font-bold text-gray-500 mb-2">
-                                        <span>Mức áp lực</span>
-                                        <span class="text-red-500">Cần tăng tốc</span>
-                                    </div>
-                                    <div class="flex gap-1 h-2 relative">
-                                        <div class="w-1/3 bg-green-500 rounded-l-full"></div>
-                                        <div class="w-1/3 bg-yellow-400"></div>
-                                        <div class="w-1/3 bg-red-500 rounded-r-full relative">
-                                            <div class="absolute right-[20%] top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[3px] border-red-500 rounded-full shadow-sm"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card Sellout -->
-                            <div class="border border-gray-200 rounded-xl p-4 md:p-5 relative overflow-hidden">
-                                <h4 class="text-green-600 font-black text-sm mb-4">SELLOUT (BÁN RA)</h4>
-                                <div class="flex justify-between items-center mb-6">
-                                    <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-600 border border-green-100 shrink-0">
-                                        <i class="fa-solid fa-cart-shopping text-2xl"></i>
-                                    </div>
-                                    <div class="text-center flex-1 border-r border-gray-100 px-2">
-                                        <div class="text-[10px] text-gray-500 font-bold mb-1">Hiệu suất yêu cầu</div>
-                                        <div class="text-4xl font-black text-green-600 leading-none">8</div>
-                                        <div class="text-[10px] text-gray-500 font-bold mt-1">xe/ngày</div>
-                                    </div>
-                                    <div class="text-center flex-1 px-2">
-                                        <div class="text-[10px] text-gray-500 font-bold mb-1">So với hôm qua</div>
-                                        <div class="text-lg font-black text-green-500 flex items-center justify-center gap-1">
-                                            <i class="fa-solid fa-arrow-down text-sm"></i> -0,3
-                                        </div>
-                                        <div class="text-[10px] font-medium text-gray-400 mt-1">Hôm qua: <span class="font-bold">8,3</span></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between text-[10px] font-bold text-gray-500 mb-2">
-                                        <span>Mức áp lực</span>
-                                        <span class="text-red-500">Cần tăng tốc</span>
-                                    </div>
-                                    <div class="flex gap-1 h-2 relative">
-                                        <div class="w-1/3 bg-green-500 rounded-l-full"></div>
-                                        <div class="w-1/3 bg-yellow-400 relative">
-                                            <div class="absolute right-[10%] top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[3px] border-yellow-400 rounded-full shadow-sm hidden"></div>
-                                        </div>
-                                        <div class="w-1/3 bg-red-500 rounded-r-full relative">
-                                            <div class="absolute right-[40%] top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[3px] border-red-500 rounded-full shadow-sm"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 flex items-center gap-2 text-[11px] font-medium text-blue-700 bg-blue-50/80 p-3 rounded-lg border border-blue-100">
-                            <i class="fa-regular fa-lightbulb"></i> Đây là sản lượng cần hoàn thành trong hôm nay để vẫn đạt mục tiêu Quý 3.
-                        </div>
-                    </div>
-
-                    <!-- 4. TIẾN ĐỘ QUÝ 3 -->
-                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
-                        <h3 class="text-base font-black text-slate-800 uppercase flex items-center gap-2 border-b border-gray-100 pb-3 mb-4">
-                            <i class="fa-solid fa-chart-simple text-orange-500"></i> TIẾN ĐỘ QUÝ 3 <span class="text-[11px] font-bold text-gray-400 ml-1">(01/07 - 30/09)</span>
-                        </h3>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Sellin Progress -->
-                            <div class="border border-gray-200 rounded-xl p-4 md:p-5">
-                                <h4 class="text-blue-600 font-black text-sm mb-4">SELLIN (PHÁT HÀNG)</h4>
-                                <div class="flex justify-between text-xs mb-2">
-                                    <div class="text-gray-500 font-bold">Mục tiêu Quý 3<br><span class="text-lg font-black text-slate-800">900 <span class="text-[10px]">xe</span></span></div>
-                                    <div class="text-gray-500 font-bold text-center">Đã hoàn thành<br><span class="text-lg font-black text-blue-600">420 <span class="text-[10px]">xe</span></span></div>
-                                    <div class="text-gray-500 font-bold text-right">Còn thiếu<br><span class="text-lg font-black text-red-500">480 <span class="text-[10px]">xe</span></span></div>
-                                </div>
-                                <div class="relative pt-1 mb-5">
-                                    <div class="flex mb-1 items-center justify-end">
-                                        <span class="text-xs font-black text-blue-600">47%</span>
-                                    </div>
-                                    <div class="overflow-hidden h-2.5 flex rounded-full bg-blue-100">
-                                        <div style="width: 47%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-600 rounded-full"></div>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between text-center pt-4 border-t border-gray-100">
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Số ngày còn lại</div><div class="text-sm font-black text-slate-800">72 ngày</div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Hiệu suất bình quân</div><div class="text-sm font-black text-slate-800">12,5 <span class="text-[10px] font-bold">xe/ngày</span></div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Hiệu suất yêu cầu</div><div class="text-sm font-black text-red-500">12 <span class="text-[10px] font-bold">xe/ngày</span></div></div>
-                                </div>
-                            </div>
-
-                            <!-- Sellout Progress -->
-                            <div class="border border-gray-200 rounded-xl p-4 md:p-5">
-                                <h4 class="text-green-600 font-black text-sm mb-4">SELLOUT (BÁN RA)</h4>
-                                <div class="flex justify-between text-xs mb-2">
-                                    <div class="text-gray-500 font-bold">Mục tiêu Quý 3<br><span class="text-lg font-black text-slate-800">650 <span class="text-[10px]">xe</span></span></div>
-                                    <div class="text-gray-500 font-bold text-center">Đã hoàn thành<br><span class="text-lg font-black text-green-600">305 <span class="text-[10px]">xe</span></span></div>
-                                    <div class="text-gray-500 font-bold text-right">Còn thiếu<br><span class="text-lg font-black text-red-500">345 <span class="text-[10px]">xe</span></span></div>
-                                </div>
-                                <div class="relative pt-1 mb-5">
-                                    <div class="flex mb-1 items-center justify-end">
-                                        <span class="text-xs font-black text-green-600">47%</span>
-                                    </div>
-                                    <div class="overflow-hidden h-2.5 flex rounded-full bg-green-100">
-                                        <div style="width: 47%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-600 rounded-full"></div>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between text-center pt-4 border-t border-gray-100">
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Số ngày còn lại</div><div class="text-sm font-black text-slate-800">72 ngày</div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Hiệu suất bình quân</div><div class="text-sm font-black text-slate-800">9,0 <span class="text-[10px] font-bold">xe/ngày</span></div></div>
-                                    <div><div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Hiệu suất yêu cầu</div><div class="text-sm font-black text-red-500">8 <span class="text-[10px] font-bold">xe/ngày</span></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 5. CHUỖI VẬN HÀNH & KẾT QUẢ 7 NGÀY -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        
-                        <!-- Chuỗi vận hành -->
-                        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
-                            <h3 class="text-sm font-black text-blue-700 uppercase mb-5 border-b border-gray-100 pb-3">CHUỖI VẬN HÀNH</h3>
-                            <div class="flex items-center justify-between text-center mt-2 px-2 relative">
-                                
-                                <!-- Đường kẻ nối nền -->
-                                <div class="absolute top-[20px] left-0 right-0 h-[1px] bg-gray-200 -z-10"></div>
-                                
-                                <!-- ĐƠN TT -->
-                                <div class="flex flex-col items-center bg-white px-1">
-                                    <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-2 shadow-sm border border-purple-100"><i class="fa-solid fa-clipboard-check text-xl"></i></div>
-                                    <div class="text-[10px] font-black uppercase mb-2 text-slate-800">ĐƠN TT</div>
-                                    <div class="text-[9px] text-gray-400 font-medium">Mục tiêu Q3<br><span class="font-bold text-slate-800">1.000 xe</span></div>
-                                    <div class="text-[9px] text-gray-400 font-medium mt-1.5">Đã hoàn thành<br><span class="font-bold text-slate-800">512 xe</span></div>
-                                    <div class="text-xs font-black text-purple-600 mt-1">51%</div>
-                                </div>
-                                <i class="fa-solid fa-arrow-right text-gray-300 text-xs bg-white"></i>
-                                
-                                <!-- SELLIN -->
-                                <div class="flex flex-col items-center bg-white px-1">
-                                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-2 shadow-sm border border-blue-100"><i class="fa-solid fa-truck text-xl"></i></div>
-                                    <div class="text-[10px] font-black uppercase mb-2 text-slate-800">SELLIN</div>
-                                    <div class="text-[9px] text-gray-400 font-medium">Mục tiêu Q3<br><span class="font-bold text-slate-800">900 xe</span></div>
-                                    <div class="text-[9px] text-gray-400 font-medium mt-1.5">Đã hoàn thành<br><span class="font-bold text-slate-800">420 xe</span></div>
-                                    <div class="text-xs font-black text-blue-600 mt-1">47%</div>
-                                </div>
-                                <i class="fa-solid fa-arrow-right text-gray-300 text-xs bg-white"></i>
-                                
-                                <!-- SELLOUT -->
-                                <div class="flex flex-col items-center bg-white px-1">
-                                    <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center mb-2 shadow-sm border border-green-100"><i class="fa-solid fa-cart-shopping text-xl"></i></div>
-                                    <div class="text-[10px] font-black uppercase mb-2 text-slate-800">SELLOUT</div>
-                                    <div class="text-[9px] text-gray-400 font-medium">Mục tiêu Q3<br><span class="font-bold text-slate-800">650 xe</span></div>
-                                    <div class="text-[9px] text-gray-400 font-medium mt-1.5">Đã hoàn thành<br><span class="font-bold text-slate-800">305 xe</span></div>
-                                    <div class="text-xs font-black text-green-600 mt-1">47%</div>
-                                </div>
-                                <i class="fa-solid fa-arrow-right text-gray-300 text-xs bg-white"></i>
-                                
-                                <!-- HÀNG CHƯA PHÁT -->
-                                <div class="flex flex-col items-center bg-white px-1">
-                                    <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center mb-2 shadow-sm border border-orange-100"><i class="fa-solid fa-box-open text-xl"></i></div>
-                                    <div class="text-[10px] font-black uppercase mb-2 text-orange-500">HÀNG CHƯA<br>PHÁT</div>
-                                    <div class="text-[9px] text-gray-400 font-medium mt-3">Hiện tại<br><span class="font-black text-slate-800 text-sm">115 xe</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bảng kết quả 7 ngày -->
-                        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
-                            <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-                                <h3 class="text-sm font-black text-blue-700 uppercase">KẾT QUẢ 7 NGÀY GẦN NHẤT</h3>
-                                <a href="#" class="text-xs font-bold text-blue-500 hover:underline">Xem chi tiết <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i></a>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-center text-xs whitespace-nowrap">
-                                    <thead class="text-gray-400 font-medium">
-                                        <tr>
-                                            <th class="pb-2">Ngày</th>
-                                            <th class="pb-2">Đơn TT</th>
-                                            <th class="pb-2 text-blue-600 font-bold">Sellin (Phát hàng)</th>
-                                            <th class="pb-2 text-green-600 font-bold">Sellout (Bán ra)</th>
-                                            <th class="pb-2">Trạng thái</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-slate-700 font-bold divide-y divide-gray-50">
-                                        <tr><td class="py-2.5">19/07</td><td class="py-2.5">12</td><td class="py-2.5">11</td><td class="py-2.5">8</td><td class="py-2.5"><i class="fa-solid fa-circle-check text-green-500"></i></td></tr>
-                                        <tr><td class="py-2.5">18/07</td><td class="py-2.5">10</td><td class="py-2.5">10</td><td class="py-2.5">7</td><td class="py-2.5"><i class="fa-solid fa-circle-check text-green-500"></i></td></tr>
-                                        <tr><td class="py-2.5">17/07</td><td class="py-2.5">8</td><td class="py-2.5">7</td><td class="py-2.5">5</td><td class="py-2.5"><i class="fa-solid fa-circle-exclamation text-yellow-500"></i></td></tr>
-                                        <tr><td class="py-2.5">16/07</td><td class="py-2.5">9</td><td class="py-2.5">8</td><td class="py-2.5">6</td><td class="py-2.5"><i class="fa-solid fa-circle-check text-green-500"></i></td></tr>
-                                        <tr><td class="py-2.5">15/07</td><td class="py-2.5">11</td><td class="py-2.5">9</td><td class="py-2.5">7</td><td class="py-2.5"><i class="fa-solid fa-circle-check text-green-500"></i></td></tr>
-                                        <tr><td class="py-2.5">14/07</td><td class="py-2.5">7</td><td class="py-2.5">6</td><td class="py-2.5">4</td><td class="py-2.5"><i class="fa-solid fa-circle-xmark text-red-500"></i></td></tr>
-                                        <tr><td class="py-2.5">13/07</td><td class="py-2.5">10</td><td class="py-2.5">9</td><td class="py-2.5">6</td><td class="py-2.5"><i class="fa-solid fa-circle-exclamation text-yellow-500"></i></td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 6. THANH CÔNG CỤ BOTTOM STICKY BAR -->
-                <div class="fixed bottom-0 left-0 right-0 z-50 md:left-64">
-                    <!-- Banner cảnh báo đỏ dính đáy -->
-                    <div class="bg-[#F97316] p-3 md:p-4 flex justify-between items-center shadow-[0_-5px_15px_rgba(0,0,0,0.15)] rounded-t-2xl md:rounded-none">
-                        <div class="flex items-center gap-3">
-                            <div class="hidden md:flex w-10 h-10 bg-white/20 rounded-lg items-center justify-center text-white">
-                                <i class="fa-solid fa-clipboard-list text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-white font-black text-sm md:text-base uppercase tracking-tight">BÁO CÁO KẾT QUẢ HÔM NAY</h3>
-                                <p class="text-white/80 text-[10px] md:text-xs font-medium">Nhập kết quả cuối ngày để hệ thống cập nhật hiệu suất yêu cầu ngày mai</p>
-                            </div>
-                        </div>
-                        <button onclick="window.switchErpTab('market')" class="bg-white text-[#F97316] px-5 py-2.5 rounded-full font-black text-xs md:text-sm shadow-md hover:scale-105 hover:bg-orange-50 transition uppercase whitespace-nowrap">
-                            BÁO CÁO NGAY <i class="fa-solid fa-chevron-right ml-1"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- TAB 3: SALE -->
+        <div id="erp-tab-sale" class="hidden fade-in"></div>
     </div>
 
     <!-- MODAL HIỂN THỊ CHI TIẾT CẢNH BÁO -->
     <div id="alert-details-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col fade-in">
-            <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
-                <h3 class="text-base font-black uppercase flex items-center gap-2" id="alert-details-title">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col fade-in">
+            <div class="bg-blue-600 p-3 flex justify-between items-center text-white">
+                <h3 class="text-sm font-black uppercase flex items-center gap-2" id="alert-details-title">
                     <i class="fa-solid fa-circle-info"></i> CHI TIẾT CẢNH BÁO
                 </h3>
                 <button onclick="window.closeDashboardAlertModal()" class="text-blue-200 hover:text-white transition w-8 h-8 rounded-full hover:bg-blue-700 flex items-center justify-center">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div class="p-6 overflow-y-auto bg-slate-50 flex-1 max-h-[70vh]">
-                <div id="alert-details-content" class="text-sm font-medium text-slate-800 space-y-4">
+            <div class="p-4 md:p-6 overflow-y-auto bg-slate-50 flex-1 max-h-[60vh]">
+                <div id="alert-details-content" class="text-[11px] md:text-xs font-medium text-slate-800 space-y-3">
                 </div>
             </div>
-            <div class="p-4 border-t border-gray-100 bg-white flex justify-end gap-3">
-                <button onclick="window.closeDashboardAlertModal()" class="px-6 py-2 bg-gray-100 text-gray-600 font-bold rounded-lg hover:bg-gray-200 transition shadow-sm">Đóng</button>
+            <div class="p-3 border-t border-gray-100 bg-white flex justify-end gap-2">
+                <button onclick="window.closeDashboardAlertModal()" class="px-5 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition shadow-sm">Đóng</button>
             </div>
         </div>
     </div>

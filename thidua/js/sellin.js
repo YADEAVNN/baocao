@@ -1,5 +1,5 @@
 // ==========================================
-// MODULE: SELL-IN (S.I) - ĐÃ FIX AUTO TÍNH SỐ CHƯA PHÁT HÀNG
+// MODULE: SELL-IN (S.I) - ĐÃ FIX AUTO TÍNH SỐ CHƯA PHÁT HÀNG VÀ UI MOBILE
 // ==========================================
 
 const checkIsAdmin = () => {
@@ -116,9 +116,14 @@ window.renderSellInView = () => {
                 .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
-                .sticky-col { position: sticky; z-index: 20; }
-                thead .sticky-col { z-index: 30; } 
-                tbody .sticky-col { z-index: 20; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); }
+                
+                /* ĐÃ FIX: Chỉ ghim cột trên màn hình PC (>= 768px). Mobile thả tự do để kéo được ngang. */
+                @media (min-width: 768px) {
+                    .sticky-col { position: sticky; z-index: 20; }
+                    thead .sticky-col { z-index: 30; } 
+                    tbody .sticky-col { z-index: 20; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); }
+                }
+                
                 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
                 input[type="number"] { -moz-appearance: textfield; }
             </style>
@@ -195,6 +200,7 @@ window.renderMonthTables = () => {
         const baseData = reports.find(r => r.region_name === region.name && r.report_date === baseDate) || {};
         const valTargetTT = baseData.target_tt || 0;
         const valTargetPH = baseData.target_ph || 0;
+        const valChuaXuat = baseData.chua_xuat || 0; 
 
         const inputTargetTT = isAdmin 
             ? `<input type="number" value="${valTargetTT === 0 ? '' : valTargetTT}" oninput="window.debouncedRecalculate()" data-region="${region.name}" class="target-tt-input w-full text-center py-2 font-bold text-orange-700 bg-transparent outline-none">`
@@ -204,8 +210,10 @@ window.renderMonthTables = () => {
             ? `<input type="number" value="${valTargetPH === 0 ? '' : valTargetPH}" oninput="window.debouncedRecalculate()" data-region="${region.name}" class="target-ph-input w-full text-center py-2 font-bold text-green-700 bg-transparent outline-none">`
             : `<div class="py-2 text-center font-bold text-green-700">${valTargetPH === 0 ? '0' : valTargetPH.toLocaleString()}</div>`;
 
-        // ĐÃ FIX: Chuyển Chưa Xuất (Chưa Phát Hàng) thành Text tĩnh, ko cho nhập
-        const inputCXElement = `<div id="cx-row-val-${index}" class="py-2 text-center font-bold text-red-600" data-region="${region.name}">0</div>`;
+        // ĐÃ FIX: Cho phép nhập tay (Input) với quyền Admin thay vì tự tính
+        const inputCXElement = isAdmin
+            ? `<input type="number" value="${valChuaXuat === 0 ? '' : valChuaXuat}" oninput="window.debouncedRecalculate()" data-region="${region.name}" class="cx-input w-full text-center py-2 font-bold text-red-600 bg-transparent outline-none">`
+            : `<div id="cx-row-val-${index}" class="py-2 text-center font-bold text-red-600">${valChuaXuat === 0 ? '0' : valChuaXuat.toLocaleString()}</div>`;
 
         let inputsTT = '';
         let inputsPH = '';
@@ -230,8 +238,8 @@ window.renderMonthTables = () => {
         tbodyTT += `
             <tr class="bg-white hover:bg-slate-50 transition border-b border-gray-200">
                 <td class="sticky-col left-0 bg-white py-2 px-2 text-center border-r font-medium text-gray-600">${index + 1}</td>
-                <td class="sticky-col left-[40px] bg-white py-2 px-3 text-left border-r font-bold text-gray-800">${region.name}</td>
-                <td class="sticky-col left-[168px] bg-white py-2 px-3 text-left border-r text-gray-700">${region.dir}</td>
+                <td class="sticky-col md:left-[40px] bg-white py-2 px-3 text-left border-r font-bold text-gray-800">${region.name}</td>
+                <td class="sticky-col md:left-[168px] bg-white py-2 px-3 text-left border-r text-gray-700">${region.dir}</td>
                 <td class="p-0 border-r bg-orange-50/50">${inputTargetTT}</td>
                 <td id="tt-row-total-${index}" class="py-2 px-2 text-center border-r bg-yellow-50 text-gray-800 font-bold shadow-[inset_0_0_2px_rgba(0,0,0,0.05)]">0</td>
                 ${inputsTT}
@@ -241,8 +249,8 @@ window.renderMonthTables = () => {
         tbodyXH += `
             <tr class="bg-white hover:bg-slate-50 transition border-b border-gray-200">
                 <td class="sticky-col left-0 bg-white py-2 px-2 text-center border-r font-medium text-gray-600">${index + 1}</td>
-                <td class="sticky-col left-[40px] bg-white py-2 px-3 text-left border-r font-bold text-gray-800">${region.name}</td>
-                <td class="sticky-col left-[168px] bg-white py-2 px-3 text-left border-r text-gray-700">${region.dir}</td>
+                <td class="sticky-col md:left-[40px] bg-white py-2 px-3 text-left border-r font-bold text-gray-800">${region.name}</td>
+                <td class="sticky-col md:left-[168px] bg-white py-2 px-3 text-left border-r text-gray-700">${region.dir}</td>
                 <td class="p-0 border-r bg-green-50/50">${inputTargetPH}</td>
                 <td class="p-0 border-r bg-red-50/50">${inputCXElement}</td>
                 <td id="ph-row-total-${index}" class="py-2 px-2 text-center border-r bg-green-100 text-green-800 font-bold shadow-[inset_0_0_2px_rgba(0,0,0,0.05)]">0</td>
@@ -261,16 +269,16 @@ window.renderMonthTables = () => {
                     <thead class="bg-gray-100 text-gray-700 font-semibold text-center border-b border-gray-300">
                         <tr>
                             <th class="py-2 px-2 border-r sticky-col left-0 bg-gray-100 w-10">STT</th>
-                            <th class="py-2 px-3 border-r sticky-col left-[40px] bg-gray-100 text-left w-32">Tên Khu Vực</th>
-                            <th class="py-2 px-3 border-r sticky-col left-[168px] bg-gray-100 text-left w-48">Tên Giám Đốc</th>
+                            <th class="py-2 px-3 border-r sticky-col md:left-[40px] bg-gray-100 text-left w-32">Tên Khu Vực</th>
+                            <th class="py-2 px-3 border-r sticky-col md:left-[168px] bg-gray-100 text-left w-48">Tên Giám Đốc</th>
                             <th class="py-2 px-2 border-r bg-orange-50 w-24">TARGET THÁNG<br><span class="text-[10px] font-normal">(Đơn)</span></th>
                             <th class="py-2 px-2 border-r bg-yellow-50 w-24">TOTAL<br><span class="text-[10px] font-normal">(Đơn)</span></th>
                             <th colspan="${daysArray.length}" class="py-1 px-2 border-r border-b">CHI TIẾT NHẬP LIỆU THEO NGÀY <span class="text-[10px] font-normal">(Đơn thanh toán)</span></th>
                         </tr>
                         <tr>
                             <th class="sticky-col left-0 bg-gray-100 border-r border-b"></th>
-                            <th class="sticky-col left-[40px] bg-gray-100 border-r border-b"></th>
-                            <th class="sticky-col left-[168px] bg-gray-100 border-r border-b"></th>
+                            <th class="sticky-col md:left-[40px] bg-gray-100 border-r border-b"></th>
+                            <th class="sticky-col md:left-[168px] bg-gray-100 border-r border-b"></th>
                             <th class="bg-orange-50 border-r border-b"></th>
                             <th class="bg-yellow-50 border-r border-b"></th>
                             ${renderDateHeaders()}
@@ -298,8 +306,8 @@ window.renderMonthTables = () => {
                     <thead class="bg-gray-100 text-gray-700 font-semibold text-center border-b border-gray-300">
                         <tr>
                             <th class="py-2 px-2 border-r sticky-col left-0 bg-gray-100 w-10">STT</th>
-                            <th class="py-2 px-3 border-r sticky-col left-[40px] bg-gray-100 text-left w-32">Tên Khu Vực</th>
-                            <th class="py-2 px-3 border-r sticky-col left-[168px] bg-gray-100 text-left w-48">Tên Giám Đốc</th>
+                            <th class="py-2 px-3 border-r sticky-col md:left-[40px] bg-gray-100 text-left w-32">Tên Khu Vực</th>
+                            <th class="py-2 px-3 border-r sticky-col md:left-[168px] bg-gray-100 text-left w-48">Tên Giám Đốc</th>
                             <th class="py-2 px-2 border-r bg-green-50 w-24">TARGET THÁNG<br><span class="text-[10px] font-normal">(Đơn)</span></th>
                             <th class="py-2 px-2 border-r bg-red-50 w-28">SỐ LƯỢNG<br>CHƯA PHÁT HÀNG<br><span class="text-[10px] font-normal">(Hiện tại)</span></th>
                             <th class="py-2 px-2 border-r bg-green-100 w-24">TOTAL PHÁT HÀNG<br><span class="text-[10px] font-normal">(Đơn)</span></th>
@@ -307,8 +315,8 @@ window.renderMonthTables = () => {
                         </tr>
                         <tr>
                             <th class="sticky-col left-0 bg-gray-100 border-r border-b"></th>
-                            <th class="sticky-col left-[40px] bg-gray-100 border-r border-b"></th>
-                            <th class="sticky-col left-[168px] bg-gray-100 border-r border-b"></th>
+                            <th class="sticky-col md:left-[40px] bg-gray-100 border-r border-b"></th>
+                            <th class="sticky-col md:left-[168px] bg-gray-100 border-r border-b"></th>
                             <th class="bg-green-50 border-r border-b"></th>
                             <th class="bg-red-50 border-r border-b"></th>
                             <th class="bg-green-100 border-r border-b"></th>
@@ -333,7 +341,7 @@ window.renderMonthTables = () => {
             <div class="col-span-2 text-[11px] text-gray-500 border border-gray-200 rounded p-3 bg-gray-50 leading-relaxed">
                 <span class="font-bold text-gray-700">GHI CHÚ:</span><br>
                 • <span class="font-semibold">TARGET THÁNG:</span> Chỉ tiêu Sellin được giao trong tháng<br>
-                • <span class="font-semibold">SỐ LƯỢNG CHƯA PHÁT HÀNG:</span> Auto tính = Target Tháng - Total Phát Hàng<br>
+                • <span class="font-semibold">SỐ LƯỢNG CHƯA PHÁT HÀNG:</span> Admin nhập trực tiếp (Bao gồm số tồn đọng từ quý trước)<br>
                 • <span class="font-semibold">TOTAL PHÁT HÀNG:</span> Lũy kế số lượng đã phát hàng trong tháng
             </div>
             <div class="border border-orange-200 rounded p-4 text-center shadow-sm bg-white">
@@ -392,13 +400,14 @@ window.recalculateTotals = () => {
         if(elTotalPH) elTotalPH.innerText = rowSumPH.toLocaleString();
         grandTotalPH += rowSumPH;
 
-        // ĐÃ FIX: Tính Chưa Phát Hàng = Target - Total Phát Hàng
-        let cxVal = tPH - rowSumPH;
-        const elCX = document.getElementById(`cx-row-val-${rIdx}`);
-        if (elCX) {
-            elCX.innerText = cxVal.toLocaleString();
-            // Đổi màu nếu âm (Vượt Target)
-            elCX.className = cxVal < 0 ? "py-2 text-center font-bold text-green-600" : "py-2 text-center font-bold text-red-600";
+        // ĐÃ FIX: Lấy Số Chưa Phát Hàng Trực Tiếp Từ Input/Div
+        let cxVal = 0;
+        const tgCXEl = document.querySelectorAll('.cx-input')[rIdx];
+        if (tgCXEl) {
+            cxVal = parseInt(tgCXEl.value) || 0; 
+        } else {
+            const elCX = document.getElementById(`cx-row-val-${rIdx}`);
+            if(elCX) cxVal = parseInt(elCX.innerText.replace(/,/g, '')) || 0; 
         }
         grandTotalCX += cxVal;
     });
@@ -414,10 +423,9 @@ window.recalculateTotals = () => {
     const ftCXGrand = document.getElementById('cx-grand-total'); 
     if(ftCXGrand) {
         ftCXGrand.innerText = grandTotalCX.toLocaleString();
-        ftCXGrand.className = grandTotalCX < 0 ? "py-3 px-2 text-center border-r text-green-700 bg-red-50" : "py-3 px-2 text-center border-r text-red-600 bg-red-50";
     }
 
-    const boxTarget = document.getElementById('summary-target'); if(boxTarget) boxTarget.innerText = totalTargetPH.toLocaleString(); // Hiển thị Target PH
+    const boxTarget = document.getElementById('summary-target'); if(boxTarget) boxTarget.innerText = totalTargetPH.toLocaleString(); 
     const boxTT = document.getElementById('summary-tt'); if(boxTT) boxTT.innerText = grandTotalTT.toLocaleString();
     const boxPH = document.getElementById('summary-ph'); if(boxPH) boxPH.innerText = grandTotalPH.toLocaleString();
 };
@@ -443,22 +451,15 @@ window.saveAllData = async () => {
         REGIONS_SI.forEach(reg => {
             const elTgTT = document.querySelector(`.target-tt-input[data-region="${reg.name}"]`);
             const elTgPH = document.querySelector(`.target-ph-input[data-region="${reg.name}"]`);
+            const elTgCX = document.querySelector(`.cx-input[data-region="${reg.name}"]`); 
             
             let key = initKey(reg.name, baseDate);
             let target_ph = elTgPH ? (parseInt(elTgPH.value) || 0) : 0;
-            
-            // Tính số Chưa phát hàng để lưu DB
-            let totalPH = 0;
-            document.querySelectorAll(`.ph-input[data-region="${reg.name}"]`).forEach(inp => {
-                totalPH += parseInt(inp.value) || 0;
-            });
-            let chua_xuat = target_ph - totalPH;
+            let chua_xuat = elTgCX ? (parseInt(elTgCX.value) || 0) : 0; 
 
             if (elTgTT) { dataMap[key].target_tt = parseInt(elTgTT.value) || 0; dataMap[key].hasData = true; }
             if (elTgPH) { dataMap[key].target_ph = target_ph; dataMap[key].hasData = true; }
-            
-            dataMap[key].chua_xuat = chua_xuat;
-            dataMap[key].hasData = true;
+            if (elTgCX) { dataMap[key].chua_xuat = chua_xuat; dataMap[key].hasData = true; }
         });
 
         document.querySelectorAll('.tt-input').forEach(input => {
@@ -565,7 +566,8 @@ window.exportSellInExcel = function() {
             totalPH += data.xuat_hang || 0;
             rowXH.push(data.xuat_hang ? data.xuat_hang : "");
         });
-        rowXH[4] = (baseData.target_ph || 0) - totalPH; // Tự tính lại lúc xuất
+        
+        rowXH[4] = (baseData.chua_xuat || 0); // Lấy trực tiếp từ database thay vì tự trừ
         rowXH[5] = totalPH; 
         aoaXH.push(rowXH);
     });
@@ -642,26 +644,21 @@ window.importSellInExcel = async function(event) {
                     let regionName = validRegions.find(vr => String(row[1] || "").includes(vr));
                     if (!regionName) continue;
                     
+                    // Cấu trúc cột Excel (0: STT, 1: Khu Vực, 2: GĐ, 3: Target, 4: Chưa Phát Hàng, 5: Total Phát Hàng, 6+: Ngày)
                     let valTgPH = parseInt(row[3]);
+                    let valCX = parseInt(row[4]); 
                     
                     let keyBase = initKey(regionName, baseDate);
                     if (!isNaN(valTgPH)) { parsedData[keyBase].target_ph = valTgPH; parsedData[keyBase].hasData = true; }
+                    if (!isNaN(valCX)) { parsedData[keyBase].chua_xuat = valCX; parsedData[keyBase].hasData = true; }
 
-                    let totalRowPH = 0;
                     for (let d = 0; d < daysArray.length; d++) {
-                        let val = parseInt(row[6 + d]);
+                        let val = parseInt(row[6 + d]); 
                         if (!isNaN(val)) {
                             let key = initKey(regionName, daysArray[d].fullDate);
                             parsedData[key].xuat_hang = val;
                             parsedData[key].hasData = true;
-                            totalRowPH += val;
                         }
-                    }
-                    
-                    // Auto tính chưa phát hàng khi import
-                    if (!isNaN(valTgPH)) {
-                        parsedData[keyBase].chua_xuat = valTgPH - totalRowPH;
-                        parsedData[keyBase].hasData = true;
                     }
                 }
             }

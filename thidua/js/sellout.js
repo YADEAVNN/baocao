@@ -260,18 +260,19 @@ window.renderHistoryMatrix = () => {
 
     let headerHtml = '<div class="flex justify-between items-end mb-4"><div class="flex items-center gap-4 text-xs font-bold text-gray-500"><div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-orange-100 border border-orange-300 block"></span> Đã duyệt (Chính thức)</div><div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-yellow-100 border border-yellow-300 block"></span> Chờ duyệt (Pending)</div></div><div id="btn-mass-approve-container"></div></div>';
 
-    let thead = '<tr class="border-b border-gray-100"><th class="py-4 px-3 sticky left-0 bg-white z-20 min-w-[200px] font-bold text-slate-500 shadow-[1px_0_0_0_#e2e8f0]">CHIẾN BINH (NVKD)</th>';
+    let thead = '<tr class="border-b border-gray-100"><th class="py-4 px-3 sticky left-0 bg-white z-20 min-w-[120px] md:min-w-[200px] font-bold text-slate-500 shadow-[1px_0_0_0_#e2e8f0]">CHIẾN BINH (NVKD)</th>';
     for (let d = 1; d <= daysInMonth; d++) {
         thead += '<th class="py-4 px-2 text-center min-w-[35px] font-bold text-slate-500">' + d + '</th>';
     }
-    thead += '<th class="py-4 px-3 text-center font-black text-orange-600 bg-orange-50 sticky right-0 shadow-[-1px_0_0_0_#e2e8f0]">TỔNG (ĐÃ DUYỆT)</th></tr>';
+    thead += '<th class="py-4 px-3 text-center font-black text-orange-600 bg-orange-50 md:sticky md:right-0 shadow-[-1px_0_0_0_#e2e8f0]">TỔNG (ĐÃ DUYỆT)</th></tr>';
 
     let tbody = '';
     
     activeSales.forEach(saleName => {
         const saleReports = reports.filter(r => r.sale_name === saleName);
         let totalApprovedMonth = 0;
-        let rowHtml = '<td class="py-3 px-3 sticky left-0 bg-white font-bold text-slate-800 z-10 shadow-[1px_0_0_0_#f1f5f9]">' + saleName + '</td>';
+        
+        let rowHtml = '<td class="py-3 px-3 sticky left-0 bg-white font-bold text-slate-800 z-10 min-w-[120px] md:min-w-[200px] truncate shadow-[1px_0_0_0_#f1f5f9]">' + saleName + '</td>';
         
         for (let d = 1; d <= daysInMonth; d++) {
             const fullDate = `${year}-${month}-${String(d).padStart(2, '0')}`;
@@ -295,7 +296,7 @@ window.renderHistoryMatrix = () => {
             }
         }
         
-        rowHtml += '<td class="py-3 px-3 text-center font-black text-orange-600 bg-orange-50 sticky right-0 shadow-[-1px_0_0_0_#f1f5f9]">' + totalApprovedMonth + '</td>';
+        rowHtml += '<td class="py-3 px-3 text-center font-black text-orange-600 bg-orange-50 md:sticky md:right-0 shadow-[-1px_0_0_0_#f1f5f9]">' + totalApprovedMonth + '</td>';
         tbody += '<tr class="hover:bg-slate-50/50 border-b border-gray-50 transition-colors">' + rowHtml + '</tr>';
     });
 
@@ -303,7 +304,7 @@ window.renderHistoryMatrix = () => {
         tbody = '<tr><td colspan="' + (daysInMonth + 2) + '" class="p-12 text-center text-red-500 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Không tìm thấy NVKD nào thuộc quyền quản lý.</td></tr>';
     }
 
-    container.innerHTML = headerHtml + '<div class="overflow-x-auto w-full pb-4 border border-gray-200 rounded-lg shadow-sm"><table class="w-full text-left border-collapse whitespace-nowrap text-sm"><thead class="text-[11px] uppercase bg-white">' + thead + '</thead><tbody class="divide-y divide-gray-50 bg-white">' + tbody + '</tbody></table></div>';
+    container.innerHTML = headerHtml + '<div class="overflow-x-auto w-full pb-4 border border-gray-200 rounded-lg shadow-sm custom-scrollbar"><table class="w-full text-left border-collapse whitespace-nowrap text-sm"><thead class="text-[11px] uppercase bg-white">' + thead + '</thead><tbody class="divide-y divide-gray-50 bg-white">' + tbody + '</tbody></table></div>';
 
     if (isManager && pendingIds.length > 0) {
         document.getElementById('btn-mass-approve-container').innerHTML = '<button onclick="window.massApproveSO(\'' + pendingIds.join(',') + '\')" class="bg-blue-600 text-white font-bold text-xs px-4 py-2 rounded-lg hover:bg-blue-700 shadow-md transition flex items-center gap-2"><i class="fa-solid fa-check-double"></i> DUYỆT TẤT CẢ (' + pendingIds.length + ')</button>';
@@ -366,6 +367,7 @@ window.editHistorySO = async (fullDate, saleName, currentTotal, currentStatus, r
                 await window.sb.from('daily_so_reports').insert([{ report_date: fullDate, sale_name: saleName, total_so: newTotal, region_name: assignedRegion, status: finalStatus }]);
             }
             if (!isManager) alert("✅ Đã lưu! Báo cáo đang ở trạng thái CHỜ SẾP DUYỆT (Màu vàng).");
+            else alert("✅ Đã thêm mới dữ liệu thành công!");
         }
         window.loadHistoryData();
     } catch (err) {

@@ -192,9 +192,10 @@ window.loadHistorySIData = async () => {
     const [year, month] = monthInput.split('-');
     const daysInMonth = new Date(year, month, 0).getDate();
     
-    let headHTML = '<tr><th class="py-4 px-4 text-left bg-gray-50 sticky left-0 z-20 min-w-[150px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">CHIẾN BINH (NVKD)</th><th class="py-4 px-2 text-center bg-gray-50 z-10 min-w-[90px] border-r border-gray-200">PHÂN LOẠI</th>';
+    // ĐÃ FIX: Điều chỉnh min-w cho Cột NVKD và Loại Phân Loại trên mobile. Bỏ sticky cứng right cho TỔNG.
+    let headHTML = '<tr><th class="py-4 px-3 md:px-4 text-left bg-gray-50 sticky left-0 z-20 min-w-[120px] md:min-w-[150px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">CHIẾN BINH (NVKD)</th><th class="py-4 px-2 text-center bg-gray-50 z-10 min-w-[75px] md:min-w-[90px] border-r border-gray-200">PHÂN LOẠI</th>';
     for(let i=1; i<=daysInMonth; i++) { headHTML += '<th class="py-4 px-1 w-10 text-center">' + i + '</th>'; }
-    headHTML += '<th class="py-4 px-4 text-center text-blue-600 bg-gray-50 sticky right-0 z-20 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">TỔNG</th></tr>';
+    headHTML += '<th class="py-4 px-4 text-center text-blue-600 bg-gray-50 md:sticky md:right-0 z-20 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">TỔNG</th></tr>';
     thead.innerHTML = headHTML;
 
     tbody.innerHTML = '<tr><td colspan="' + (daysInMonth + 3) + '" class="p-8 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải dữ liệu Ma trận...</td></tr>';
@@ -238,8 +239,9 @@ window.loadHistorySIData = async () => {
             let totalTT = 0;
             let totalXH = 0;
             
-            let rowTT = '<td rowspan="2" class="py-2 px-4 text-left font-bold text-gray-800 bg-white sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-b border-gray-200">' + sName + '</td><td class="py-2 px-2 text-center text-[11px] font-bold text-blue-600 bg-blue-50/50 border-r border-gray-100">Thanh Toán</td>';
-            let rowXH = '<td class="py-2 px-2 text-center text-[11px] font-bold text-teal-600 bg-teal-50/50 border-r border-gray-100 border-b border-gray-200">Xuất Hàng</td>';
+            // ĐÃ FIX: Điều chỉnh lại các CSS hiển thị cho khớp Mobile
+            let rowTT = '<td rowspan="2" class="py-2 px-3 md:px-4 text-left font-bold text-gray-800 bg-white sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-b border-gray-200 min-w-[120px] md:min-w-[150px] truncate max-w-[120px] md:max-w-none" title="' + sName + '">' + sName + '</td><td class="py-2 px-1 md:px-2 text-center text-[10px] md:text-[11px] font-bold text-blue-600 bg-blue-50/50 border-r border-gray-100 min-w-[75px] md:min-w-[90px]">Thanh Toán</td>';
+            let rowXH = '<td class="py-2 px-1 md:px-2 text-center text-[10px] md:text-[11px] font-bold text-teal-600 bg-teal-50/50 border-r border-gray-100 border-b border-gray-200 min-w-[75px] md:min-w-[90px]">Xuất Hàng</td>';
 
             for (let d = 1; d <= daysInMonth; d++) {
                 const fullDate = `${year}-${month}-${String(d).padStart(2, '0')}`;
@@ -277,8 +279,9 @@ window.loadHistorySIData = async () => {
                 }
             }
             
-            rowTT += '<td class="py-2 px-4 font-black text-blue-600 bg-blue-50/80 sticky right-0 z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)] text-center">' + totalTT + '</td>';
-            rowXH += '<td class="py-2 px-4 font-black text-teal-600 bg-teal-50/80 sticky right-0 z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)] border-b border-gray-200 text-center">' + totalXH + '</td>';
+            // ĐÃ FIX: Đổi sticky right thành md:sticky md:right-0 cho 2 hàng TỔNG
+            rowTT += '<td class="py-2 px-4 font-black text-blue-600 bg-blue-50/80 md:sticky md:right-0 z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)] text-center">' + totalTT + '</td>';
+            rowXH += '<td class="py-2 px-4 font-black text-teal-600 bg-teal-50/80 md:sticky md:right-0 z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)] border-b border-gray-200 text-center">' + totalXH + '</td>';
 
             bodyHTML += '<tr class="hover:bg-blue-50/30 transition">' + rowTT + '</tr><tr class="hover:bg-teal-50/30 transition">' + rowXH + '</tr>';
         });

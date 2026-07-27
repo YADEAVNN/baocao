@@ -165,7 +165,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
     const soRegions = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ"];
     const siRegions = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ", "Nam Trung Bộ", "Tây Nguyên", "Đông Nam", "Hồ Chí Minh", "Tây Nam", "Sông Cửu Long"];
     
-    // Định nghĩa các vùng thuộc Miền Bắc
     const mienBacRegions = ["tây bắc", "hà nội", "đông bắc", "hồng hà", "bắc trung bộ", "trung trung bộ"];
 
     function getNormalizedRegion(rawReg) {
@@ -207,9 +206,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         }
     });
 
-    // ===============================================
-    // ĐÃ FIX: XỬ LÝ DỮ LIỆU TỪ BẢNG ADMIN (daily_si)
-    // ===============================================
     dataSI.forEach(r => {
         const isBaseDate = r.report_date === baseDateSI;
         const sName = norm(r.sale_name);
@@ -219,7 +215,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
         if (!res.regions[regAll]) res.regions[regAll] = { name: regAll, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0, si_game_act: 0 };
         
-        // 1. LUÔN LẤY MỤC TIÊU (TARGET) TỪ ADMIN CHO TẤT CẢ KHU VỰC
         if (isBaseDate && r.target_ph) {
             res.regions[regAll].si_tar += safeNum(r.target_ph);
             if (soRegions.includes(regAll)) {
@@ -227,7 +222,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
             }
         }
 
-        // 2. NẾU LÀ MIỀN NAM -> LẤY SỐ LIỆU THỰC TẾ TỪ ADMIN
         if (!isMienBac) {
             const val = safeNum(r.xuat_hang); 
             const paidVal = safeNum(r.thanh_toan);
@@ -238,7 +232,7 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
             if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
             res.daily[r.report_date].si += val; 
 
-            if (soRegions.includes(regAll)) { // Mặc dù Miền Nam không có trong soRegions, giữ cấu trúc cũ an toàn
+            if (soRegions.includes(regAll)) { 
                 res.si_total += val;
                 if (r.report_date === todayStr) res.si_today += val;
                 if (r.report_date === yesterdayStr) res.si_yest += val;
@@ -246,9 +240,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         }
     });
 
-    // ===============================================
-    // ĐÃ FIX: XỬ LÝ DỮ LIỆU TỪ BẢNG SALE (game_si)
-    // ===============================================
     dataGameSI.forEach(r => {
         const val = safeNum(r.xuat_hang); 
         const paidVal = safeNum(r.thanh_toan);
@@ -258,14 +249,13 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         const isMienBac = mienBacRegions.includes(norm(regAll));
 
         if (!res.regions[regAll]) res.regions[regAll] = { name: regAll, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0, si_game_act: 0 };
-        res.regions[regAll].si_game_act += val; // Vẫn lưu riêng cho rank Sale
+        res.regions[regAll].si_game_act += val; 
 
         if (r.sale_name) {
             if (!res.sales[r.sale_name]) res.sales[r.sale_name] = { name: r.sale_name, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
             res.sales[r.sale_name].si_act += val;
         }
 
-        // NẾU LÀ MIỀN BẮC -> LẤY SỐ LIỆU THỰC TẾ TỪ SALE NHẬP LIỆU
         if (isMienBac) {
             res.regions[regAll].si_act += val; 
             res.regions[regAll].si_paid += paidVal;
@@ -616,6 +606,9 @@ function renderTopSales(salesObj) {
     autoScrollTable('erp-top-so-body');
 }
 
+// ===============================================
+// ĐÃ CHỈNH SỬA: BẢNG THI ĐUA 12 KHU VỰC SELLIN 
+// ===============================================
 function render12RegionSIChart(regionsObj) {
     const tbody = document.getElementById('erp-12-region-si-body');
     if(!tbody) return;
@@ -629,30 +622,64 @@ function render12RegionSIChart(regionsObj) {
             r.missing = Math.max(0, r.si_tar - (r.si_act || 0));
             return r;
         })
-        .sort((a,b) => siRegionsOrder.indexOf(a.name) - siRegionsOrder.indexOf(b.name));
+        // SẮP XẾP THEO TIẾN ĐỘ THAY VÌ THỨ TỰ ĐỊA LÝ (Tạo thành Bảng Xếp Hạng thực tế)
+        .sort((a,b) => b.pct - a.pct || b.si_act - a.si_act);
 
     tbody.innerHTML = regions.map((r, i) => {
         let barWidth = r.pct > 100 ? 100 : r.pct;
-        let rankClass = i < 3 ? 'text-blue-600' : 'text-gray-400';
         
         return `
-        <tr class="hover:bg-blue-50/50 transition border-b border-gray-50">
-            <td class="py-2.5 px-1 text-center font-black ${rankClass} whitespace-nowrap">${i+1}</td>
-            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-nowrap min-w-[100px]">${r.name}</td>
-            <td class="py-2.5 px-2 text-center font-black text-blue-600 whitespace-nowrap">${fmt(r.si_act || 0)}</td>
-            <td class="py-2.5 px-4 min-w-[130px]">
+        <tr class="hover:bg-slate-50 transition border-b border-gray-50 bg-white">
+            <td class="py-3 px-2 text-center font-bold text-gray-500 whitespace-nowrap">${i+1}</td>
+            <td class="py-3 px-2 font-black text-slate-700 whitespace-nowrap min-w-[120px]">${r.name}</td>
+            <td class="py-3 px-2 text-center font-black text-blue-600 whitespace-nowrap">${fmt(r.si_act || 0)}</td>
+            <td class="py-3 px-4 min-w-[180px]">
                 <div class="flex items-center gap-3">
-                    <div class="relative w-full h-[14px] bg-slate-100 rounded-sm flex items-center shadow-inner">
-                        <div class="absolute top-0 left-0 h-full bg-blue-500 rounded-sm z-10 transition-all duration-700" style="width: ${barWidth}%"></div>
-                        <div class="absolute top-[-3px] bottom-[-3px] border-l border-dashed border-orange-500 z-20" style="left: 100%;"></div>
+                    <div class="relative w-full h-[6px] bg-slate-100 rounded-full flex items-center">
+                        <div class="absolute top-0 left-0 h-full bg-blue-500 rounded-full z-10 transition-all duration-700" style="width: ${barWidth}%"></div>
+                        <div class="absolute top-[-5px] bottom-[-5px] border-l-[1.5px] border-dashed border-orange-400 z-20" style="left: 100%;"></div>
                     </div>
-                    <span class="text-[10px] font-black text-slate-700 w-12 text-right whitespace-nowrap">${Math.round(r.pct)}%</span>
+                    <span class="text-[11px] font-black text-slate-800 w-10 text-right whitespace-nowrap">${Math.round(r.pct)}%</span>
                 </div>
             </td>
-            <td class="py-2.5 px-2 text-right font-black ${r.missing > 0 ? 'text-rose-500' : 'text-emerald-500'} whitespace-nowrap">${r.missing > 0 ? fmt(r.missing) : '0'}</td>
+            <td class="py-3 px-2 text-center font-black text-red-600 whitespace-nowrap">${r.missing > 0 ? fmt(r.missing) : '0'}</td>
         </tr>
         `;
     }).join('') || '<tr><td colspan="5" class="text-center py-6 text-gray-400">Không có dữ liệu khu vực</td></tr>';
+
+    // Xử lý ghi đè giao diện Header và Thêm Chú thích (Legend)
+    const table = tbody.closest('table');
+    if (table) {
+        const thead = table.querySelector('thead');
+        if (thead) {
+            thead.innerHTML = `
+                <tr class="text-gray-500 font-bold uppercase text-[10px] border-b border-gray-100 bg-white">
+                    <th class="py-3 px-2 text-center w-12">Hạng</th>
+                    <th class="py-3 px-2 text-left">Khu vực</th>
+                    <th class="py-3 px-2 text-center">Thực đạt</th>
+                    <th class="py-3 px-4 text-center">Tiến độ <span class="text-gray-400 lowercase font-medium">(so với mục tiêu)</span></th>
+                    <th class="py-3 px-2 text-center">Còn thiếu</th>
+                </tr>
+            `;
+        }
+        
+        // Tự động chèn Chú thích (Legend) nếu chưa có
+        const card = table.closest('.bg-white');
+        if (card) {
+            const headerFlex = card.querySelector('.flex.justify-between');
+            if (headerFlex && !headerFlex.querySelector('.legend-injected')) {
+                const oldLegend = headerFlex.querySelector('.text-xs');
+                if (oldLegend) oldLegend.remove(); 
+                
+                headerFlex.insertAdjacentHTML('beforeend', `
+                    <div class="legend-injected flex items-center gap-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-blue-500 rounded-[2px]"></div> Thực đạt</div>
+                        <div class="flex items-center gap-1.5"><div class="w-4 border-b-[1.5px] border-dashed border-orange-400"></div> Mục tiêu (100%)</div>
+                    </div>
+                `);
+            }
+        }
+    }
 
     autoScrollTable('erp-12-region-si-body');
 }

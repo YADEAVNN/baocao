@@ -156,10 +156,18 @@ window.renderSaleLeaderboard = async () => {
             targetData = resTarget.data || [];
         }
 
+        // --- FIX: Hàm chuẩn hóa tên nhân viên để gộp chung ---
+        const normalizeName = (name) => {
+            if (!name) return null;
+            return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        };
+
         let saleStats = {};
 
         targetData.forEach(row => {
-            const name = row.sale_name ? row.sale_name.trim() : null;
+            const name = normalizeName(row.sale_name); // Gọi hàm chuẩn hóa
             if (name) {
                 if (!saleStats[name]) saleStats[name] = { name: name, target: 0, actual: 0 };
                 if (type === 'SO') {
@@ -171,7 +179,7 @@ window.renderSaleLeaderboard = async () => {
         });
 
         reports.forEach(row => {
-            const name = row.sale_name ? row.sale_name.trim() : null;
+            const name = normalizeName(row.sale_name); // Gọi hàm chuẩn hóa
             let val = 0;
             
             if (type === 'SO') {

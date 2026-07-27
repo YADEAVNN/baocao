@@ -2,6 +2,12 @@
 // MODULE: ERP - TAB CÁ NHÂN SALE (CẬP NHẬT THEO THÁNG & DUAL PACE TIMELINE)
 // ==========================================
 
+// Hàm xử lý sự kiện khi thay đổi bộ lọc Sale
+window.changeErpSaleFilter = (val) => {
+    window.STATE.erpSelectedSale = val;
+    window.renderErpSalePersonal();
+};
+
 window.renderErpSalePersonal = async () => {
     const container = document.getElementById('erp-tab-sale');
     if (!container) return;
@@ -10,15 +16,52 @@ window.renderErpSalePersonal = async () => {
     container.innerHTML = `
         <div class="p-20 flex flex-col items-center justify-center fade-in">
             <i class="fa-solid fa-spinner fa-spin text-4xl text-[#F97316] mb-4"></i>
-            <p class="text-gray-500 font-bold">Đang đồng bộ dữ liệu thị trường của bạn...</p>
+            <p class="text-gray-500 font-bold">Đang đồng bộ dữ liệu thị trường...</p>
         </div>
     `;
 
     try {
-        // 2. Lấy thông tin User
+        // Lấy danh sách shop để phân quyền (Nếu chưa có trong STATE)
+        if (!window.STATE.globalAssignedShops || window.STATE.globalAssignedShops.length === 0) {
+            let { data: shops } = await window.sb.from('master_shop_list').select('*');
+            if (!shops || shops.length === 0) {
+                const res = await window.sb.from('assigned_shops').select('*');
+                shops = res.data || [];
+            }
+            window.STATE.globalAssignedShops = shops || [];
+        }
+
+        // 2. Lấy thông tin User & Phân quyền
         const user = window.STATE?.currentUser || { full_name: "Chưa xác định", region: "Khác", role: "Sale" };
-        const saleName = user.full_name;
-        const regionName = user.region || (window.STATE?.globalAssignedShops && window.STATE.globalAssignedShops[0]?.area) || 'Đông Bắc';
+        const role = user.role || '';
+        const nameNorm = (user.full_name || '').trim().toLowerCase();
+        let allShops = window.STATE.globalAssignedShops || [];
+
+        let availableSales = [];
+        if (role === 'Admin') {
+            availableSales = [...new Set(allShops.map(s => s.sale_name).filter(Boolean))];
+        } else if (role === 'RSM' || role === 'Giám đốc' || role.toLowerCase().includes('giám đốc') || role.toLowerCase().includes('gđ')) {
+            const filteredShops = allShops.filter(s => {
+                const dirDB = (s.director_name || '').trim().toLowerCase();
+                return dirDB === nameNorm || dirDB.includes(nameNorm);
+            });
+            availableSales = [...new Set(filteredShops.map(s => s.sale_name).filter(Boolean))];
+        } else {
+            availableSales = [user.full_name];
+        }
+
+        availableSales.sort();
+
+        // Ghi nhớ lựa chọn hiện tại
+        let selectedSale = window.STATE.erpSelectedSale || user.full_name;
+        if (!availableSales.includes(selectedSale) && availableSales.length > 0) {
+            selectedSale = availableSales[0]; // Mặc định chọn sale đầu tiên nếu Admin/RSM chưa chọn
+        }
+        window.STATE.erpSelectedSale = selectedSale;
+
+        // Lấy Khu vực tương ứng với Sale đang được xem
+        const targetShop = allShops.find(s => s.sale_name === selectedSale);
+        const regionName = targetShop ? (targetShop.area || targetShop.khu_vuc || targetShop.region) : (user.region || 'Khác');
 
         // 3. Tính toán thời gian (Theo Tháng Hiện Tại)
         const today = new Date();
@@ -33,11 +76,11 @@ window.renderErpSalePersonal = async () => {
         const mEndStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
         const currentMonthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
 
-        // 4. Fetch Dữ Liệu Từ Supabase (S.I luôn lấy từ game_si_reports do Sale nhập)
+        // 4. Fetch Dữ Liệu Từ Supabase theo `selectedSale` (Đã được lọc)
         const [soRes, siRes, tgtRes] = await Promise.all([
-            window.sb.from('daily_so_reports').select('*').eq('sale_name', saleName).gte('report_date', mStartStr).lte('report_date', mEndStr),
-            window.sb.from('game_si_reports').select('*').eq('sale_name', saleName).gte('report_date', mStartStr).lte('report_date', mEndStr),
-            window.sb.from('monthly_sale_targets').select('*').eq('sale_name', saleName)
+            window.sb.from('daily_so_reports').select('*').eq('sale_name', selectedSale).gte('report_date', mStartStr).lte('report_date', mEndStr),
+            window.sb.from('game_si_reports').select('*').eq('sale_name', selectedSale).gte('report_date', mStartStr).lte('report_date', mEndStr),
+            window.sb.from('monthly_sale_targets').select('*').eq('sale_name', selectedSale)
         ]);
 
         const soData = soRes.data || [];
@@ -177,15 +220,15 @@ window.renderErpSalePersonal = async () => {
         // 10. RENDER GIAO DIỆN HTML
         container.innerHTML = `
             <div class="w-full bg-white pb-28 font-sans max-w-5xl mx-auto fade-in shadow-xl rounded-t-3xl overflow-hidden mt-6 border border-gray-200">
-                <!-- HEADER CÁ NHÂN -->
+                <!-- HEADER NGƯỜI ĐĂNG NHẬP -->
                 <div class="flex justify-between items-center p-5 border-b border-gray-100 bg-white sticky top-0 z-10">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center border border-orange-200 shrink-0">
                             <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="w-6 object-contain">
                         </div>
                         <div>
-                            <h2 class="text-sm text-slate-600">Xin chào, <span class="font-black text-lg text-slate-800">${saleName} 👋</span></h2>
-                            <p class="text-[11px] text-gray-500 font-medium">${user.role} - Khu vực: <span class="font-bold text-slate-700">${regionName}</span></p>
+                            <h2 class="text-sm text-slate-600">Xin chào, <span class="font-black text-lg text-slate-800">${user.full_name} 👋</span></h2>
+                            <p class="text-[11px] text-gray-500 font-medium">${user.role} - Khu vực: <span class="font-bold text-slate-700">${user.region || 'Khác'}</span></p>
                         </div>
                     </div>
                     <div class="flex gap-3 items-center">
@@ -198,6 +241,27 @@ window.renderErpSalePersonal = async () => {
                         </div>
                     </div>
                 </div>
+
+                ${availableSales.length > 1 ? `
+                <!-- BỘ LỌC CHỌN SALE (Dành cho Admin/Manager) -->
+                <div class="px-5 mt-5">
+                    <div class="flex items-center gap-3 bg-blue-50 border border-blue-100 p-3 rounded-xl shadow-sm">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-users-viewfinder text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-[10px] font-black text-blue-600 uppercase block mb-1">Xem báo cáo cá nhân của NVKD:</label>
+                            <select onchange="window.changeErpSaleFilter(this.value)" class="w-full bg-white border border-blue-200 text-slate-800 text-sm md:text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-black outline-none shadow-sm cursor-pointer">
+                                ${availableSales.map(s => {
+                                    const r = allShops.find(x => x.sale_name === s);
+                                    const rName = r ? (r.area || r.khu_vuc || 'Khác') : 'Khác';
+                                    return '<option value="' + s + '" ' + (s === selectedSale ? 'selected' : '') + '>' + s + ' - ' + rName + '</option>';
+                                }).join('')}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
 
                 <!-- BANNER MỤC TIÊU -->
                 <div class="px-5 mt-5">
@@ -215,7 +279,7 @@ window.renderErpSalePersonal = async () => {
                         <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-5">
                             <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
                                 <span class="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-[10px]">1</span> 
-                                HIỆU SUẤT YÊU CẦU HÔM NAY
+                                HIỆU SUẤT YÊU CẦU CỦA <span class="text-blue-600">${selectedSale}</span>
                             </h3>
                             <span class="text-[10px] text-gray-400 font-medium hidden md:block">
                                 Được tính theo mục tiêu Tháng ${currentMonth} và số ngày còn lại <i class="fa-solid fa-circle-info ml-1"></i>

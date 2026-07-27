@@ -232,9 +232,12 @@
     <script src="./js/dashboard.js"></script>
     <script src="./js/erp/erp-controller.js"></script>
     <script src="./js/erp/erp-market.js"></script>
-    <!-- THÊM 2 FILE MỚI CHO TAB KHU VỰC VÀ SALE -->
     <script src="./js/erp/erp-region.js"></script>
     <script src="./js/erp/erp-sale.js"></script>
+    
+    <!-- THÊM SCRIPT THÔNG BÁO TIẾN ĐỘ THÁNG Ở ĐÂY -->
+    <script src="./js/login-alert.js"></script>
+    
     <script type="module" src="./js/main.js"></script>
 
     <script>
@@ -337,6 +340,38 @@
             } finally {
                 btn.innerText = "Xác nhận đổi";
                 btn.disabled = false;
+            }
+        });
+
+        // ==========================================
+        // TRIGGER POPUP THÔNG BÁO KHI ĐĂNG NHẬP (ĐÃ TĂNG TỐC)
+        // ==========================================
+        
+        // Quét liên tục mỗi 0.2 giây, ngay khi User có sẵn thì bung popup
+        const fastAlertCheck = setInterval(() => {
+            if (window.STATE && window.STATE.currentUser && typeof window.checkAndShowLoginAlert === 'function') {
+                window.checkAndShowLoginAlert();
+                clearInterval(fastAlertCheck); // Dừng quét sau khi hiển thị xong
+            }
+        }, 200);
+
+        // Tự động tắt vòng lặp sau 10 giây để tiết kiệm tài nguyên nếu người dùng chưa đăng nhập
+        setTimeout(() => {
+            clearInterval(fastAlertCheck);
+        }, 10000);
+        
+        // Cụm dự phòng: Nếu họ thao tác đăng nhập sau 10s (khi vòng lặp trên đã tắt), ta kích hoạt bằng event của Supabase
+        window.addEventListener('load', () => {
+            if (window.sb && window.sb.auth) {
+                window.sb.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_IN') {
+                        setTimeout(() => {
+                            if(typeof window.checkAndShowLoginAlert === 'function') {
+                                window.checkAndShowLoginAlert();
+                            }
+                        }, 500); // Rút ngắn thời gian chờ tải màn hình xuống nửa giây
+                    }
+                });
             }
         });
     </script>

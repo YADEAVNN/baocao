@@ -45,7 +45,7 @@ window.initErpRegion = async function() {
                         
                         <div class="h-10 w-px bg-gray-200 hidden md:block"></div>
                         
-                        <!-- ĐÃ FIX: CHUYỂN TỪ LỌC THÁNG SANG LỌC TỪ NGÀY ... ĐẾN NGÀY -->
+                        <!-- LỌC TỪ NGÀY ... ĐẾN NGÀY -->
                         <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner">
                             <div class="flex items-center gap-2 px-2">
                                 <i class="fa-regular fa-calendar text-gray-400"></i>
@@ -352,48 +352,20 @@ window.loadDataRegionTab = async function() {
     const lastUpdate = document.getElementById('reg-last-update');
     if(lastUpdate) lastUpdate.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-orange-500"></i> Đang tải...';
 
-    // Dựa vào ngày end để lấy mục tiêu target (Giả định lấy target của tháng của ngày End)
     const [year, month] = endStr.split('-');
     const daysInMonth = new Date(year, month, 0).getDate();
     
-    // Tính toán số ngày dựa vào khoảng thời gian được lọc
     const startD = new Date(startStr);
     const endD = new Date(endStr);
     const daysPassed = Math.max(1, Math.floor((endD - startD) / (1000 * 60 * 60 * 24)) + 1);
     
-    // Số ngày còn lại tính từ ngày kết thúc của filter đến cuối tháng đó
     const eom = new Date(year, month, 0);
     let daysLeft = Math.floor((eom - endD) / (1000 * 60 * 60 * 24));
     if (daysLeft < 1) daysLeft = 1;
 
     try {
-        // Fetch đa bảng từ Supabase
-        const [resSI, resSO, resTarget, resShops, resGameSI] = await Promise.all([
-            window.sb.from('daily_si_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
-            window.sb.from('daily_so_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
-            // Target vẫn lấy theo nguyên tháng của ngày lọc
-            window.sb.from('monthly_sale_targets').select('*').like('report_month', `${year}-${month}%`),
-            window.sb.from('master_shop_list').select('sale_name, area, khu_vuc, region, director_name'),
-            window.sb.from('game_si_reports').select('*').gte('report_date', startStr).lte('report_date', endStr)
-        ]);
-
-        const rawTarget = resTarget.data || [];
-        const rawSI = resSI.data || [];
-        const rawSO = resSO.data || [];
-        const rawGameSI = resGameSI.data || [];
-        const shops = resShops.data || [];
-
-        // 1. Chuẩn hóa tên vùng và tạo Map
         const norm = (str) => str ? str.toString().trim().toLowerCase().replace(/\s+/g, ' ') : "";
         
-        // Chuẩn hóa tên nhân sự (Title Case) để gộp trùng lặp
-        const normalizeDisplayName = (name) => {
-            if (!name) return null;
-            return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
-        };
-
         const getNormalizedRegion = (rawReg) => {
             const nReg = norm(rawReg);
             if(nReg.includes("tây bắc") || nReg.includes("tay bac")) return "Tây Bắc";
@@ -407,9 +379,32 @@ window.loadDataRegionTab = async function() {
         };
 
         const regionFilterNorm = getNormalizedRegion(regionFilter);
+
+        // Fetch đa bảng từ Supabase
+        const [resSI, resSO, resTarget, resShops, resGameSI, resAdminLatest] = await Promise.all([
+            window.sb.from('daily_si_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
+            window.sb.from('daily_so_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
+            window.sb.from('monthly_sale_targets').select('*').like('report_month', `${year}-${month}%`),
+            window.sb.from('master_shop_list').select('sale_name, area, khu_vuc, region, director_name'),
+            window.sb.from('game_si_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
+            window.sb.from('daily_si_reports').select('*').order('report_date', { ascending: false }).limit(1000)
+        ]);
+
+        const rawTarget = resTarget.data || [];
+        const rawSI = resSI.data || [];
+        const rawSO = resSO.data || [];
+        const rawGameSI = resGameSI.data || [];
+        const shops = resShops.data || [];
+
+        const normalizeDisplayName = (name) => {
+            if (!name) return null;
+            return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        };
+
         const saleToRegionMap = {};
 
-        // MÃ MÓC DỮ LIỆU ĐA NGUỒN ĐỂ MAPPING SALE -> KHU VỰC
         shops.forEach(s => { 
             const sName = norm(s.sale_name);
             const reg = getNormalizedRegion(s.area || s.khu_vuc || s.region || '');
@@ -428,7 +423,6 @@ window.loadDataRegionTab = async function() {
             if (sName && reg && !saleToRegionMap[sName]) saleToRegionMap[sName] = reg;
         });
 
-        // 2. Lọc tất cả các Sale thuộc Khu vực đang chọn
         const salesInRegion = new Set();
         Object.keys(saleToRegionMap).forEach(sNorm => {
             if (saleToRegionMap[sNorm] === regionFilterNorm) {
@@ -436,7 +430,6 @@ window.loadDataRegionTab = async function() {
             }
         });
 
-        // 3. Lọc Báo cáo theo khu vực
         const siFiltered = rawSI.filter(r => getNormalizedRegion(r.region_name) === regionFilterNorm);
 
         const soFiltered = rawSO.filter(r => {
@@ -469,35 +462,36 @@ window.loadDataRegionTab = async function() {
             return false;
         });
 
-        // ===============================================
-        // ĐÃ FIX: PHÂN TÁCH LOGIC BẮC/NAM CHUẨN XÁC VÀ SỬA CASE SENSITIVE
-        // ===============================================
         let totalTarSI = 0, totalTarSO = 0;
         let totalActTT = 0, totalActSI = 0, totalActSO = 0;
-        const saleStats = {};
+        let totalChuaPhatAdmin = 0; 
         
-        // Cập nhật lại Biểu đồ: Dữ liệu theo tháng của ngày End
+        const saleStats = {};
         const chartDaysInMonth = new Date(year, month, 0).getDate();
         const dailyStats = Array.from({length: chartDaysInMonth}, (_, i) => ({ day: i+1, si: 0, so: 0 }));
 
         const mienBacRegions = ["tây bắc", "hà nội", "đông bắc", "hồng hà", "bắc trung bộ", "trung trung bộ"];
         const isMienBac = mienBacRegions.includes(norm(regionFilterNorm)); 
 
-        // A. Tính tổng Admin S.I (Target luôn lấy từ Admin, Actual chỉ cộng nếu là miền Nam)
-        const baseDateSI = `${year}-${month}-01`;
-        // Cần fetch target bổ sung từ daily_si_reports nếu ngày baseDateSI không nằm trong khoảng lọc
-        if (startStr > baseDateSI) {
-             const resSITarget = await window.sb.from('daily_si_reports').select('target_ph').eq('report_date', baseDateSI).eq('region_name', regionFilterNorm);
-             if (resSITarget.data && resSITarget.data.length > 0) {
-                 totalTarSI = Number(resSITarget.data[0].target_ph) || 0;
-             }
+        // ===============================================
+        // ĐÃ FIX: SMART FALLBACK - TRÍCH XUẤT HÀNG CHƯA PHÁT VÀ TARGET S.I
+        // Bổ sung lấy cột r.chua_xuat
+        // ===============================================
+        const adminLatestData = resAdminLatest.data || [];
+        for (let r of adminLatestData) {
+            if (getNormalizedRegion(r.region_name) === regionFilterNorm) {
+                const tar = Number(r.target_ph || r.target_si || 0);
+                const cp = Number(r.chua_xuat || r.so_luong_chua_phat || r.chua_phat_hang || r.chua_phat || r.hang_chua_phat || r.sl_chua_phat || 0);
+                
+                if (tar > 0 && totalTarSI === 0) totalTarSI = tar;
+                if (cp > 0 && totalChuaPhatAdmin === 0) totalChuaPhatAdmin = cp;
+                
+                if (totalTarSI > 0 && totalChuaPhatAdmin > 0) break;
+            }
         }
 
+        // A. Xử lý Admin S.I (Actual chỉ cộng nếu là miền Nam)
         siFiltered.forEach(r => {
-            if(r.report_date === baseDateSI) {
-                totalTarSI += Number(r.target_ph) || 0;
-            }
-
             if (!isMienBac) {
                 const tt = Number(r.thanh_toan) || 0;
                 const xh = Number(r.xuat_hang) || 0;
@@ -565,7 +559,7 @@ window.loadDataRegionTab = async function() {
             }
         });
 
-        const totalChuaPhat = Math.max(0, totalTarSI - totalActSI);
+        const totalChuaPhat = totalChuaPhatAdmin;
 
         // 5. Update UI Block 1: Chuỗi vận hành
         document.getElementById('reg-val-tt').innerHTML = `${fmtRegNum(totalActTT)} <span class="text-sm font-bold text-gray-400">xe</span>`;
@@ -574,7 +568,6 @@ window.loadDataRegionTab = async function() {
         document.getElementById('reg-val-cx').innerHTML = `${fmtRegNum(totalChuaPhat)} <span class="text-sm font-bold text-gray-400">xe</span>`;
 
         // 6. Update UI Block 2: Nhịp độ tổng quan
-        // Tính paceIdeal dựa trên ngày endD trong tháng đó
         const currentPassed = endD.getDate(); 
         const paceIdeal = Math.min(100, Math.round(safeDivR(currentPassed, chartDaysInMonth) * 100));
         

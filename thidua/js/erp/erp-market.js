@@ -47,7 +47,7 @@ async function setupErpFilters() {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     
-    // ĐÃ FIX: Mặc định lọc dữ liệu của ngày hôm nay (Từ ngày hiện tại đến ngày hiện tại)
+    // Mặc định lọc dữ liệu của ngày hôm nay (Từ ngày hiện tại đến ngày hiện tại)
     dStart.value = `${yyyy}-${mm}-${dd}`;
     dEnd.value = `${yyyy}-${mm}-${dd}`;
 
@@ -86,11 +86,32 @@ async function fetchAndRenderErpDashboard() {
     let dataTarget = (resTarget.data || []).filter(r => r.report_month && r.report_month.startsWith(startMonth));
 
     const saleToRegionMap = {};
-    shops.forEach(s => { 
-        const sName = s.sale_name || s.sale || s.nhan_vien || s.ten_nvkd || s.nvkd;
-        if (sName) saleToRegionMap[sName.trim().toLowerCase()] = s.area || s.khu_vuc || s.region || 'Khác'; 
-    });
     
+    // --- THÊM LOGIC LỌC DANH SÁCH SALE HỢP LỆ (LOẠI BỎ GIÁM ĐỐC) ---
+    const normalizeDisplayName = (name) => {
+        if (!name) return null;
+        return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
+
+    const validSales = new Set();
+    const directors = new Set();
+
+    shops.forEach(s => { 
+        const sName = normalizeDisplayName(s.sale_name || s.sale || s.nhan_vien || s.ten_nvkd || s.nvkd);
+        const dirName = normalizeDisplayName(s.director_name || s.giam_doc || s.rsm || s.asm);
+        
+        if (dirName) directors.add(dirName);
+        if (sName) {
+            validSales.add(sName);
+            saleToRegionMap[sName.toLowerCase()] = s.area || s.khu_vuc || s.region || 'Khác'; 
+        }
+    });
+
+    // Xóa tất cả các tên trùng với Giám đốc ra khỏi danh sách Sale hợp lệ
+    directors.forEach(dir => validSales.delete(dir));
+
     if (region !== 'ALL') {
         dataSI = dataSI.filter(r => (r.region_name || '').includes(region));
         dataGameSI = dataGameSI.filter(r => {
@@ -110,7 +131,7 @@ async function fetchAndRenderErpDashboard() {
         });
     }
 
-    const agg = calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToRegionMap, dataGameSI);
+    const agg = calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToRegionMap, dataGameSI, validSales);
 
     renderCards(agg);
     renderGauges(agg);
@@ -133,7 +154,8 @@ async function fetchAndRenderErpDashboard() {
     }
 }
 
-function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToRegionMap, dataGameSI) {
+// Bổ sung param validSales vào hàm
+function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToRegionMap, dataGameSI, validSales) {
     const todayStr = end; 
     let prevDate = new Date(todayStr); prevDate.setDate(prevDate.getDate() - 1);
     const yesterdayStr = prevDate.toISOString().split('T')[0];
@@ -164,7 +186,7 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
     const norm = (str) => str ? str.toString().trim().toLowerCase() : "";
     
-    // ĐÃ FIX: Hàm chuẩn hóa tên nhân sự (Title Case) để gộp trùng lặp
+    // Hàm chuẩn hóa tên nhân sự (Title Case)
     const normalizeDisplayName = (name) => {
         if (!name) return null;
         return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
@@ -211,7 +233,8 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
         if (t.sale_name) {
             const dName = normalizeDisplayName(t.sale_name);
-            if (dName) {
+            // THÊM ĐIỀU KIỆN LỌC VALID SALES
+            if (dName && validSales.has(dName)) {
                 if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
                 res.sales[dName].si_tar += safeNum(t.target_si); 
                 res.sales[dName].so_tar += tSO;
@@ -266,7 +289,8 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
         if (r.sale_name) {
             const dName = normalizeDisplayName(r.sale_name);
-            if (dName) {
+            // THÊM ĐIỀU KIỆN LỌC VALID SALES
+            if (dName && validSales.has(dName)) {
                 if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
                 res.sales[dName].si_act += val;
             }
@@ -307,7 +331,8 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
         if (r.sale_name) {
             const dName = normalizeDisplayName(r.sale_name);
-            if (dName) {
+            // THÊM ĐIỀU KIỆN LỌC VALID SALES
+            if (dName && validSales.has(dName)) {
                 if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
                 res.sales[dName].so_act += val;
             }

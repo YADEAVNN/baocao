@@ -45,14 +45,15 @@ window.initErpRegion = async function() {
                         
                         <div class="h-10 w-px bg-gray-200 hidden md:block"></div>
                         
+                        <!-- ĐÃ FIX: CHUYỂN TỪ LỌC THÁNG SANG LỌC TỪ NGÀY ... ĐẾN NGÀY -->
                         <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner">
-                            <div class="pl-2">
-                                <span class="text-[10px] text-gray-400 font-bold uppercase block leading-none mb-1">Chu kỳ</span>
-                                <span class="text-sm font-black text-slate-700">Tháng <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i></span>
+                            <div class="flex items-center gap-2 px-2">
+                                <i class="fa-regular fa-calendar text-gray-400"></i>
+                                <input type="date" id="reg-filter-date-start" onchange="window.loadDataRegionTab()" class="bg-transparent border-none font-black text-slate-800 outline-none cursor-pointer text-sm w-32">
                             </div>
-                            <div class="w-px h-8 bg-gray-200 mx-1"></div>
-                            <div class="flex items-center gap-2 pr-2">
-                                <input type="month" id="reg-filter-month" onchange="window.loadDataRegionTab()" class="bg-transparent border-none font-black text-slate-800 outline-none cursor-pointer text-sm w-32">
+                            <span class="text-gray-400 font-bold">-</span>
+                            <div class="flex items-center gap-2 px-2">
+                                <input type="date" id="reg-filter-date-end" onchange="window.loadDataRegionTab()" class="bg-transparent border-none font-black text-slate-800 outline-none cursor-pointer text-sm w-32">
                                 <i class="fa-regular fa-calendar text-gray-400"></i>
                             </div>
                         </div>
@@ -89,7 +90,7 @@ window.initErpRegion = async function() {
                                         ĐƠN THANH TOÁN
                                     </div>
                                     <div class="text-3xl font-black text-slate-800 mb-2" id="reg-val-tt">0 <span class="text-sm font-bold text-gray-400">xe</span></div>
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Lũy kế tháng (Thực tế)</div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Tổng trong giai đoạn</div>
                                     <div class="absolute bottom-0 left-0 w-full h-1 bg-indigo-500 rounded-b-2xl"></div>
                                 </div>
                                 <div class="hidden md:block text-gray-300"><i class="fa-solid fa-arrow-right-long text-2xl"></i></div>
@@ -100,7 +101,7 @@ window.initErpRegion = async function() {
                                         PHÁT HÀNG (SELLIN)
                                     </div>
                                     <div class="text-3xl font-black text-slate-800 mb-2" id="reg-val-si">0 <span class="text-sm font-bold text-gray-400">xe</span></div>
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Lũy kế tháng (Thực tế)</div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Tổng trong giai đoạn</div>
                                     <div class="absolute bottom-0 left-0 w-full h-1 bg-blue-500 rounded-b-2xl"></div>
                                 </div>
                                 <div class="hidden md:block text-gray-300"><i class="fa-solid fa-arrow-right-long text-2xl"></i></div>
@@ -111,7 +112,7 @@ window.initErpRegion = async function() {
                                         BÁN RA (SELLOUT)
                                     </div>
                                     <div class="text-3xl font-black text-slate-800 mb-2" id="reg-val-so">0 <span class="text-sm font-bold text-gray-400">xe</span></div>
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Lũy kế tháng (Tổng Sale)</div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Tổng trong giai đoạn</div>
                                     <div class="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-b-2xl"></div>
                                 </div>
                                 <div class="hidden md:block text-gray-300"><i class="fa-solid fa-arrow-right-long text-2xl"></i></div>
@@ -132,7 +133,7 @@ window.initErpRegion = async function() {
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                             <h3 class="text-sm font-black text-blue-800 uppercase mb-5 flex items-center gap-2">
                                 <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm">2</span> 
-                                NHỊP ĐỘ TỔNG QUAN
+                                NHỊP ĐỘ TỔNG QUAN (SO VỚI MỤC TIÊU THÁNG GIAO TẠI NGÀY GẦN NHẤT)
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Box SI -->
@@ -198,7 +199,7 @@ window.initErpRegion = async function() {
                             <div class="flex justify-between items-center mb-5">
                                 <h3 class="text-sm font-black text-blue-800 uppercase flex items-center gap-2">
                                     <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm">3</span> 
-                                    NHỊP ĐỘ CHI TIẾT THEO NGÀY (DUAL PACE TIMELINE)
+                                    NHỊP ĐỘ CHI TIẾT THEO NGÀY TRONG THÁNG ĐƯỢC CHỌN
                                 </h3>
                             </div>
                             
@@ -207,7 +208,7 @@ window.initErpRegion = async function() {
                                 <div class="flex items-center gap-2"><span class="w-6 h-0 border-b-2 border-dashed border-gray-400"></span> Kế hoạch lũy kế</div>
                                 <div class="flex items-center gap-2"><span class="w-4 h-0 border-b-2 border-blue-600"></span> Thực đạt (SI)</div>
                                 <div class="flex items-center gap-2"><span class="w-4 h-0 border-b-2 border-emerald-500"></span> Thực đạt (SO)</div>
-                                <div class="flex items-center gap-2 text-red-500"><i class="fa-solid fa-diamond text-[8px]"></i> Hôm nay</div>
+                                <div class="flex items-center gap-2 text-red-500"><i class="fa-solid fa-diamond text-[8px]"></i> Lọc hiện tại</div>
                             </div>
 
                             <div class="space-y-6">
@@ -326,8 +327,12 @@ window.initErpRegion = async function() {
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const monthInput = document.getElementById('reg-filter-month');
-        if (monthInput) monthInput.value = `${yyyy}-${mm}`;
+        const dd = String(today.getDate()).padStart(2, '0');
+        
+        const dStartInput = document.getElementById('reg-filter-date-start');
+        const dEndInput = document.getElementById('reg-filter-date-end');
+        if (dStartInput) dStartInput.value = `${yyyy}-${mm}-01`;
+        if (dEndInput) dEndInput.value = `${yyyy}-${mm}-${dd}`;
     }
 
     await window.loadDataRegionTab();
@@ -335,25 +340,28 @@ window.initErpRegion = async function() {
 
 window.loadDataRegionTab = async function() {
     const regionFilter = document.getElementById('reg-filter-region').value;
-    const monthVal = document.getElementById('reg-filter-month').value;
-    if(!regionFilter || !monthVal) return;
+    const startStr = document.getElementById('reg-filter-date-start').value;
+    const endStr = document.getElementById('reg-filter-date-end').value;
+
+    if(!regionFilter || !startStr || !endStr) return;
+    if(startStr > endStr) {
+        alert("Khoảng thời gian không hợp lệ!");
+        return;
+    }
 
     const lastUpdate = document.getElementById('reg-last-update');
     if(lastUpdate) lastUpdate.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-orange-500"></i> Đang tải...';
 
-    const [year, month] = monthVal.split('-');
-    const startStr = `${year}-${month}-01`;
+    // Dựa vào ngày end để lấy mục tiêu target (Giả định lấy target của tháng của ngày End)
+    const [year, month] = endStr.split('-');
     const daysInMonth = new Date(year, month, 0).getDate();
-    let endStr = `${year}-${month}-${daysInMonth}`;
     
-    const today = new Date();
-    if (today.getFullYear() === parseInt(year) && today.getMonth() + 1 === parseInt(month)) {
-        endStr = today.toISOString().split('T')[0];
-    }
-
+    // Tính toán số ngày dựa vào khoảng thời gian được lọc
     const startD = new Date(startStr);
     const endD = new Date(endStr);
     const daysPassed = Math.max(1, Math.floor((endD - startD) / (1000 * 60 * 60 * 24)) + 1);
+    
+    // Số ngày còn lại tính từ ngày kết thúc của filter đến cuối tháng đó
     const eom = new Date(year, month, 0);
     let daysLeft = Math.floor((eom - endD) / (1000 * 60 * 60 * 24));
     if (daysLeft < 1) daysLeft = 1;
@@ -361,11 +369,12 @@ window.loadDataRegionTab = async function() {
     try {
         // Fetch đa bảng từ Supabase
         const [resSI, resSO, resTarget, resShops, resGameSI] = await Promise.all([
-            window.sb.from('daily_si_reports').select('*').gte('report_date', startStr).lte('report_date', `${year}-${month}-${daysInMonth}`),
-            window.sb.from('daily_so_reports').select('*').gte('report_date', startStr).lte('report_date', `${year}-${month}-${daysInMonth}`),
+            window.sb.from('daily_si_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
+            window.sb.from('daily_so_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
+            // Target vẫn lấy theo nguyên tháng của ngày lọc
             window.sb.from('monthly_sale_targets').select('*').like('report_month', `${year}-${month}%`),
             window.sb.from('master_shop_list').select('sale_name, area, khu_vuc, region, director_name'),
-            window.sb.from('game_si_reports').select('*').gte('report_date', startStr).lte('report_date', `${year}-${month}-${daysInMonth}`)
+            window.sb.from('game_si_reports').select('*').gte('report_date', startStr).lte('report_date', endStr)
         ]);
 
         const rawTarget = resTarget.data || [];
@@ -377,6 +386,14 @@ window.loadDataRegionTab = async function() {
         // 1. Chuẩn hóa tên vùng và tạo Map
         const norm = (str) => str ? str.toString().trim().toLowerCase().replace(/\s+/g, ' ') : "";
         
+        // Chuẩn hóa tên nhân sự (Title Case) để gộp trùng lặp
+        const normalizeDisplayName = (name) => {
+            if (!name) return null;
+            return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        };
+
         const getNormalizedRegion = (rawReg) => {
             const nReg = norm(rawReg);
             if(nReg.includes("tây bắc") || nReg.includes("tay bac")) return "Tây Bắc";
@@ -458,13 +475,24 @@ window.loadDataRegionTab = async function() {
         let totalTarSI = 0, totalTarSO = 0;
         let totalActTT = 0, totalActSI = 0, totalActSO = 0;
         const saleStats = {};
-        const dailyStats = Array.from({length: daysInMonth}, (_, i) => ({ day: i+1, si: 0, so: 0 }));
+        
+        // Cập nhật lại Biểu đồ: Dữ liệu theo tháng của ngày End
+        const chartDaysInMonth = new Date(year, month, 0).getDate();
+        const dailyStats = Array.from({length: chartDaysInMonth}, (_, i) => ({ day: i+1, si: 0, so: 0 }));
 
         const mienBacRegions = ["tây bắc", "hà nội", "đông bắc", "hồng hà", "bắc trung bộ", "trung trung bộ"];
-        const isMienBac = mienBacRegions.includes(norm(regionFilterNorm)); // Đã Fix case sensitive
+        const isMienBac = mienBacRegions.includes(norm(regionFilterNorm)); 
 
         // A. Tính tổng Admin S.I (Target luôn lấy từ Admin, Actual chỉ cộng nếu là miền Nam)
         const baseDateSI = `${year}-${month}-01`;
+        // Cần fetch target bổ sung từ daily_si_reports nếu ngày baseDateSI không nằm trong khoảng lọc
+        if (startStr > baseDateSI) {
+             const resSITarget = await window.sb.from('daily_si_reports').select('target_ph').eq('report_date', baseDateSI).eq('region_name', regionFilterNorm);
+             if (resSITarget.data && resSITarget.data.length > 0) {
+                 totalTarSI = Number(resSITarget.data[0].target_ph) || 0;
+             }
+        }
+
         siFiltered.forEach(r => {
             if(r.report_date === baseDateSI) {
                 totalTarSI += Number(r.target_ph) || 0;
@@ -478,7 +506,7 @@ window.loadDataRegionTab = async function() {
                 totalActSI += xh;
 
                 const dayNum = parseInt(r.report_date.slice(-2));
-                if(dayNum >= 1 && dayNum <= daysInMonth) {
+                if(dayNum >= 1 && dayNum <= chartDaysInMonth) {
                     dailyStats[dayNum-1].si += xh;
                 }
             }
@@ -490,28 +518,28 @@ window.loadDataRegionTab = async function() {
             totalActSO += val;
             
             const dayNum = parseInt(r.report_date.slice(-2));
-            if(dayNum >= 1 && dayNum <= daysInMonth) {
+            if(dayNum >= 1 && dayNum <= chartDaysInMonth) {
                 dailyStats[dayNum-1].so += val;
             }
 
-            const sName = r.sale_name ? r.sale_name.trim() : null;
-            if (sName) {
-                if (!saleStats[sName]) saleStats[sName] = { name: sName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
-                saleStats[sName].actSO += val;
+            const dName = normalizeDisplayName(r.sale_name);
+            if (dName) {
+                if (!saleStats[dName]) saleStats[dName] = { name: dName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
+                saleStats[dName].actSO += val;
             }
         });
 
         // C. Lấy Target của Sale
         targetFiltered.forEach(t => {
-            const sName = t.sale_name ? t.sale_name.trim() : null;
+            const dName = normalizeDisplayName(t.sale_name);
             const tSI = Number(t.target_si) || 0;
             const tSO = Number(t.target_so) || 0;
             totalTarSO += tSO;
             
-            if (sName) {
-                if (!saleStats[sName]) saleStats[sName] = { name: sName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
-                saleStats[sName].tarSI += tSI;
-                saleStats[sName].tarSO += tSO;
+            if (dName) {
+                if (!saleStats[dName]) saleStats[dName] = { name: dName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
+                saleStats[dName].tarSI += tSI;
+                saleStats[dName].tarSO += tSO;
             }
         });
 
@@ -520,10 +548,10 @@ window.loadDataRegionTab = async function() {
             const xh = Number(r.xuat_hang) || 0;
             const tt = Number(r.thanh_toan) || 0;
             
-            const sName = r.sale_name ? r.sale_name.trim() : null;
-            if (sName) {
-                if (!saleStats[sName]) saleStats[sName] = { name: sName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
-                saleStats[sName].actSI += xh;
+            const dName = normalizeDisplayName(r.sale_name);
+            if (dName) {
+                if (!saleStats[dName]) saleStats[dName] = { name: dName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
+                saleStats[dName].actSI += xh;
             }
 
             if (isMienBac) {
@@ -531,7 +559,7 @@ window.loadDataRegionTab = async function() {
                 totalActSI += xh;
 
                 const dayNum = parseInt(r.report_date.slice(-2));
-                if(dayNum >= 1 && dayNum <= daysInMonth) {
+                if(dayNum >= 1 && dayNum <= chartDaysInMonth) {
                     dailyStats[dayNum-1].si += xh;
                 }
             }
@@ -546,7 +574,9 @@ window.loadDataRegionTab = async function() {
         document.getElementById('reg-val-cx').innerHTML = `${fmtRegNum(totalChuaPhat)} <span class="text-sm font-bold text-gray-400">xe</span>`;
 
         // 6. Update UI Block 2: Nhịp độ tổng quan
-        const paceIdeal = Math.min(100, Math.round(safeDivR(daysPassed, daysPassed + daysLeft) * 100));
+        // Tính paceIdeal dựa trên ngày endD trong tháng đó
+        const currentPassed = endD.getDate(); 
+        const paceIdeal = Math.min(100, Math.round(safeDivR(currentPassed, chartDaysInMonth) * 100));
         
         // SI
         const pctSI = Math.round(safeDivR(totalActSI, totalTarSI) * 100);
@@ -628,7 +658,7 @@ window.loadDataRegionTab = async function() {
         }
 
         // 9. Update Chart 3: Dual Pace
-        updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, daysPassed);
+        updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, chartDaysInMonth, currentPassed);
 
         if(lastUpdate) {
             const now = new Date();
@@ -686,7 +716,7 @@ function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, da
         grid: { borderColor: '#f1f5f9', strokeDashArray: 3, padding: { top: 0, bottom: 0, left: 10, right: 10 } },
         legend: { show: false },
         annotations: {
-            xaxis: [{ x: String(daysPassed).padStart(2,'0'), strokeDashArray: 0, borderColor: '#ef4444', label: { borderColor: '#ef4444', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 800 }, text: 'Hôm nay', offsetY: 0 } }]
+            xaxis: [{ x: String(daysPassed).padStart(2,'0'), strokeDashArray: 0, borderColor: '#ef4444', label: { borderColor: '#ef4444', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 800 }, text: 'Lọc hiện tại', offsetY: 0 } }]
         }
     };
 

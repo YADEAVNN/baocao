@@ -47,7 +47,8 @@ async function setupErpFilters() {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     
-    dStart.value = `${yyyy}-${mm}-01`;
+    // ĐÃ FIX: Mặc định lọc dữ liệu của ngày hôm nay (Từ ngày hiện tại đến ngày hiện tại)
+    dStart.value = `${yyyy}-${mm}-${dd}`;
     dEnd.value = `${yyyy}-${mm}-${dd}`;
 
     const defaultRegions = ['Tây Bắc', 'Hà Nội', 'Đông Bắc', 'Hồng Hà', 'Bắc Trung Bộ', 'Trung Trung Bộ', 'Nam Trung Bộ', 'Tây Nguyên', 'Đông Nam', 'Hồ Chí Minh', 'Tây Nam', 'Sông Cửu Long'];
@@ -162,6 +163,15 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
     };
 
     const norm = (str) => str ? str.toString().trim().toLowerCase() : "";
+    
+    // ĐÃ FIX: Hàm chuẩn hóa tên nhân sự (Title Case) để gộp trùng lặp
+    const normalizeDisplayName = (name) => {
+        if (!name) return null;
+        return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
+
     const soRegions = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ"];
     const siRegions = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ", "Nam Trung Bộ", "Tây Nguyên", "Đông Nam", "Hồ Chí Minh", "Tây Nam", "Sông Cửu Long"];
     
@@ -200,9 +210,12 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         }
 
         if (t.sale_name) {
-            if (!res.sales[t.sale_name]) res.sales[t.sale_name] = { name: t.sale_name, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
-            res.sales[t.sale_name].si_tar += safeNum(t.target_si); 
-            res.sales[t.sale_name].so_tar += tSO;
+            const dName = normalizeDisplayName(t.sale_name);
+            if (dName) {
+                if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
+                res.sales[dName].si_tar += safeNum(t.target_si); 
+                res.sales[dName].so_tar += tSO;
+            }
         }
     });
 
@@ -252,8 +265,11 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         res.regions[regAll].si_game_act += val; 
 
         if (r.sale_name) {
-            if (!res.sales[r.sale_name]) res.sales[r.sale_name] = { name: r.sale_name, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
-            res.sales[r.sale_name].si_act += val;
+            const dName = normalizeDisplayName(r.sale_name);
+            if (dName) {
+                if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
+                res.sales[dName].si_act += val;
+            }
         }
 
         if (isMienBac) {
@@ -290,8 +306,11 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         }
 
         if (r.sale_name) {
-            if (!res.sales[r.sale_name]) res.sales[r.sale_name] = { name: r.sale_name, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
-            res.sales[r.sale_name].so_act += val;
+            const dName = normalizeDisplayName(r.sale_name);
+            if (dName) {
+                if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
+                res.sales[dName].so_act += val;
+            }
         }
     });
 
@@ -606,9 +625,6 @@ function renderTopSales(salesObj) {
     autoScrollTable('erp-top-so-body');
 }
 
-// ===============================================
-// ĐÃ CHỈNH SỬA: BẢNG THI ĐUA 12 KHU VỰC SELLIN 
-// ===============================================
 function render12RegionSIChart(regionsObj) {
     const tbody = document.getElementById('erp-12-region-si-body');
     if(!tbody) return;
@@ -622,7 +638,6 @@ function render12RegionSIChart(regionsObj) {
             r.missing = Math.max(0, r.si_tar - (r.si_act || 0));
             return r;
         })
-        // SẮP XẾP THEO TIẾN ĐỘ THAY VÌ THỨ TỰ ĐỊA LÝ (Tạo thành Bảng Xếp Hạng thực tế)
         .sort((a,b) => b.pct - a.pct || b.si_act - a.si_act);
 
     tbody.innerHTML = regions.map((r, i) => {
@@ -647,7 +662,6 @@ function render12RegionSIChart(regionsObj) {
         `;
     }).join('') || '<tr><td colspan="5" class="text-center py-6 text-gray-400">Không có dữ liệu khu vực</td></tr>';
 
-    // Xử lý ghi đè giao diện Header và Thêm Chú thích (Legend)
     const table = tbody.closest('table');
     if (table) {
         const thead = table.querySelector('thead');
@@ -663,7 +677,6 @@ function render12RegionSIChart(regionsObj) {
             `;
         }
         
-        // Tự động chèn Chú thích (Legend) nếu chưa có
         const card = table.closest('.bg-white');
         if (card) {
             const headerFlex = card.querySelector('.flex.justify-between');

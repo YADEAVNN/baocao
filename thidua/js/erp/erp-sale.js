@@ -31,6 +31,14 @@ window.renderErpSalePersonal = async () => {
             window.STATE.globalAssignedShops = shops || [];
         }
 
+        // ĐÃ FIX: Hàm chuẩn hóa tên nhân sự (Title Case) để gộp trùng lặp
+        const normalizeDisplayName = (name) => {
+            if (!name) return null;
+            return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        };
+
         // 2. Lấy thông tin User & Phân quyền
         const user = window.STATE?.currentUser || { full_name: "Chưa xác định", region: "Khác", role: "Sale" };
         const role = user.role || '';
@@ -39,53 +47,70 @@ window.renderErpSalePersonal = async () => {
 
         let availableSales = [];
         if (role === 'Admin') {
-            availableSales = [...new Set(allShops.map(s => s.sale_name).filter(Boolean))];
+            availableSales = [...new Set(allShops.map(s => normalizeDisplayName(s.sale_name)).filter(Boolean))];
         } else if (role === 'RSM' || role === 'Giám đốc' || role.toLowerCase().includes('giám đốc') || role.toLowerCase().includes('gđ')) {
             const filteredShops = allShops.filter(s => {
                 const dirDB = (s.director_name || '').trim().toLowerCase();
                 return dirDB === nameNorm || dirDB.includes(nameNorm);
             });
-            availableSales = [...new Set(filteredShops.map(s => s.sale_name).filter(Boolean))];
+            availableSales = [...new Set(filteredShops.map(s => normalizeDisplayName(s.sale_name)).filter(Boolean))];
         } else {
-            availableSales = [user.full_name];
+            availableSales = [normalizeDisplayName(user.full_name)];
         }
 
         availableSales.sort();
 
         // Ghi nhớ lựa chọn hiện tại
-        let selectedSale = window.STATE.erpSelectedSale || user.full_name;
+        let selectedSale = window.STATE.erpSelectedSale || normalizeDisplayName(user.full_name);
         if (!availableSales.includes(selectedSale) && availableSales.length > 0) {
             selectedSale = availableSales[0]; // Mặc định chọn sale đầu tiên nếu Admin/RSM chưa chọn
         }
         window.STATE.erpSelectedSale = selectedSale;
 
         // Lấy Khu vực tương ứng với Sale đang được xem
-        const targetShop = allShops.find(s => s.sale_name === selectedSale);
+        const targetShop = allShops.find(s => normalizeDisplayName(s.sale_name) === selectedSale);
         const regionName = targetShop ? (targetShop.area || targetShop.khu_vuc || targetShop.region) : (user.region || 'Khác');
 
-        // 3. Tính toán thời gian (Theo Tháng Hiện Tại)
+        // 3. Tính toán thời gian (Theo Bộ lọc ngày)
         const today = new Date();
-        const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth() + 1;
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        
+        let startStr = window.STATE.erpSaleStart || `${yyyy}-${mm}-01`;
+        let endStr = window.STATE.erpSaleEnd || `${yyyy}-${mm}-${dd}`;
+
+        const [startYear, startMonth] = startStr.split('-');
+        const [endYear, endMonth] = endStr.split('-');
+        
+        // Target mặc định sẽ tính theo tháng của ngày cuối cùng (endStr)
+        const currentYear = parseInt(endYear);
+        const currentMonth = parseInt(endMonth);
+        const currentMonthPrefix = `${endYear}-${endMonth}`;
         
         const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-        const daysPassed = Math.min(today.getDate(), daysInMonth);
-        const daysLeft = Math.max(0, daysInMonth - daysPassed);
+        
+        const startD = new Date(startStr);
+        const endD = new Date(endStr);
+        const daysPassed = Math.max(1, Math.floor((endD - startD) / (1000 * 60 * 60 * 24)) + 1);
+        
+        // Số ngày còn lại tính từ ngày kết thúc của filter đến cuối tháng đó
+        const eom = new Date(currentYear, currentMonth, 0);
+        let daysLeft = Math.floor((eom - endD) / (1000 * 60 * 60 * 24));
+        if (daysLeft < 1) daysLeft = 1;
 
-        const mStartStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
-        const mEndStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
-        const currentMonthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-
-        // 4. Fetch Dữ Liệu Từ Supabase theo `selectedSale` (Đã được lọc)
+        // 4. Fetch Dữ Liệu Từ Supabase
+        // Gộp tên khi truy vấn: Chúng ta lấy toàn bộ dữ liệu rồi lọc bằng JS để đảm bảo case-insensitive
         const [soRes, siRes, tgtRes] = await Promise.all([
-            window.sb.from('daily_so_reports').select('*').eq('sale_name', selectedSale).gte('report_date', mStartStr).lte('report_date', mEndStr),
-            window.sb.from('game_si_reports').select('*').eq('sale_name', selectedSale).gte('report_date', mStartStr).lte('report_date', mEndStr),
-            window.sb.from('monthly_sale_targets').select('*').eq('sale_name', selectedSale)
+            window.sb.from('daily_so_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
+            window.sb.from('game_si_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
+            window.sb.from('monthly_sale_targets').select('*')
         ]);
 
-        const soData = soRes.data || [];
-        const siData = siRes.data || [];
-        const tgtData = tgtRes.data || [];
+        // Lọc lại dữ liệu chính xác theo Sale (sau khi đã chuẩn hóa tên)
+        const soData = (soRes.data || []).filter(r => normalizeDisplayName(r.sale_name) === selectedSale);
+        const siData = (siRes.data || []).filter(r => normalizeDisplayName(r.sale_name) === selectedSale);
+        const tgtData = (tgtRes.data || []).filter(r => normalizeDisplayName(r.sale_name) === selectedSale);
 
         // 5. Tính toán Kế Hoạch (Target Tháng)
         let targetSO = 0, targetSI = 0;
@@ -103,19 +128,20 @@ window.renderErpSalePersonal = async () => {
         // 6. Tính toán Thực Đạt (Actuals)
         let actualSO = 0, actualSI = 0, actualTT = 0;
         let yesterdaySO = 0, yesterdaySI = 0;
-        let dYesterday = new Date(today);
+        
+        let dYesterday = new Date(endD);
         dYesterday.setDate(dYesterday.getDate() - 1);
         let yesterdayStr = `${dYesterday.getFullYear()}-${String(dYesterday.getMonth() + 1).padStart(2, '0')}-${String(dYesterday.getDate()).padStart(2, '0')}`;
 
         soData.forEach(r => {
             actualSO += Number(r.total_so || 0);
-            if(r.report_date !== today.toISOString().split('T')[0]) yesterdaySO += Number(r.total_so || 0);
+            if(r.report_date !== endStr) yesterdaySO += Number(r.total_so || 0);
         });
         
         siData.forEach(r => {
             actualSI += Number(r.xuat_hang || 0);
             actualTT += Number(r.thanh_toan || 0);
-            if(r.report_date !== today.toISOString().split('T')[0]) yesterdaySI += Number(r.xuat_hang || 0);
+            if(r.report_date !== endStr) yesterdaySI += Number(r.xuat_hang || 0);
         });
 
         // 7. Xử lý Chỉ số Hiệu Suất, Áp Lực & DỰ BÁO (Forecast)
@@ -160,6 +186,8 @@ window.renderErpSalePersonal = async () => {
         let dailyTargetSI = targetSI / daysInMonth;
         let dailyTargetSO = targetSO / daysInMonth;
 
+        const currentPassed = endD.getDate();
+
         for (let i = 1; i <= daysInMonth; i++) {
             chartCategories.push(String(i).padStart(2, '0'));
             let dStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
@@ -169,7 +197,7 @@ window.renderErpSalePersonal = async () => {
             cumPlanSO.push(Math.round(dailyTargetSO * i));
 
             // Thực tế
-            if (i <= daysPassed) {
+            if (i <= currentPassed) {
                 let d_si = siData.filter(r => r.report_date === dStr).reduce((sum, r) => sum + Number(r.xuat_hang || 0), 0);
                 let d_so = soData.filter(r => r.report_date === dStr).reduce((sum, r) => sum + Number(r.total_so || 0), 0);
                 
@@ -191,7 +219,7 @@ window.renderErpSalePersonal = async () => {
         // 9. Lấy 7 Ngày Gần Nhất
         let last7DaysHtml = '';
         for (let i = 0; i < 7; i++) {
-            let d = new Date();
+            let d = new Date(endD);
             d.setDate(d.getDate() - i);
             let dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             let displayDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -217,11 +245,17 @@ window.renderErpSalePersonal = async () => {
             `;
         }
 
+        window.updateErpSaleDates = () => {
+            window.STATE.erpSaleStart = document.getElementById('sale-filter-date-start').value;
+            window.STATE.erpSaleEnd = document.getElementById('sale-filter-date-end').value;
+            window.renderErpSalePersonal();
+        };
+
         // 10. RENDER GIAO DIỆN HTML
         container.innerHTML = `
             <div class="w-full bg-white pb-28 font-sans max-w-5xl mx-auto fade-in shadow-xl rounded-t-3xl overflow-hidden mt-6 border border-gray-200">
                 <!-- HEADER NGƯỜI ĐĂNG NHẬP -->
-                <div class="flex justify-between items-center p-5 border-b border-gray-100 bg-white sticky top-0 z-10">
+                <div class="flex justify-between items-center p-5 border-b border-gray-100 bg-white sticky top-0 z-10 flex-wrap gap-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center border border-orange-200 shrink-0">
                             <img src="https://xcfnmqnwbydohlopmcaa.supabase.co/storage/v1/object/public/website-assets/logo%20YADEA.png" class="w-6 object-contain">
@@ -231,13 +265,23 @@ window.renderErpSalePersonal = async () => {
                             <p class="text-[11px] text-gray-500 font-medium">${user.role} - Khu vực: <span class="font-bold text-slate-700">${user.region || 'Khác'}</span></p>
                         </div>
                     </div>
-                    <div class="flex gap-3 items-center">
-                        <div class="relative cursor-pointer hover:bg-gray-100 p-2 rounded-full transition border border-gray-200 bg-gray-50">
+                    <div class="flex gap-3 items-center ml-auto">
+                        <!-- BỘ LỌC NGÀY CHO SALE -->
+                        <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-1 shadow-inner mr-2">
+                            <div class="flex items-center gap-1 px-1">
+                                <i class="fa-regular fa-calendar text-gray-400 text-xs"></i>
+                                <input type="date" id="sale-filter-date-start" value="${startStr}" onchange="window.updateErpSaleDates()" class="bg-transparent border-none font-bold text-slate-800 outline-none cursor-pointer text-[11px] w-24">
+                            </div>
+                            <span class="text-gray-400 font-bold">-</span>
+                            <div class="flex items-center gap-1 px-1">
+                                <input type="date" id="sale-filter-date-end" value="${endStr}" onchange="window.updateErpSaleDates()" class="bg-transparent border-none font-bold text-slate-800 outline-none cursor-pointer text-[11px] w-24">
+                                <i class="fa-regular fa-calendar text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <div class="relative cursor-pointer hover:bg-gray-100 p-2 rounded-full transition border border-gray-200 bg-gray-50 hidden sm:block">
                             <i class="fa-regular fa-bell text-lg text-slate-600"></i>
                             <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border border-white">3</span>
-                        </div>
-                        <div class="cursor-pointer hover:bg-gray-100 p-2 rounded-full transition border border-gray-200 bg-gray-50">
-                            <i class="fa-regular fa-calendar text-lg text-slate-600"></i>
                         </div>
                     </div>
                 </div>
@@ -253,7 +297,7 @@ window.renderErpSalePersonal = async () => {
                             <label class="text-[10px] font-black text-blue-600 uppercase block mb-1">Xem báo cáo cá nhân của NVKD:</label>
                             <select onchange="window.changeErpSaleFilter(this.value)" class="w-full bg-white border border-blue-200 text-slate-800 text-sm md:text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-black outline-none shadow-sm cursor-pointer">
                                 ${availableSales.map(s => {
-                                    const r = allShops.find(x => x.sale_name === s);
+                                    const r = allShops.find(x => normalizeDisplayName(x.sale_name) === s);
                                     const rName = r ? (r.area || r.khu_vuc || 'Khác') : 'Khác';
                                     return '<option value="' + s + '" ' + (s === selectedSale ? 'selected' : '') + '>' + s + ' - ' + rName + '</option>';
                                 }).join('')}
@@ -365,7 +409,7 @@ window.renderErpSalePersonal = async () => {
                     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
                         <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2 border-b border-gray-100 pb-3 mb-5">
                             <span class="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-[10px]">2</span> 
-                            TIẾN ĐỘ THÁNG ${currentMonth} <span class="text-[10px] font-bold text-gray-400 ml-1">(01/${String(currentMonth).padStart(2,'0')} - ${String(daysInMonth).padStart(2,'0')}/${String(currentMonth).padStart(2,'0')})</span>
+                            TIẾN ĐỘ TRONG GIAI ĐOẠN ĐƯỢC CHỌN
                         </h3>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -423,7 +467,7 @@ window.renderErpSalePersonal = async () => {
                     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
                         <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2 border-b border-gray-100 pb-3 mb-4">
                             <span class="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-[10px]">3</span> 
-                            NHỊP ĐỘ CHI TIẾT THEO NGÀY (DUAL PACE TIMELINE)
+                            NHỊP ĐỘ CHI TIẾT THEO NGÀY TRONG THÁNG (CỦA NGÀY LỌC)
                         </h3>
                         
                         <!-- Chú thích (Legend) cập nhật cho biểu đồ kết hợp -->
@@ -433,7 +477,7 @@ window.renderErpSalePersonal = async () => {
                             <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-blue-300 rounded-[3px]"></div> Nhập ngày (SI)</div>
                             <div class="flex items-center gap-1.5"><div class="w-5 border-b-[3px] border-green-600"></div> Lũy kế (SO)</div>
                             <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-green-300 rounded-[3px]"></div> Nhập ngày (SO)</div>
-                            <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rotate-45 bg-red-500"></div> Hôm nay</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rotate-45 bg-red-500"></div> Lọc hiện tại</div>
                         </div>
 
                         <!-- SI Chart Row -->
@@ -538,7 +582,7 @@ window.renderErpSalePersonal = async () => {
                             <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
                                 <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
                                     <span class="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-[10px]">5</span> 
-                                    KẾT QUẢ 7 NGÀY GẦN NHẤT
+                                    KẾT QUẢ 7 NGÀY (TRƯỚC NGÀY LỌC)
                                 </h3>
                                 <button onclick="window.switchErpTab('market')" class="text-[11px] font-bold text-blue-500 hover:underline outline-none bg-blue-50 px-2 py-1 rounded">Xem chi tiết <i class="fa-solid fa-chevron-right text-[9px] ml-0.5"></i></button>
                             </div>
@@ -633,10 +677,10 @@ window.renderErpSalePersonal = async () => {
                     },
                     annotations: {
                         xaxis: [{
-                            x: String(daysPassed).padStart(2, '0'),
+                            x: String(currentPassed).padStart(2, '0'),
                             borderColor: '#ef4444',
                             strokeDashArray: 0,
-                            label: { text: 'Hôm nay', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 'bold', padding: { left: 4, right: 4, top: 2, bottom: 2 } }, orientation: 'horizontal' }
+                            label: { text: 'Lọc hiện tại', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 'bold', padding: { left: 4, right: 4, top: 2, bottom: 2 } }, orientation: 'horizontal' }
                         }]
                     }
                 };
@@ -664,10 +708,10 @@ window.renderErpSalePersonal = async () => {
                     },
                     annotations: {
                         xaxis: [{
-                            x: String(daysPassed).padStart(2, '0'),
+                            x: String(currentPassed).padStart(2, '0'),
                             borderColor: '#ef4444',
                             strokeDashArray: 0,
-                            label: { text: 'Hôm nay', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 'bold', padding: { left: 4, right: 4, top: 2, bottom: 2 } }, orientation: 'horizontal' }
+                            label: { text: 'Lọc hiện tại', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 'bold', padding: { left: 4, right: 4, top: 2, bottom: 2 } }, orientation: 'horizontal' }
                         }]
                     }
                 };

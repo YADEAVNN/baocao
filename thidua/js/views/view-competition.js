@@ -138,22 +138,27 @@ window.renderSaleLeaderboard = async () => {
 
         let reports = [];
         let targetData = [];
+        let shops = [];
 
         if (type === 'SO') {
-            const [resSO, resTarget] = await Promise.all([
+            const [resSO, resTarget, resShops] = await Promise.all([
                 window.sb.from('daily_so_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
-                window.sb.from('monthly_sale_targets').select('*')
+                window.sb.from('monthly_sale_targets').select('*'),
+                window.sb.from('master_shop_list').select('*')
             ]);
             reports = resSO.data || [];
             targetData = resTarget.data || [];
+            shops = resShops.data || [];
         } else {
             // Lấy dữ liệu thi đua S.I từ bảng game_si_reports
-            const [resSI, resTarget] = await Promise.all([
+            const [resSI, resTarget, resShops] = await Promise.all([
                 window.sb.from('game_si_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
-                window.sb.from('monthly_sale_targets').select('*')
+                window.sb.from('monthly_sale_targets').select('*'),
+                window.sb.from('master_shop_list').select('*')
             ]);
             reports = resSI.data || [];
             targetData = resTarget.data || [];
+            shops = resShops.data || [];
         }
 
         // --- FIX: Hàm chuẩn hóa tên nhân viên để gộp chung ---
@@ -164,11 +169,19 @@ window.renderSaleLeaderboard = async () => {
                 .join(' ');
         };
 
+        // --- FIX: Chỉ lấy danh sách NVKD thực sự (có trong master_shop_list) ---
+        const validSales = new Set();
+        shops.forEach(s => {
+            const name = normalizeName(s.sale_name || s.sale || s.nhan_vien || s.ten_nvkd || s.nvkd);
+            if (name) validSales.add(name);
+        });
+
         let saleStats = {};
 
         targetData.forEach(row => {
             const name = normalizeName(row.sale_name); // Gọi hàm chuẩn hóa
-            if (name) {
+            // Chỉ thêm vào bảng xếp hạng nếu có trong danh sách hợp lệ
+            if (name && validSales.has(name)) {
                 if (!saleStats[name]) saleStats[name] = { name: name, target: 0, actual: 0 };
                 if (type === 'SO') {
                     saleStats[name].target += Number(row.target_so || 0);
@@ -180,15 +193,16 @@ window.renderSaleLeaderboard = async () => {
 
         reports.forEach(row => {
             const name = normalizeName(row.sale_name); // Gọi hàm chuẩn hóa
-            let val = 0;
-            
-            if (type === 'SO') {
-                val = Number(row.total_so || row.so_luong || row.ban_ra || 0);
-            } else {
-                val = Number(row.xuat_hang || 0);
-            }
+            // Chỉ thêm vào bảng xếp hạng nếu có trong danh sách hợp lệ
+            if (name && validSales.has(name)) {
+                let val = 0;
+                
+                if (type === 'SO') {
+                    val = Number(row.total_so || row.so_luong || row.ban_ra || 0);
+                } else {
+                    val = Number(row.xuat_hang || 0);
+                }
 
-            if (name) {
                 if (!saleStats[name]) saleStats[name] = { name: name, target: 0, actual: 0 };
                 saleStats[name].actual += val;
             }

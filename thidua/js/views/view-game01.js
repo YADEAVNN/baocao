@@ -74,7 +74,7 @@ export const game01HTML = `
             <div class="p-5 border-b border-gray-100 flex justify-between items-center">
                 <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
                     BẢNG XẾP HẠNG THƯỞNG HÔM NAY (<span id="g1-display-date">--/--</span>) 
-                    <i class="fa-solid fa-circle-info text-orange-400 text-xs" title="Nhập muộn/bù không được tính số. Bắt buộc nhập trong ngày!"></i>
+                    <i class="fa-solid fa-circle-info text-orange-400 text-xs" title="Phải được duyệt và nhập trong ngày mới được tính!"></i>
                 </h2>
                 <select id="g1-status-filter" onchange="window.renderGame01Table()" class="bg-gray-50 border border-gray-200 text-xs font-bold py-1.5 px-3 rounded-lg outline-none">
                     <option value="ALL">Tất cả trạng thái</option>
@@ -295,8 +295,10 @@ window.loadGame01Data = async () => {
                 let actualForGame = 0;
 
                 saleReports.forEach(r => {
-                    // XỬ LÝ LUẬT SẮT: CHỈ LẤY BÁO CÁO CẬP NHẬT TRONG NGÀY
-                    // Trích xuất created_at (thời gian click gửi thực tế)
+                    // XỬ LÝ LUẬT SẮT 1: CHỈ LẤY CÁC BÁO CÁO ĐÃ ĐƯỢC DUYỆT (Loại bỏ pending, rejected)
+                    if (r.status !== 'approved') return;
+
+                    // XỬ LÝ LUẬT SẮT 2: CHỈ LẤY BÁO CÁO CẬP NHẬT TRONG NGÀY
                     let createdStr = r.created_at || r.inserted_at;
                     if (createdStr) {
                         let createdDateObj = new Date(createdStr);
@@ -307,9 +309,7 @@ window.loadGame01Data = async () => {
                         if (vnTimeStr <= dDateStr) {
                             actualForGame += Number(r.total_so || 0);
                         }
-                        // Nếu lớn hơn, đồng nghĩa với NHẬP BÙ -> Disqualify (Bị 0 điểm, không cộng vào Game)
                     } else {
-                        // Dự phòng nếu DB thiếu field created_at
                         actualForGame += Number(r.total_so || 0);
                     }
                 });
@@ -391,19 +391,16 @@ window.loadGame01Data = async () => {
         document.getElementById('g1-fund-today').innerText = fmt(todayFund);
         document.getElementById('g1-fund-calc').innerText = `(${todayFailCount} lượt x 50.000đ)`;
         
-        // Quỹ Tích Lũy Bằng Số Thực
         document.getElementById('g1-fund-accum').innerText = fmt(totalAccumFund);
 
-        // Progress Mục Tiêu
         document.getElementById('g1-goal-bar').style.width = `${Math.min(100, passPct)}%`;
         document.getElementById('g1-goal-text').innerText = `${passPct}% (Mục tiêu > 80%)`;
         
-        // Lấy tổng số lượt bị Fail từ đầu tháng làm Nhắc nợ quỹ
         let totalDebtDays = finalStats.reduce((sum, s) => sum + s.debtDays, 0);
         document.getElementById('g1-debt-count').innerText = totalDebtDays;
 
         window.renderGame01Table();
-        window.renderGame01Charts(totalAccumFund); // Vẽ biểu đồ bằng Quỹ tích lũy
+        window.renderGame01Charts(totalAccumFund); 
 
     } catch (err) {
         console.error(err);
@@ -435,7 +432,6 @@ window.renderGame01Table = () => {
             ? `<div class="inline-flex items-center gap-1.5 bg-green-50 text-green-600 border border-green-200 px-3 py-1 rounded-full text-[10px] font-black uppercase"><i class="fa-solid fa-circle-check"></i> Đạt</div>` 
             : `<div class="inline-flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded-full text-[10px] font-black uppercase"><i class="fa-solid fa-circle-xmark"></i> Không đạt</div>`;
         
-        // Nợ lũy kế thay vì nợ ngày
         const debtHtml = s.accumDebt === 0
             ? `<span class="text-green-600 font-bold">0đ</span><br><span class="text-[9px] text-gray-400">Đủ</span>`
             : `<span class="text-red-500 font-black">${fmt(s.accumDebt)}đ</span><br><span class="text-[9px] text-gray-400">Nợ ${s.debtDays} lượt</span>`;
@@ -501,12 +497,11 @@ window.renderGame01Charts = (totalFund) => {
         const el = document.querySelector("#g1-donut-chart");
         el.innerHTML = ''; 
         
-        // Quỹ chưa ai đóng tiền nên full Cam
         const unPaid = totalFund; 
         document.getElementById('g1-donut-unpaid').innerText = Number(unPaid).toLocaleString('vi-VN') + 'đ';
 
         const options = {
-            series: [unPaid, 0, 0], // Chưa TT, ASM, RSM
+            series: [unPaid, 0, 0], 
             labels: ['Chưa thanh toán', 'ASM xác nhận', 'RSM xác nhận'],
             chart: { type: 'donut', height: 160, fontFamily: 'Inter, sans-serif' },
             colors: ['#fb923c', '#3b82f6', '#9333ea'],
@@ -542,7 +537,7 @@ window.showDebtModal = () => {
     const tbody = document.getElementById('g1-debt-body');
     const fmt = n => Math.round(Number(n)).toLocaleString('vi-VN');
 
-    // 1. Tính Thực nợ = Nợ lũy kế - Thưởng lũy kế
+    // Tính Thực nợ = Nợ lũy kế - Thưởng lũy kế
     const debtList = data.map(s => {
         return {
             name: s.name,
@@ -552,12 +547,11 @@ window.showDebtModal = () => {
             netDebt: s.accumDebt - s.accumReward // THỰC NỢ
         };
     })
-    // 2. Chỉ hiển thị những ai có Thực nợ > 0đ, sắp xếp từ nợ nhiều xuống nợ ít
     .filter(s => s.netDebt > 0)
     .sort((a, b) => b.netDebt - a.netDebt);
 
     if (debtList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-gray-500 font-bold">Tất cả đều đã trừ cấn trừ xong. Không có ai đang nợ quỹ.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-gray-500 font-bold">Tất cả đều đã cấn trừ xong. Không có ai đang nợ quỹ.</td></tr>';
     } else {
         tbody.innerHTML = debtList.map(s => `
             <tr class="hover:bg-orange-50/30 transition">
@@ -582,7 +576,6 @@ window.closeDebtModal = () => {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     
-    // Reset nút Copy
     const btnCopy = document.getElementById('btn-copy-debt');
     if(btnCopy) {
         btnCopy.innerHTML = '<i class="fa-regular fa-copy"></i> COPY GỬI ZALO GROUP';

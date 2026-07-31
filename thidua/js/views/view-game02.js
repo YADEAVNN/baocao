@@ -52,17 +52,17 @@ export const game02HTML = `
                 <div class="flex justify-between relative z-10 text-center">
                     <div class="flex flex-col items-center">
                         <div class="w-4 h-4 rounded-full bg-gray-400 border-2 border-white mb-1"></div>
-                        <span class="text-[9px] font-black text-gray-800">01/07</span>
+                        <span class="text-[9px] font-black text-gray-800 dyn-m01">01/MM</span>
                         <span class="text-[8px] text-gray-500 font-bold uppercase mt-1">Giai đoạn 1<br>(Tích lũy)</span>
                     </div>
                     <div class="flex flex-col items-center">
                         <div class="w-4 h-4 rounded-full bg-orange-500 border-2 border-white mb-1 shadow-[0_0_0_2px_#fed7aa]"></div>
-                        <span class="text-[9px] font-black text-orange-600">15/07</span>
+                        <span class="text-[9px] font-black text-orange-600 dyn-m15">15/MM</span>
                         <span class="text-[8px] text-orange-500 font-bold uppercase mt-1">Giai đoạn 2<br>(Chốt phe)</span>
                     </div>
                     <div class="flex flex-col items-center">
                         <div class="w-4 h-4 rounded-full bg-gray-400 border-2 border-white mb-1"></div>
-                        <span class="text-[9px] font-black text-gray-800">31/07</span>
+                        <span class="text-[9px] font-black text-gray-800 dyn-mend">End/MM</span>
                         <span class="text-[8px] text-gray-500 font-bold uppercase mt-1">Tổng kết<br>(Trao giải)</span>
                     </div>
                 </div>
@@ -71,7 +71,7 @@ export const game02HTML = `
 
         <!-- Thẻ 3: Trạng thái phe -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <p class="text-[10px] font-black text-gray-400 uppercase mb-3 text-center">TRẠNG THÁI PHE (SAU 15/07)</p>
+            <p class="text-[10px] font-black text-gray-400 uppercase mb-3 text-center">TRẠNG THÁI PHE (SAU <span class="dyn-m15">15/MM</span>)</p>
             <div class="flex gap-2">
                 <div class="flex-1 border border-green-200 bg-green-50/50 rounded-lg p-2 text-center">
                     <p class="text-[10px] font-black text-green-700 uppercase">CHÍNH DIỆN</p>
@@ -90,7 +90,7 @@ export const game02HTML = `
                     <p class="text-[9px] text-gray-500 font-bold">Khu vực</p>
                 </div>
             </div>
-            <p class="text-[8px] text-gray-400 text-center mt-2 italic">*Phe được cố định dựa trên BXH ngày 15/07</p>
+            <p class="text-[8px] text-gray-400 text-center mt-2 italic">*Phe được cố định dựa trên BXH ngày <span class="dyn-m15">15/MM</span></p>
         </div>
 
         <!-- Thẻ 4: Tiến độ Target chung -->
@@ -113,17 +113,17 @@ export const game02HTML = `
                     <tr>
                         <th class="py-3 px-2 w-10 border-r border-gray-700">#</th>
                         <th class="py-3 px-3 text-left border-r border-gray-700">KHU VỰC</th>
-                        <th class="py-3 px-2 w-16 border-r border-gray-700">PHE<br><span class="text-[8px] font-normal">(SAU 15/07)</span></th>
+                        <th class="py-3 px-2 w-16 border-r border-gray-700">PHE<br><span class="text-[8px] font-normal">(SAU <span class="dyn-m15">15/MM</span>)</span></th>
                         <th class="py-3 px-2 border-r border-gray-700">CHỈ TIÊU<br>THÁNG</th>
                         <th class="py-3 px-2 border-r border-gray-700 text-green-400">THỰC ĐẠT</th>
                         <th class="py-3 px-2 border-r border-gray-700 text-orange-400">TIẾN ĐỘ<br>HIỆN TẠI (%)</th>
                         <th class="py-3 px-4 border-r border-gray-700 min-w-[250px]">
                             <div class="flex justify-between text-[8px] text-gray-400 mb-1">
-                                <span>01</span> <span>08</span> <span>15</span> <span>22</span> <span>31</span>
+                                <span>01</span> <span>08</span> <span>15</span> <span>22</span> <span class="dyn-dend">End</span>
                             </div>
                             TIẾN ĐỘ THEO THỜI GIAN (%)
                         </th>
-                        <th class="py-3 px-2 border-r border-gray-700">THỨ HẠNG<br>15/07</th>
+                        <th class="py-3 px-2 border-r border-gray-700">THỨ HẠNG<br><span class="dyn-m15">15/MM</span></th>
                         <th class="py-3 px-2 border-r border-gray-700 text-orange-400">THỨ HẠNG<br>HIỆN TẠI</th>
                         <th class="py-3 px-3 bg-green-900/40 border-r border-gray-700 text-green-400">DỰ BÁO GIẢI THƯỞNG<br><span class="text-[8px] font-normal text-gray-400" id="g2-reward-date"></span></th>
                         <th class="py-3 px-3 bg-red-900/40 text-red-400">DỰ BÁO HÌNH PHẠT<br><span class="text-[8px] font-normal text-gray-400">(TÀI TRỢ PICKLEBALL)</span></th>
@@ -143,11 +143,11 @@ export const game02HTML = `
             <div class="space-y-3 text-[11px]">
                 <div>
                     <p class="font-black text-green-700 mb-1 flex items-center gap-1"><i class="fa-solid fa-shield-halved"></i> PHE CHÍNH DIỆN</p>
-                    <p class="text-gray-600 leading-tight">Chỉ 04 khu vực có thứ hạng cao nhất (tính đến 15/07) mới có quyền tranh Giải Nhất - Nhì - Ba.</p>
+                    <p class="text-gray-600 leading-tight">Chỉ 04 khu vực có thứ hạng cao nhất (tính đến <span class="dyn-m15 font-bold">15/MM</span>) mới có quyền tranh Giải Nhất - Nhì - Ba.</p>
                 </div>
                 <div>
                     <p class="font-black text-red-600 mb-1 flex items-center gap-1"><i class="fa-solid fa-skull"></i> PHE PHẢN DIỆN</p>
-                    <p class="text-gray-600 leading-tight">02 khu vực chót bảng ngày 15/07. Không được tranh Nhất/Nhì/Ba. Chỉ có cơ hội đạt <span class="font-bold text-red-600">Giải Hồi Sinh</span> nếu hoàn thành ≥ 100% chỉ tiêu và dẫn đầu nhóm Phản Diện.</p>
+                    <p class="text-gray-600 leading-tight">02 khu vực chót bảng ngày <span class="dyn-m15 font-bold">15/MM</span>. Không được tranh Nhất/Nhì/Ba. Chỉ có cơ hội đạt <span class="font-bold text-red-600">Giải Hồi Sinh</span> nếu hoàn thành ≥ 100% chỉ tiêu và dẫn đầu nhóm Phản Diện.</p>
                 </div>
             </div>
         </div>
@@ -221,6 +221,12 @@ window.loadGame02Data = async () => {
         currentDayNum = 0; 
     }
 
+    // UPDATE CÁC TEXT NGÀY THÁNG ĐỘNG
+    document.querySelectorAll('.dyn-m01').forEach(el => el.innerText = `01/${monthStr}`);
+    document.querySelectorAll('.dyn-m15').forEach(el => el.innerText = `15/${monthStr}`);
+    document.querySelectorAll('.dyn-mend').forEach(el => el.innerText = `${String(daysInMonth).padStart(2, '0')}/${monthStr}`);
+    document.querySelectorAll('.dyn-dend').forEach(el => el.innerText = String(daysInMonth).padStart(2, '0'));
+
     document.getElementById('g2-update-time').innerText = `(Cập nhật ngày ${String(currentDayNum).padStart(2, '0')}/${monthStr})`;
     document.getElementById('g2-reward-date').innerText = `(CẤP NHẬT ${String(currentDayNum).padStart(2, '0')}/${monthStr})`;
 
@@ -231,8 +237,6 @@ window.loadGame02Data = async () => {
         const startDate = `${yearStr}-${monthStr}-01`;
         const endDate = `${yearStr}-${monthStr}-${String(daysInMonth).padStart(2, '0')}`;
 
-        // FIX 1: Lấy toàn bộ số lượng S.O (Không lọc status=approved nữa để đồng bộ 100% với màn ERP)
-        // FIX 2: Rút toàn bộ Target về Javascript để lọc thủ công tránh lỗi column
         const [resSO, resTarget, resShops] = await Promise.all([
             window.sb.from('daily_so_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
             window.sb.from('monthly_sale_targets').select('*'),
@@ -271,12 +275,12 @@ window.loadGame02Data = async () => {
             "bùi minh trung": "Trung Trung Bộ"
         };
 
-        // Khởi tạo cấu trúc dữ liệu cho 6 khu vực
+        // Khởi tạo cấu trúc dữ liệu cho 6 khu vực (Đã thay actual31 -> actualEnd)
         const regionStats = {};
         validRegions.forEach(r => {
             regionStats[r] = { 
                 name: r, target: 0, actualCurrent: 0, 
-                actual01: 0, actual08: 0, actual15: 0, actual22: 0, actual31: 0 
+                actual01: 0, actual08: 0, actual15: 0, actual22: 0, actualEnd: 0 
             };
         });
 
@@ -303,11 +307,9 @@ window.loadGame02Data = async () => {
             
             let reg = getNormalizedRegion(t.area || t.khu_vuc || t.region_name);
             
-            // Tìm theo tên Giám đốc trước (Chính xác cao nhất cho Target)
             if (!reg && dName && dirToRegionMap[dName]) {
                 reg = dirToRegionMap[dName];
             }
-            // Nếu không có, tìm tiếp theo tên Sale
             if (!reg && saleToRegionMap[sName]) {
                 reg = saleToRegionMap[sName];
             }
@@ -318,7 +320,7 @@ window.loadGame02Data = async () => {
         });
 
         // ==========================================
-        // 2. TÍNH TOÁN ACTUALS (SỐ THỰC TẾ LŨY KẾ)
+        // 2. TÍNH TOÁN ACTUALS LŨY KẾ
         // ==========================================
         rawSO.forEach(r => {
             const sName = norm(r.sale_name);
@@ -333,12 +335,11 @@ window.loadGame02Data = async () => {
             if (reg && regionStats[reg]) {
                 const day = parseInt(r.report_date.slice(-2), 10);
                 
-                // Lũy kế cho các mốc để vẽ Timeline
                 if (day <= 1) regionStats[reg].actual01 += val;
                 if (day <= 8) regionStats[reg].actual08 += val;
                 if (day <= 15) regionStats[reg].actual15 += val;
                 if (day <= 22) regionStats[reg].actual22 += val;
-                if (day <= 31) regionStats[reg].actual31 += val;
+                if (day <= daysInMonth) regionStats[reg].actualEnd += val; // Hỗ trợ luôn tháng 30 hoặc 31 ngày
 
                 // Lũy kế cho hiện tại
                 if (day <= currentDayNum) regionStats[reg].actualCurrent += val;
@@ -375,7 +376,7 @@ window.loadGame02Data = async () => {
             r.pct08 = getPct(r.actual08, r.target);
             r.pct15Real = getPct(r.actual15, r.target); 
             r.pct22 = getPct(r.actual22, r.target);
-            r.pct31 = getPct(r.actual31, r.target);
+            r.pctEnd = getPct(r.actualEnd, r.target);
             return r;
         }).sort((a, b) => b.pctCurrent - a.pctCurrent);
 
@@ -443,7 +444,7 @@ window.loadGame02Data = async () => {
         tbody.innerHTML = currentRankData.map(r => {
             
             // Xử lý icon Phe
-            let factionIcon = `<span class="text-gray-300 font-medium text-[9px]"><i class="fa-regular fa-clock"></i> Chờ 15/07</span>`;
+            let factionIcon = `<span class="text-gray-300 font-medium text-[9px]"><i class="fa-regular fa-clock"></i> Chờ 15</span>`;
             let colorTheme = "gray"; 
             
             if (r.faction === 'Hero') {
@@ -477,7 +478,7 @@ window.loadGame02Data = async () => {
                     ${getDotStr(r.pct08, 8)}
                     ${getDotStr(r.pct15Real, 15)}
                     ${getDotStr(r.pct22, 22)}
-                    ${getDotStr(r.pct31, 31)}
+                    ${getDotStr(r.pctEnd, daysInMonth)}
                 </div>
             `;
 

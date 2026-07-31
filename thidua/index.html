@@ -1,3 +1,4 @@
+<!-- File: index.html -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -125,7 +126,7 @@
                     <span class="font-bold uppercase tracking-wider">TRANG CHỦ</span>
                 </a>
 
-                <!-- MENU ERP MỚI -->
+                <!-- MENU ERP -->
                 <a onclick="window.customSwitchView('erp')" id="nav-erp" class="nav-item">
                     <i class="fa-solid fa-chart-pie text-indigo-500 w-6"></i> 
                     <span class="font-bold">Hệ thống ERP</span>
@@ -190,6 +191,15 @@
                             <span class="font-bold text-xs">Lịch sử thưởng</span>
                         </a>
                     </div>
+                </div>
+
+                <!-- BỔ SUNG MENU KHU VỰC QUẢN TRỊ (Dành cho Admin) -->
+                <div id="nav-master-menu" class="hidden mt-4">
+                    <div class="px-6 py-2 text-[10px] font-black text-red-500 uppercase tracking-wider">Khu Vực Quản Trị</div>
+                    <a onclick="window.customSwitchView('master')" id="nav-master" class="nav-item bg-red-50/10 hover:bg-red-900/40 border-l-4 border-transparent hover:border-red-500 text-gray-300">
+                        <i class="fa-solid fa-database text-red-500 w-6"></i> 
+                        <span class="font-bold ml-2">Báo Cáo Tổng Hợp</span>
+                    </a>
                 </div>
             </nav>
             

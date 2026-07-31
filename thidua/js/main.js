@@ -1,3 +1,5 @@
+// File: js/main.js
+
 // 1. IMPORT CẤU HÌNH & GIAO DIỆN
 import { STATE, sb } from './config.js';
 import { api_checkSession, api_loadShopsAndLock, api_login, api_signup, api_logout } from './api.js';
@@ -14,9 +16,15 @@ import { historySiHTML } from './views/view-history-si.js';
 import { sellinHTML } from './views/view-sellin.js'; 
 import { competitionHTML } from './views/view-competition.js';
 
+// TÍCH HỢP GIAO DIỆN MASTER REPORT MỚI
+import { masterReportHTML } from './views/view-master-report.js'; 
+
+// TÍCH HỢP GIAO DIỆN GAME 01 MỚI
+import { game01HTML } from './views/view-game01.js';
+
 import './sellout.js';
 import './sellin.js';
-import './sale-si.js'; // <-- ĐÃ FIX: Import file logic S.I
+import './sale-si.js'; 
 
 window.STATE = STATE;
 window.sb = sb; 
@@ -101,7 +109,8 @@ const viewMap = {
     `,
     'sellin': sellinHTML, 
     'leaderboard': competitionHTML,
-    'game01': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Game đang phát triển...</div>',
+    'master': masterReportHTML, 
+    'game01': game01HTML, // ĐÃ ĐỔI TỪ PLACEHOLDER THÀNH BIẾN game01HTML
     'game02': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Game đang phát triển...</div>',
     'game03': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Game đang phát triển...</div>',
     'fund': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Quỹ đang phát triển...</div>',
@@ -153,7 +162,6 @@ window.switchView = (viewId) => {
                 histMonthInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             }
             
-            // --- ĐÃ FIX: Mồi dữ liệu và bộ lọc khi mở tab ---
             if (typeof window.updateHistorySIFilters === 'function') window.updateHistorySIFilters('init');
             if (typeof window.loadHistorySIData === 'function') window.loadHistorySIData();
         }, 50);
@@ -164,8 +172,23 @@ window.switchView = (viewId) => {
         window.renderSellInView();
     }
 
+    // Khởi tạo Master Report khi mở tab
+    if (viewId === 'master') {
+        const monthInput = document.getElementById('master_month_filter');
+        if (monthInput && !monthInput.value) {
+            const d = new Date();
+            monthInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+        if (typeof window.loadMasterData === 'function') window.loadMasterData();
+    }
+
+    // Khởi tạo Game 01 - Solo Bứt Phá
+    if (viewId === 'game01' && typeof window.loadGame01Data === 'function') {
+        window.loadGame01Data();
+    }
+
     // Highlight Menu Trái
-    const allNavs = ['nav-dashboard', 'nav-sellout', 'nav-sale_si', 'nav-sellin', 'nav-game01', 'nav-game02', 'nav-game03', 'nav-fund', 'nav-leaderboard', 'nav-reward'];
+    const allNavs = ['nav-dashboard', 'nav-sellout', 'nav-sale_si', 'nav-sellin', 'nav-master', 'nav-game01', 'nav-game02', 'nav-game03', 'nav-fund', 'nav-leaderboard', 'nav-reward'];
     allNavs.forEach(n => {
         const el = document.getElementById(n);
         if(el) {
@@ -208,6 +231,12 @@ async function init() {
         
         if(document.getElementById('userDisplay')) document.getElementById('userDisplay').innerText = profile.full_name || "NVKD";
         if(document.getElementById('roleDisplay')) document.getElementById('roleDisplay').innerText = profile.role || "SALE";
+
+        // Mở khóa menu Master Report nếu là Admin
+        if (profile.role === 'Admin') {
+            const masterMenu = document.getElementById('nav-master-menu');
+            if (masterMenu) masterMenu.classList.remove('hidden');
+        }
 
         if (typeof api_loadShopsAndLock === 'function') await api_loadShopsAndLock(profile);
         window.switchView('dashboard'); 

@@ -5,9 +5,8 @@ import { sb } from './core/supabase.js';
 import * as Dashboard from './modules/dashboard.js';
 import * as Analytics from './modules/analytics.js';
 import * as Admin from './modules/admin.js';
-
-// THÊM IMPORT CHO MODULE MỚI
 import * as DailyInput from './modules/dailyInput.js';
+import * as Project50 from './modules/project50.js';
 
 window.globalAdminShopMap = {}; 
 window.currentUserProfile = null; 
@@ -58,7 +57,7 @@ async function init() {
 }
 
 function setupViewRestrictionsByRole(role) {
-    const adminConfigurationTabs = ['tab-users', 'tab-targets', 'tab-pricing', 'tab-master'];
+    const adminConfigurationTabs = ['tab-users', 'tab-targets', 'tab-pricing', 'tab-master', 'tab-official-so'];
     if (role === 'Admin') {
         adminConfigurationTabs.forEach(id => { if($(id)) $(id).classList.remove('hidden'); });
     } else {
@@ -83,7 +82,8 @@ window.toggleSidebar = () => {
 window.switchTab = (tab) => { 
     document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active')); 
     
-    const views = ['view-dashboard','view-users','view-master','view-pricing', 'view-analytics-full', 'view-targets', 'view-pacing', 'view-daily-input'];
+    // THÊM 'view-official-so' VÀO MẢNG
+    const views = ['view-dashboard','view-users','view-master','view-pricing', 'view-analytics-full', 'view-targets', 'view-pacing', 'view-daily-input', 'view-project-50', 'view-official-so'];
     views.forEach(id => {
         if($(id)) $(id).classList.add('hidden');
     });
@@ -99,6 +99,8 @@ window.switchTab = (tab) => {
     if(tab === 'pricing') Admin.loadPriceHistory();
     if(tab === 'users') Admin.loadUsers(); 
     if(tab === 'master') Admin.loadMasterData();
+    if(tab === 'project-50') Project50.loadProject50Data(); 
+    if(tab === 'official-so') Admin.loadOfficialSO(); // Gọi load dữ liệu tab kích hoạt
     if(tab === 'analytics-full') {
         Analytics.initFilterChain();
         if (!$('ana_month').value) {
@@ -129,8 +131,6 @@ window.loadAnalyticsFull = Analytics.loadAnalyticsFull;
 window.updateFilterChain = Analytics.updateFilterChain;
 window.resetFilters = Analytics.resetFilters;
 window.exportAnalyticsExcel = Analytics.exportAnalyticsExcel;
-
-// KẾT NỐI HÀM CẢNH BÁO ZALO MỚI VÀO WINDOW
 window.showMissingReports = Analytics.showMissingReports;
 window.copyMissingReports = Analytics.copyMissingReports;
 
@@ -158,11 +158,19 @@ window.updateTargetFilterChain = Admin.updateTargetFilterChain;
 window.resetTargetFilters = Admin.resetTargetFilters;
 window.saveAllTargets = Admin.saveAllTargets;
 window.updateLocalTarget = Admin.updateLocalTarget;
-window.exportTargetExcel = Admin.exportTargetExcel; // GẮN KẾT NỐI EXCEL TARGET VÀO WINDOW
+window.exportTargetExcel = Admin.exportTargetExcel; 
 
 window.loadDailyInputData = DailyInput.loadDailyInputData;
 window.renderDailyInputTableFiltered = DailyInput.renderDailyInputTableFiltered;
 window.exportDailyInputExcel = DailyInput.exportDailyInputExcel; 
+
+// LIÊN KẾT WINDOW CHO PROJECT 50
+window.loadProject50Data = Project50.loadProject50Data;
+window.exportProject50Excel = Project50.exportProject50Excel;
+
+// LIÊN KẾT WINDOW CHO S.O KÍCH HOẠT
+window.loadOfficialSO = Admin.loadOfficialSO;
+window.exportOfficialSOExcel = Admin.exportOfficialSOExcel;
 
 if ($('btnLogin')) {
     $('btnLogin').onclick = async () => { 

@@ -3,11 +3,9 @@ import { sb } from '../core/supabase.js';
 
 let cachedUsersList = []; 
 
-// --- USERS ---
 export async function loadUsers() {
     const { data: users, error } = await sb.from('profiles').select('*');
     if (error) { $('userTableBody').innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-600 font-bold bg-red-50">LỖI: ${error.message}</td></tr>`; return; }
-    
     cachedUsersList = users || [];
     renderUserTableFiltered();
 }
@@ -23,22 +21,16 @@ export function renderUserTableFiltered() {
     
     const filtered = cachedUsersList.filter(u => {
         const matchesKeyword = (u.full_name || '').toLowerCase().includes(kw) || (u.email || '').toLowerCase().includes(kw);
-        
         let matchesStatus = true;
         if (statusFilter === 'PENDING') matchesStatus = !u.is_approved;
         if (statusFilter === 'APPROVED') matchesStatus = u.is_approved;
-        
         let matchesRole = true;
-        if (roleFilter !== 'ALL') {
-            matchesRole = (u.role === roleFilter);
-        }
-        
+        if (roleFilter !== 'ALL') { matchesRole = (u.role === roleFilter); }
         return matchesKeyword && matchesStatus && matchesRole; 
     });
 
     const tbody = $('userTableBody');
     if (!tbody) return;
-
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-500 italic">Không tìm thấy tài khoản nào phù hợp điều kiện lọc.</td></tr>`;
         return;
@@ -47,7 +39,6 @@ export function renderUserTableFiltered() {
     tbody.innerHTML = filtered.map(u => {
         const areaInfo = getAreaBySaleName(u.full_name);
         const areaDisplay = areaInfo ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200 text-xs font-bold">${areaInfo}</span>` : `<span class="text-gray-400 italic text-xs">Chưa gán shop</span>`;
-        
         let shopNameHTML = '';
         if (u.role === 'Cửa hàng' && u.full_name) {
             const matchedShop = window.globalAdminShopMap[u.full_name.trim().toUpperCase()];
@@ -57,13 +48,8 @@ export function renderUserTableFiltered() {
                 shopNameHTML = `<div class="text-[10px] font-bold text-red-500 mt-1 italic"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Sai mã DVN / Không có trong hệ thống</div>`;
             }
         }
-
         return `<tr class="hover:bg-slate-50 border-b">
-            <td class="p-4">
-                <div class="font-bold text-slate-800">${u.full_name || '...'}</div>
-                ${shopNameHTML}
-                <div class="text-[10px] text-gray-500 mt-1">${u.email}</div>
-            </td>
+            <td class="p-4"><div class="font-bold text-slate-800">${u.full_name || '...'}</div>${shopNameHTML}<div class="text-[10px] text-gray-500 mt-1">${u.email}</div></td>
             <td class="p-4">${areaDisplay}</td>
             <td class="p-4"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold border border-blue-100">${u.role || 'Sale'}</span></td>
             <td class="p-4 text-center"><span class="px-2 py-1 rounded text-[10px] font-black uppercase ${u.is_approved ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">${u.is_approved ? 'Hoạt Động' : 'Đã Khóa'}</span></td>
@@ -101,12 +87,14 @@ export const resetUserPassword = async (email) => {
 export async function loadMasterData() { 
     const { data } = await sb.from('master_shop_list').select('*').order('area', {ascending: true}); 
     $('shopCount').innerText = `${data?.length || 0} Shop`;
-    
     $('masterBody').innerHTML = (data||[]).map(r => `
         <tr class="hover:bg-slate-50 border-b">
             <td class="p-4 font-bold text-orange-600 text-xs uppercase">${r.area || '-'}</td>
             <td class="p-4 text-xs font-mono text-slate-500">${r.svn_code || '-'}</td>
-            <td class="p-4 font-bold text-sm">${r.shop_code}</td>
+            <td class="p-4 font-bold text-sm">
+                ${r.shop_code}
+                ${r.is_project_50 ? '<span class="ml-2 bg-yellow-400 text-white px-1.5 py-0.5 rounded text-[10px] uppercase font-black"><i class="fa-solid fa-star"></i> VIP</span>' : ''}
+            </td>
             <td class="p-4 text-sm font-bold text-slate-700">${r.shop_name}</td>
             <td class="p-4 text-xs">${r.province || '-'}</td>
             <td class="p-4 text-xs font-bold">${r.sale_name||'-'}</td>
@@ -122,10 +110,8 @@ export async function loadMasterData() {
 export async function exportMasterData() {
     const { data } = await sb.from('master_shop_list').select('*').order('area');
     if (!data || data.length === 0) return alert("Chưa có dữ liệu!");
-    
-    const header = ["Khu Vực", "Mã Khách Hàng", "Mã DVN", "Tên Đại Lý", "Tỉnh/Thành", "Sale Phụ Trách", "GĐ Khu Vực", "GĐ Miền", "Loại Hình"];
-    const rows = data.map(d => [ d.area, d.svn_code, d.shop_code, d.shop_name, d.province, d.sale_name, d.director_name, d.regional_director, d.shop_type ]);
-    
+    const header = ["Khu Vực", "Mã Khách Hàng", "Mã DVN", "Tên Đại Lý", "Tỉnh/Thành", "Sale Phụ Trách", "GĐ Khu Vực", "GĐ Miền", "Loại Hình", "Thuộc Dự Án 50"];
+    const rows = data.map(d => [ d.area, d.svn_code, d.shop_code, d.shop_name, d.province, d.sale_name, d.director_name, d.regional_director, d.shop_type, d.is_project_50 ? 'CÓ' : '' ]);
     const wb = XLSX.utils.book_new(); 
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows]); 
     XLSX.utils.book_append_sheet(wb, ws, "DanhSachDaiLy"); 
@@ -133,36 +119,16 @@ export async function exportMasterData() {
 }
 
 export const deleteShop = async (code) => { if(confirm(`Xóa Shop ${code}?`)) { await sb.from('master_shop_list').delete().eq('shop_code', code); loadMasterData(); } }
-
 export const openShopEdit = (s) => { 
-    $('edit_s_code').value = s.shop_code; 
-    $('edit_s_name').value = s.shop_name || ''; 
-    $('edit_s_area').value = s.area || ''; 
-    $('edit_s_svn').value = s.svn_code || ''; 
-    $('edit_s_province').value = s.province || ''; 
-    $('edit_s_sale').value = s.sale_name || ''; 
-    $('edit_s_director').value = s.director_name || '';
-    $('edit_s_regional_director').value = s.regional_director || ''; 
+    $('edit_s_code').value = s.shop_code; $('edit_s_name').value = s.shop_name || ''; $('edit_s_area').value = s.area || ''; $('edit_s_svn').value = s.svn_code || ''; $('edit_s_province').value = s.province || ''; $('edit_s_sale').value = s.sale_name || ''; $('edit_s_director').value = s.director_name || ''; $('edit_s_regional_director').value = s.regional_director || ''; 
+    if($('edit_s_is_project50')) $('edit_s_is_project50').checked = (s.is_project_50 === true);
     toggleModal('shopEditModal'); 
 }
-
 export const submitShopEdit = async () => { 
-    const payload = { 
-        shop_name: $('edit_s_name').value, 
-        area: $('edit_s_area').value, 
-        svn_code: $('edit_s_svn').value, 
-        province: $('edit_s_province').value, 
-        sale_name: $('edit_s_sale').value,
-        director_name: $('edit_s_director').value,
-        regional_director: $('edit_s_regional_director').value 
-    }; 
+    const payload = { shop_name: $('edit_s_name').value, area: $('edit_s_area').value, svn_code: $('edit_s_svn').value, province: $('edit_s_province').value, sale_name: $('edit_s_sale').value, director_name: $('edit_s_director').value, regional_director: $('edit_s_regional_director').value }; 
+    if($('edit_s_is_project50')) payload.is_project_50 = $('edit_s_is_project50').checked;
     const { error } = await sb.from('master_shop_list').update(payload).eq('shop_code', $('edit_s_code').value); 
-    if(error) alert("Lỗi: " + error.message); 
-    else { 
-        toggleModal('shopEditModal'); 
-        loadMasterData(); 
-        alert("Cập nhật thông tin thành công!");
-    } 
+    if(error) alert("Lỗi: " + error.message); else { toggleModal('shopEditModal'); loadMasterData(); alert("Cập nhật thông tin thành công!"); } 
 }
 
 // --- PRICING ---
@@ -173,38 +139,29 @@ export const openPriceEdit = (m, mo, c, p) => { currentEditPrice={month:m, model
 export const submitPriceEdit = async () => { await sb.from('monthly_product_prices').update({ import_price: parseFloat($('edit_p_cost').value)||0, selling_price: parseFloat($('edit_p_price').value)||0 }).match({ report_month: currentEditPrice.month, model: currentEditPrice.model }); toggleModal('priceEditModal'); loadPriceHistory(); }
 export const deletePrice = async (m, mo) => { if(confirm(`Xóa giá?`)) { await sb.from('monthly_product_prices').delete().match({ report_month: m, model: mo }); loadPriceHistory(); } }
 
-// --- EVENT HANDLERS FOR FILE UPLOAD ---
 export function initAdminEvents() {
     $('excelFile').onchange = async (e) => { 
         const file = e.target.files[0]; if(!file) return; 
         if(!confirm("Hệ thống sẽ đồng bộ thông tin bao gồm cả cột Giám Đốc Miền từ file Excel.\nBạn có muốn tiếp tục?")) return;
-        
         $('uploadStatus').innerText = "Đang xử lý đồng bộ..."; 
         const reader = new FileReader(); 
         reader.onload = async (e) => { 
             try { 
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'}); 
                 const jsonData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                
                 const getVal = (row, ...kws) => {
                     const keys = Object.keys(row);
-                    for (const k of keys) {
-                        if (kws.some(kw => k.toLowerCase().trim() === kw.toLowerCase())) return row[k];
-                    }
+                    for (const k of keys) { if (kws.some(kw => k.toLowerCase().trim() === kw.toLowerCase())) return row[k]; }
                     return undefined;
                 }; 
-
                 const { data: oldData } = await sb.from('master_shop_list').select('*');
                 const oldMap = {};
                 if(oldData) oldData.forEach(s => oldMap[s.shop_code] = s);
-
                 const dbData = jsonData.map(row => {
                     const shop_code = getVal(row, 'mã dvn', 'shop code', 'mã shop');
                     if (!shop_code) return null;
-
                     const old = oldMap[shop_code] || {}; 
                     let valSvn = getVal(row, 'mã svn', 'mã khách hàng', 'svn');
-                    
                     return {
                         ...old, 
                         shop_code: String(shop_code).trim(),
@@ -218,23 +175,15 @@ export function initAdminEvents() {
                         shop_type: getVal(row, 'loại hình') !== undefined ? getVal(row, 'loại hình') : old.shop_type
                     };
                 }).filter(x => x !== null);
-
                 if (dbData.length === 0) throw new Error("File không có dữ liệu hợp lệ (Thiếu cột Mã DVN).");
-
                 const uniqueDataMap = {};
-                dbData.forEach(item => {
-                    uniqueDataMap[item.shop_code] = item; 
-                });
+                dbData.forEach(item => { uniqueDataMap[item.shop_code] = item; });
                 const finalDbData = Object.values(uniqueDataMap);
-
                 const { error } = await sb.from('master_shop_list').upsert(finalDbData); 
                 if (error) throw error;
-
                 $('uploadStatus').innerText = "Đồng bộ thành công!"; 
                 loadMasterData(); 
-            } catch(err) {
-                $('uploadStatus').innerText = "Lỗi: " + err.message;
-            } 
+            } catch(err) { $('uploadStatus').innerText = "Lỗi: " + err.message; } 
         }; 
         reader.readAsArrayBuffer(file); 
         e.target.value = '';
@@ -247,26 +196,18 @@ export function initAdminEvents() {
             try { 
                 const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'}); 
                 const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                
                 const getVal = (row, ...kws) => { 
                     const keys = Object.keys(row); 
-                    for(const k of keys) {
-                        if(kws.some(kw => k.toLowerCase().includes(kw))) return row[k]; 
-                    }
+                    for(const k of keys) { if(kws.some(kw => k.toLowerCase().includes(kw))) return row[k]; }
                     return null; 
                 }; 
-                
                 const dbData = jsonData.map(row => {
                     let rawMonth = getVal(row, 'tháng', 'month', 'date', 'áp dụng');
                     let finalMonth = "";
-                    
                     if (typeof rawMonth === 'number' && rawMonth > 10000) {
                         const dateObj = new Date(Math.round((rawMonth - 25569) * 86400 * 1000));
                         finalMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-                    } else {
-                        finalMonth = formatMonth(rawMonth); 
-                    }
-
+                    } else { finalMonth = formatMonth(rawMonth); }
                     return { 
                         report_month: finalMonth, 
                         model: getVal(row, 'model', 'loại xe', 'tên xe', 'dòng xe'), 
@@ -275,70 +216,46 @@ export function initAdminEvents() {
                     };
                 }).filter(x => x.report_month && x.model);
 
-                if(dbData.length === 0) { 
-                    $('priceStatus').innerText = "Lỗi: File trống hoặc sai tên cột (Cần cột Tháng, Model, Giá nhập, Giá bán)!"; 
-                    return; 
-                } 
-                
+                if(dbData.length === 0) { $('priceStatus').innerText = "Lỗi: File trống hoặc sai tên cột (Cần cột Tháng, Model, Giá nhập, Giá bán)!"; return; } 
                 const monthsInFile = [...new Set(dbData.map(item => item.report_month))]; 
                 if(!confirm(`Hệ thống tìm thấy dữ liệu giá của (các) tháng: ${monthsInFile.join(', ')}.\nXóa giá cũ của các tháng này và nạp giá mới?`)) { 
                     $('priceStatus').innerText = "Đã hủy."; return; 
                 } 
-                
-                for (const m of monthsInFile) { 
-                    await sb.from('monthly_product_prices').delete().eq('report_month', m); 
-                } 
-                
+                for (const m of monthsInFile) { await sb.from('monthly_product_prices').delete().eq('report_month', m); } 
                 const { error } = await sb.from('monthly_product_prices').insert(dbData);
-                
                 if(error) $('priceStatus').innerText = "Lỗi: " + error.message; 
-                else { 
-                    $('priceStatus').innerText = "✅ Thành công!"; 
-                    loadPriceHistory(); 
-                } 
-            } catch(err) { 
-                $('priceStatus').innerText = "Lỗi file: " + err.message; 
-            } 
+                else { $('priceStatus').innerText = "✅ Thành công!"; loadPriceHistory(); } 
+            } catch(err) { $('priceStatus').innerText = "Lỗi file: " + err.message; } 
         }; 
         reader.readAsArrayBuffer(file); 
         e.target.value = '';
     };
 
-    // --- XỬ LÝ SỰ KIỆN TẢI LÊN FILE TARGET MỚI THÊM VÀO ---
     const targetFileInput = $('targetFile');
     if(targetFileInput) {
         targetFileInput.onchange = async (e) => {
             const file = e.target.files[0]; if(!file) return;
             const month = $('target_month').value;
-            if (!month) {
-                alert("Vui lòng chọn Tháng Target trên màn hình trước khi tải file lên!");
-                e.target.value = ''; return;
-            }
-            if(!confirm(`Hệ thống sẽ cập nhật Target cho tháng: ${month} dựa trên file Excel.\nBạn có muốn tiếp tục?`)) {
-                e.target.value = ''; return;
-            }
+            if (!month) { alert("Vui lòng chọn Tháng Target trên màn hình trước khi tải file lên!"); e.target.value = ''; return; }
+            if(!confirm(`Hệ thống sẽ cập nhật Target cho tháng: ${month} dựa trên file Excel.\nBạn có muốn tiếp tục?`)) { e.target.value = ''; return; }
 
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
                     const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
                     const jsonData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                    
                     const getVal = (row, ...kws) => {
                         const keys = Object.keys(row);
-                        for (const k of keys) {
-                            if (kws.some(kw => k.toLowerCase().trim() === kw.toLowerCase())) return row[k];
-                        }
+                        for (const k of keys) { if (kws.some(kw => k.toLowerCase().trim() === kw.toLowerCase())) return row[k]; }
                         return 0; 
                     };
-
                     const payload = jsonData.map(row => {
                         const codeKey = Object.keys(row).find(k => k.toLowerCase().trim() === 'mã dvn');
                         if (!codeKey || !row[codeKey]) return null;
-                        
                         return {
                             report_month: month,
                             shop_code: String(row[codeKey]).trim(),
+                            score_3824: parseFloat(getVal(row, 'điểm 3824', 'điểm', '3824')) || 0,
                             target_so: parseInt(getVal(row, 'target s.o', 'target so')) || 0,
                             target_report: parseInt(getVal(row, 'báo cáo')) || 0,
                             target_traffic: parseInt(getVal(row, 'lượt khách')) || 0,
@@ -349,20 +266,143 @@ export function initAdminEvents() {
                     }).filter(x => x !== null);
 
                     if(payload.length === 0) throw new Error("File không đúng form mẫu (Bắt buộc phải có cột 'Mã DVN').");
+                    const { error } = await sb.from('monthly_shop_targets').upsert(payload, { onConflict: 'report_month, shop_code' });
+                    if (error) throw error;
+                    alert(`✅ Đã tải lên thành công Target tháng ${month} cho ${payload.length} Cửa hàng!`);
+                    loadTargets();
+                } catch(err) { alert("Lỗi đọc file Excel: " + err.message); }
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = ''; 
+        };
+    }
+
+    // UPLOAD S.O KÍCH HOẠT (OFFICIAL S.O - XỬ LÝ MA TRẬN 12 THÁNG)
+    const officialSoFile = $('officialSoFile');
+    if(officialSoFile) {
+        officialSoFile.onchange = async (e) => {
+            const file = e.target.files[0]; if(!file) return;
+            const yearBase = '2026'; // Mặc định năm xét duyệt thi đua Dự án 50 là 2026
+            const dataType = $('official_so_type').value; 
+            
+            const yearLabel = dataType === 'last_year' ? '2025 (Cùng kỳ)' : '2026 (Năm nay)';
+
+            if(!confirm(`Xác nhận nạp toàn bộ 12 THÁNG số liệu S.O Kích Hoạt cho: Năm ${yearLabel}?`)) { e.target.value = ''; return; }
+
+            $('officialSoStatus').innerText = "Đang phân tích ma trận 12 tháng...";
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    
+                    // Đọc file thành mảng 2 chiều để dò tìm vị trí chứa tiêu đề cột Mã DVN (Bỏ qua các dòng merge thừa bên trên)
+                    const rawData = XLSX.utils.sheet_to_json(ws, { header: 1 }); 
+                    let headerRowIndex = 0;
+                    for(let i=0; i<rawData.length; i++) {
+                        if(rawData[i].some(cell => typeof cell === 'string' && cell.toLowerCase().includes('mã dvn'))) {
+                            headerRowIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    // Parse lại bắt đầu từ dòng tiêu đề thật
+                    const jsonData = XLSX.utils.sheet_to_json(ws, { range: headerRowIndex });
+
+                    const payload = [];
+                    jsonData.forEach(row => {
+                        const getVal = (...kws) => {
+                            const keys = Object.keys(row);
+                            for (const k of keys) { if (kws.some(kw => k.toLowerCase().trim() === kw.toLowerCase())) return row[k]; }
+                            return null; 
+                        };
+
+                        const shopCode = getVal('mã dvn');
+                        if (!shopCode) return;
+                        
+                        // Quét lấy số liệu 12 tháng (từ T1 đến T12)
+                        for(let m = 1; m <= 12; m++) {
+                            const monthStr = `${yearBase}-${String(m).padStart(2, '0')}`;
+                            let valSO = getVal(`t${m}`, `tháng ${m}`, `thang ${m}`);
+                            valSO = parseInt(valSO);
+
+                            if (!isNaN(valSO)) {
+                                let record = {
+                                    report_month: monthStr,
+                                    shop_code: String(shopCode).trim()
+                                };
+                                
+                                // Nếu là năm trước (2025) thì lưu vào cột last_year, ngược lại lưu this_year
+                                if (dataType === 'last_year') {
+                                    record.official_so_last_year = valSO;
+                                } else {
+                                    record.official_so_this_year = valSO;
+                                }
+                                payload.push(record);
+                            }
+                        }
+                    });
+
+                    if(payload.length === 0) throw new Error("File thiếu cột Mã DVN hoặc các cột tháng T1, T2... T12.");
 
                     const { error } = await sb.from('monthly_shop_targets').upsert(payload, { onConflict: 'report_month, shop_code' });
                     if (error) throw error;
-
-                    alert(`✅ Đã tải lên thành công Target tháng ${month} cho ${payload.length} Cửa hàng!`);
-                    loadTargets();
-                } catch(err) {
-                    alert("Lỗi đọc file Excel: " + err.message);
+                    
+                    $('officialSoStatus').innerText = `✅ Đã phân bổ thành công S.O Kích Hoạt 12 Tháng!`;
+                    loadOfficialSO();
+                } catch(err) { 
+                    $('officialSoStatus').innerText = "Lỗi đọc file: " + err.message; 
+                    alert("Lỗi đọc file Excel: " + err.message); 
                 }
             };
             reader.readAsArrayBuffer(file);
             e.target.value = ''; 
         };
     }
+}
+
+// --- OFFICIAL S.O TAB ---
+export async function loadOfficialSO() {
+    let month = $('official_so_view_month').value;
+    if (!month) { 
+        const d = new Date(); month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; 
+        $('official_so_view_month').value = month; 
+    }
+    
+    const { data: dbTargets } = await sb.from('monthly_shop_targets').select('*').eq('report_month', month);
+    const tbody = $('officialSoBody');
+    
+    if(!dbTargets || dbTargets.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-500">Chưa có dữ liệu S.O kích hoạt cho tháng ${month}. Vui lòng Upload file Excel T1-T12.</td></tr>`;
+        return;
+    }
+
+    const rows = dbTargets.filter(t => t.official_so_last_year !== null || t.official_so_this_year !== null).map(t => {
+        const shopName = window.globalAdminShopMap[t.shop_code]?.shop_name || "N/A";
+        return `
+        <tr class="hover:bg-slate-50 border-b">
+            <td class="p-4 border-r font-mono text-gray-500">${t.shop_code}</td>
+            <td class="p-4 border-r font-bold text-slate-800 text-left">${shopName}</td>
+            <td class="p-4 border-r font-bold text-gray-600 bg-gray-100">${t.official_so_last_year !== null ? t.official_so_last_year : '-'}</td>
+            <td class="p-4 font-black text-blue-700 bg-blue-50/50">${t.official_so_this_year !== null ? t.official_so_this_year : '-'}</td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = rows.length > 0 ? rows.join('') : `<tr><td colspan="4" class="p-6 text-center text-gray-500">Chưa có dữ liệu S.O kích hoạt.</td></tr>`;
+}
+
+export function exportOfficialSOExcel() {
+    const header = ["Sale Phụ Trách", "Mã Khách Hàng", "Mã DVN", "Tên Đại Lý", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+    const vipShops = Object.values(window.globalAdminShopMap || {}).filter(s => s.is_project_50 === true);
+    
+    if(vipShops.length === 0) return alert("Hệ thống chưa có shop nào được đánh dấu là VIP Dự án 50!");
+
+    const rows = vipShops.map(s => [s.sale_name || '', s.svn_code || '', s.shop_code, s.shop_name, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    
+    const wb = XLSX.utils.book_new(); 
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows]); 
+    XLSX.utils.book_append_sheet(wb, ws, "SO_12Thang"); 
+    XLSX.writeFile(wb, `Mau_Nhap_SO_12_Thang.xlsx`);
 }
 
 // --- TARGETS ---
@@ -406,52 +446,76 @@ export async function loadTargets() {
     
     window.currentViewTargets = shops.map(s => {
         const t = targetMap[s.shop_code] || {};
-        return { s, shop_code: s.shop_code, shop_name: s.shop_name, targets: { target_so: t.target_so || 0, target_report: t.target_report || 0, target_traffic: t.target_traffic || 0, target_video: t.target_video || 0, target_view: t.target_view || 0, target_livestream: t.target_livestream || 0 } };
+        return { 
+            s, 
+            shop_code: s.shop_code, 
+            shop_name: s.shop_name, 
+            targets: { 
+                score_3824: t.score_3824 || 0,
+                target_so: t.target_so || 0, 
+                target_report: t.target_report || 0, 
+                target_traffic: t.target_traffic || 0, 
+                target_video: t.target_video || 0, 
+                target_view: t.target_view || 0, 
+                target_livestream: t.target_livestream || 0 
+            } 
+        };
     });
     updateTargetFilterChain('load');
 }
 
 function renderTargetTable(data) {
-    if(data.length === 0) { $('targetBody').innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500">Không tìm thấy shop phù hợp.</td></tr>`; return; }
+    if(data.length === 0) { $('targetBody').innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-500">Không tìm thấy shop phù hợp.</td></tr>`; return; }
     $('targetBody').innerHTML = data.map(s => `
         <tr class="hover:bg-slate-50 border-b">
             <td class="p-4"><div class="font-bold text-sm text-slate-800">${s.shop_name}</div><div class="text-[10px] text-gray-500 font-mono bg-gray-100 inline-block px-1 rounded mt-1">${s.shop_code}</div></td>
-            <td class="p-4 text-center bg-orange-50/50"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_so', this.value)" value="${s.targets.target_so}" class="w-16 border border-orange-200 rounded text-center text-sm font-bold text-orange-600 focus:border-orange-500 outline-none p-1.5 shadow-inner"></td>
-            <td class="p-4 text-center"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_report', this.value)" value="${s.targets.target_report}" class="w-16 border border-blue-200 rounded text-center text-sm font-bold text-blue-600 focus:border-blue-500 outline-none p-1.5 shadow-inner"></td>
-            <td class="p-4 text-center bg-green-50/50"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_traffic', this.value)" value="${s.targets.target_traffic}" class="w-16 border border-green-200 rounded text-center text-sm font-bold text-green-600 focus:border-green-500 outline-none p-1.5 shadow-inner"></td>
-            <td class="p-4 text-center"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_video', this.value)" value="${s.targets.target_video}" class="w-16 border border-pink-200 rounded text-center text-sm font-bold text-pink-600 focus:border-pink-500 outline-none p-1.5 shadow-inner"></td>
-            <td class="p-4 text-center bg-purple-50/50"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_view', this.value)" value="${s.targets.target_view}" class="w-16 border border-purple-200 rounded text-center text-sm font-bold text-purple-600 focus:border-purple-500 outline-none p-1.5 shadow-inner"></td>
-            <td class="p-4 text-center"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_livestream', this.value)" value="${s.targets.target_livestream}" class="w-16 border border-red-200 rounded text-center text-sm font-bold text-red-600 focus:border-red-500 outline-none p-1.5 shadow-inner"></td>
+            <td class="p-4 text-center bg-yellow-50/20"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'score_3824', this.value)" value="${s.targets.score_3824}" class="w-16 border border-yellow-300 rounded text-center text-sm font-bold text-yellow-700 focus:border-yellow-500 outline-none p-1.5 shadow-inner bg-white" max="100"></td>
+            <td class="p-4 text-center bg-orange-50/50"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_so', this.value)" value="${s.targets.target_so}" class="w-16 border border-orange-200 rounded text-center text-sm font-bold text-orange-600 focus:border-orange-500 outline-none p-1.5 shadow-inner bg-white"></td>
+            <td class="p-4 text-center"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_report', this.value)" value="${s.targets.target_report}" class="w-16 border border-blue-200 rounded text-center text-sm font-bold text-blue-600 focus:border-blue-500 outline-none p-1.5 shadow-inner bg-white"></td>
+            <td class="p-4 text-center bg-green-50/50"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_traffic', this.value)" value="${s.targets.target_traffic}" class="w-16 border border-green-200 rounded text-center text-sm font-bold text-green-600 focus:border-green-500 outline-none p-1.5 shadow-inner bg-white"></td>
+            <td class="p-4 text-center"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_video', this.value)" value="${s.targets.target_video}" class="w-16 border border-pink-200 rounded text-center text-sm font-bold text-pink-600 focus:border-pink-500 outline-none p-1.5 shadow-inner bg-white"></td>
+            <td class="p-4 text-center bg-purple-50/50"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_view', this.value)" value="${s.targets.target_view}" class="w-16 border border-purple-200 rounded text-center text-sm font-bold text-purple-600 focus:border-purple-500 outline-none p-1.5 shadow-inner bg-white"></td>
+            <td class="p-4 text-center"><input type="number" onchange="updateLocalTarget('${s.shop_code}', 'target_livestream', this.value)" value="${s.targets.target_livestream}" class="w-16 border border-red-200 rounded text-center text-sm font-bold text-red-600 focus:border-red-500 outline-none p-1.5 shadow-inner bg-white"></td>
         </tr>`).join('');
 }
 
-export function updateLocalTarget(shopCode, field, value) { const item = window.currentViewTargets.find(x => x.shop_code === shopCode); if (item) { item.targets[field] = parseInt(value) || 0; } }
+export function updateLocalTarget(shopCode, field, value) { const item = window.currentViewTargets.find(x => x.shop_code === shopCode); if (item) { item.targets[field] = parseFloat(value) || 0; } }
 export async function saveAllTargets() {
     const month = $('target_month').value; if (!month) return alert("Vui lòng chọn tháng Target!");
-    if (!confirm(`Xác nhận LƯU TOÀN BỘ Target cho tháng ${month}?`)) return;
+    if (!confirm(`Xác nhận LƯU TOÀN BỘ Target và Điểm 3824 cho tháng ${month}?`)) return;
     const btn = event.currentTarget; const oldText = btn.innerHTML;
     btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...`; btn.disabled = true;
 
     const payload = window.currentViewTargets
         .filter(s => Object.values(s.targets).some(v => v > 0))
-        .map(s => ({ report_month: month, shop_code: s.shop_code, target_so: s.targets.target_so, target_report: s.targets.target_report, target_traffic: s.targets.target_traffic, target_video: s.targets.target_video, target_view: s.targets.target_view, target_livestream: s.targets.target_livestream }));
+        .map(s => ({ 
+            report_month: month, 
+            shop_code: s.shop_code, 
+            score_3824: s.targets.score_3824,
+            target_so: s.targets.target_so, 
+            target_report: s.targets.target_report, 
+            target_traffic: s.targets.target_traffic, 
+            target_video: s.targets.target_video, 
+            target_view: s.targets.target_view, 
+            target_livestream: s.targets.target_livestream 
+        }));
 
-    if(payload.length === 0) { alert("Chưa có Target nào được nhập!"); btn.innerHTML = oldText; btn.disabled = false; return; }
+    if(payload.length === 0) { alert("Chưa có Target/Điểm nào được nhập!"); btn.innerHTML = oldText; btn.disabled = false; return; }
     const { error } = await sb.from('monthly_shop_targets').upsert(payload, { onConflict: 'report_month, shop_code' });
     btn.innerHTML = oldText; btn.disabled = false;
     if (error) alert("Lỗi khi lưu Target: " + error.message);
-    else alert(`✅ Đã lưu thành công Target tháng ${month} cho ${payload.length} Cửa hàng!`);
+    else alert(`✅ Đã lưu Target và Điểm 3824 thành công cho tháng ${month}!`);
 }
 
-// --- HÀM XUẤT EXCEL TARGET THÊM VÀO ---
 export function exportTargetExcel() {
     const month = $('target_month').value;
     if (!month) return alert("Vui lòng chọn tháng trước khi xuất Excel!");
     if (!window.currentViewTargets || window.currentViewTargets.length === 0) return alert("Không có dữ liệu shop để xuất!");
 
-    const header = ["Mã DVN", "Tên Cửa Hàng", "Target S.O", "Báo Cáo", "Lượt Khách", "Video Gửi", "Lượt Xem", "Livestream"];
+    const header = ["Mã DVN", "Tên Cửa Hàng", "Điểm 3824", "Target S.O", "Báo Cáo", "Lượt Khách", "Video Gửi", "Lượt Xem", "Livestream"];
     const rows = window.currentViewTargets.map(s => [
         s.shop_code, s.shop_name, 
+        s.targets.score_3824,
         s.targets.target_so, s.targets.target_report, s.targets.target_traffic, 
         s.targets.target_video, s.targets.target_view, s.targets.target_livestream
     ]);
@@ -459,5 +523,5 @@ export function exportTargetExcel() {
     const wb = XLSX.utils.book_new(); 
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows]); 
     XLSX.utils.book_append_sheet(wb, ws, "Target_" + month); 
-    XLSX.writeFile(wb, `Mau_Target_Thang_${month}.xlsx`);
+    XLSX.writeFile(wb, `Mau_Target_Diem3824_Thang_${month}.xlsx`);
 }

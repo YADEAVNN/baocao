@@ -47,7 +47,7 @@ async function setupErpFilters() {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     
-    // Mặc định lọc dữ liệu của ngày hôm nay (Từ ngày hiện tại đến ngày hiện tại)
+    // Mặc định lọc dữ liệu của ngày hôm nay
     dStart.value = `${yyyy}-${mm}-${dd}`;
     dEnd.value = `${yyyy}-${mm}-${dd}`;
 
@@ -87,7 +87,6 @@ async function fetchAndRenderErpDashboard() {
 
     const saleToRegionMap = {};
     
-    // --- THÊM LOGIC LỌC DANH SÁCH SALE HỢP LỆ (LOẠI BỎ GIÁM ĐỐC) ---
     const normalizeDisplayName = (name) => {
         if (!name) return null;
         return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
@@ -109,7 +108,6 @@ async function fetchAndRenderErpDashboard() {
         }
     });
 
-    // Xóa tất cả các tên trùng với Giám đốc ra khỏi danh sách Sale hợp lệ
     directors.forEach(dir => validSales.delete(dir));
 
     if (region !== 'ALL') {
@@ -136,9 +134,8 @@ async function fetchAndRenderErpDashboard() {
     renderCards(agg);
     renderGauges(agg);
     renderRegionTable(agg);
-    renderTopSales(agg.sales);
     render12RegionSIChart(agg.regions);
-    renderLineCharts(agg.daily, start, end);
+    renderLineCharts(agg.daily, start, end, agg);
 
     const rawData = { si: dataSI, so: dataSO, target: dataTarget, gameSi: dataGameSI };
     if (typeof window.buildDashboardAlerts === 'function') {
@@ -154,7 +151,6 @@ async function fetchAndRenderErpDashboard() {
     }
 }
 
-// Bổ sung param validSales vào hàm
 function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToRegionMap, dataGameSI, validSales) {
     const todayStr = end; 
     let prevDate = new Date(todayStr); prevDate.setDate(prevDate.getDate() - 1);
@@ -186,7 +182,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
     const norm = (str) => str ? str.toString().trim().toLowerCase() : "";
     
-    // Hàm chuẩn hóa tên nhân sự (Title Case)
     const normalizeDisplayName = (name) => {
         if (!name) return null;
         return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
@@ -233,7 +228,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
         if (t.sale_name) {
             const dName = normalizeDisplayName(t.sale_name);
-            // THÊM ĐIỀU KIỆN LỌC VALID SALES
             if (dName && validSales.has(dName)) {
                 if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
                 res.sales[dName].si_tar += safeNum(t.target_si); 
@@ -289,7 +283,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
         if (r.sale_name) {
             const dName = normalizeDisplayName(r.sale_name);
-            // THÊM ĐIỀU KIỆN LỌC VALID SALES
             if (dName && validSales.has(dName)) {
                 if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
                 res.sales[dName].si_act += val;
@@ -331,7 +324,6 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
 
         if (r.sale_name) {
             const dName = normalizeDisplayName(r.sale_name);
-            // THÊM ĐIỀU KIỆN LỌC VALID SALES
             if (dName && validSales.has(dName)) {
                 if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
                 res.sales[dName].so_act += val;
@@ -601,55 +593,6 @@ function renderRegionTable(agg) {
     autoScrollTable('erp-region-table-body');
 }
 
-function renderTopSales(salesObj) {
-    const sales = Object.values(salesObj);
-    
-    sales.forEach(s => {
-        s.si_pct = safeDiv(s.si_act || 0, s.si_tar) * 100;
-        s.so_pct = safeDiv(s.so_act || 0, s.so_tar) * 100;
-    });
-
-    const siSales = [...sales]
-        .filter(s => s.si_tar > 0 || (s.si_act && s.si_act > 0))
-        .sort((a,b) => b.si_pct - a.si_pct);
-
-    const soSales = [...sales]
-        .filter(s => s.so_tar > 0 || s.so_act > 0)
-        .sort((a,b) => b.so_pct - a.so_pct);
-
-    const renderRowSI = (arr) => arr.map((s, i) => {
-        let rankClass = i < 3 ? 'text-blue-600' : 'text-slate-400';
-        let pctClass = s.si_pct >= 100 ? 'text-emerald-600' : (s.si_pct >= 75 ? 'text-orange-500' : 'text-rose-500');
-        return `
-        <tr class="hover:bg-blue-50/50 transition border-b border-gray-50">
-            <td class="py-2.5 px-3 font-black ${rankClass} sticky left-0 bg-white shadow-[1px_0_0_0_#f8fafc] whitespace-nowrap z-10">${i+1}</td>
-            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-nowrap min-w-[120px]">${s.name}</td>
-            <td class="py-2.5 px-2 text-center font-medium text-gray-500 whitespace-nowrap">${fmt(s.si_tar)}</td>
-            <td class="py-2.5 px-2 text-center font-bold text-blue-600 bg-blue-50/50 whitespace-nowrap">${fmt(s.si_act || 0)}</td>
-            <td class="py-2.5 px-3 text-right font-black ${pctClass} whitespace-nowrap">${Math.round(s.si_pct)}%</td>
-        </tr>`;
-    }).join('') || '<tr><td colspan="5" class="text-center py-8 text-gray-400">Không có dữ liệu</td></tr>';
-
-    const renderRowSO = (arr) => arr.map((s, i) => {
-        let rankClass = i < 3 ? 'text-green-600' : 'text-slate-400';
-        let pctClass = s.so_pct >= 100 ? 'text-emerald-600' : (s.so_pct >= 75 ? 'text-orange-500' : 'text-rose-500');
-        return `
-        <tr class="hover:bg-green-50/50 transition border-b border-gray-50">
-            <td class="py-2.5 px-3 font-black ${rankClass} sticky left-0 bg-white shadow-[1px_0_0_0_#f8fafc] whitespace-nowrap z-10">${i+1}</td>
-            <td class="py-2.5 px-2 font-bold text-slate-700 whitespace-nowrap min-w-[120px]">${s.name}</td>
-            <td class="py-2.5 px-2 text-center font-medium text-gray-500 whitespace-nowrap">${fmt(s.so_tar)}</td>
-            <td class="py-2.5 px-2 text-center font-bold text-green-600 bg-green-50/50 whitespace-nowrap">${fmt(s.so_act)}</td>
-            <td class="py-2.5 px-3 text-right font-black ${pctClass} whitespace-nowrap">${Math.round(s.so_pct)}%</td>
-        </tr>`;
-    }).join('') || '<tr><td colspan="5" class="text-center py-8 text-gray-400">Không có dữ liệu</td></tr>';
-
-    document.getElementById('erp-top-si-body').innerHTML = renderRowSI(siSales);
-    document.getElementById('erp-top-so-body').innerHTML = renderRowSO(soSales);
-
-    autoScrollTable('erp-top-si-body');
-    autoScrollTable('erp-top-so-body');
-}
-
 function render12RegionSIChart(regionsObj) {
     const tbody = document.getElementById('erp-12-region-si-body');
     if(!tbody) return;
@@ -722,7 +665,36 @@ function render12RegionSIChart(regionsObj) {
     autoScrollTable('erp-12-region-si-body');
 }
 
-function renderLineCharts(dailyObj, startStr, endStr) {
+function renderLineCharts(dailyObj, startStr, endStr, agg) {
+    if (agg) {
+        const siTarget = agg.si_target;
+        const soTarget = agg.so_target;
+        
+        const siActPace = agg.daysPassed > 0 ? agg.si_total / agg.daysPassed : 0;
+        const siForecast = Math.round(agg.si_total + (siActPace * agg.daysLeft));
+        const siForecastPct = siTarget > 0 ? (siForecast / siTarget) * 100 : 0;
+
+        const soActPace = agg.daysPassed > 0 ? agg.so_total / agg.daysPassed : 0;
+        const soForecast = Math.round(agg.so_total + (soActPace * agg.daysLeft));
+        const soForecastPct = soTarget > 0 ? (soForecast / soTarget) * 100 : 0;
+
+        const elSiTarget = document.getElementById('trend-si-target');
+        const elSiForecast = document.getElementById('trend-si-forecast');
+        const elSiForecastPct = document.getElementById('trend-si-forecast-pct');
+        
+        if(elSiTarget) elSiTarget.innerText = fmt(siTarget) + ' xe';
+        if(elSiForecast) elSiForecast.innerText = fmt(siForecast);
+        if(elSiForecastPct) elSiForecastPct.innerText = `(${Math.round(siForecastPct)}%)`;
+
+        const elSoTarget = document.getElementById('trend-so-target');
+        const elSoForecast = document.getElementById('trend-so-forecast');
+        const elSoForecastPct = document.getElementById('trend-so-forecast-pct');
+        
+        if(elSoTarget) elSoTarget.innerText = fmt(soTarget) + ' xe';
+        if(elSoForecast) elSoForecast.innerText = fmt(soForecast);
+        if(elSoForecastPct) elSoForecastPct.innerText = `(${Math.round(soForecastPct)}%)`;
+    }
+
     const dates = [];
     const siData = []; const soData = [];
     
@@ -736,8 +708,9 @@ function renderLineCharts(dailyObj, startStr, endStr) {
     }
 
     const baseOpts = {
-        chart: { type: 'line', height: 210, toolbar: { show: false }, fontFamily: 'Inter, system-ui, sans-serif' },
+        chart: { type: 'area', height: 210, toolbar: { show: false }, fontFamily: 'Inter, system-ui, sans-serif' },
         stroke: { curve: 'smooth', width: 2.5 },
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] } },
         markers: { size: 3, colors: ['#fff'], strokeWidth: 2, hover: { size: 5 } },
         dataLabels: { 
             enabled: true, 

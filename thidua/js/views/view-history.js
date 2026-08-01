@@ -1,3 +1,7 @@
+// ==========================================
+// MODULE: GIAO DIỆN LỊCH SỬ S.O (MA TRẬN)
+// ==========================================
+
 export const historyHTML = `
 <div class="p-4 md:p-8 fade-in max-w-full mx-auto">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -20,22 +24,24 @@ export const historyHTML = `
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
             <div class="xl:col-span-1">
                 <label class="text-xs font-black text-slate-500 uppercase mb-2 block">Tháng báo cáo</label>
-                <input type="month" id="history_month_filter" onchange="window.applyHistoryFilter()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-[#F97316] uppercase">
+                <!-- FIX 1: Đổi onchange thành loadHistoryData() để query DB tháng mới -->
+                <input type="month" id="history_month_filter" onchange="window.loadHistoryData()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-[#F97316] uppercase cursor-pointer transition-colors hover:bg-white">
             </div>
             <div class="xl:col-span-1">
                 <label class="text-xs font-black text-slate-500 uppercase mb-2 block">Giám Đốc Miền</label>
-                <select id="history_filter_director" onchange="window.updateHistoryFilters('director')" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-[#F97316]"></select>
+                <select id="history_filter_director" onchange="window.updateHistoryFilters('director')" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-[#F97316] cursor-pointer transition-colors hover:bg-white"></select>
             </div>
             <div class="xl:col-span-1">
                 <label class="text-xs font-black text-slate-500 uppercase mb-2 block">Quản lý vùng (Sale)</label>
-                <select id="history_filter_sale" onchange="window.updateHistoryFilters('sale')" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-[#F97316]"></select>
+                <select id="history_filter_sale" onchange="window.updateHistoryFilters('sale')" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-[#F97316] cursor-pointer transition-colors hover:bg-white"></select>
             </div>
             <div class="xl:col-span-1">
                 <label class="text-xs font-black text-slate-500 uppercase mb-2 block">Mã SVN</label>
-                <select id="history_filter_svn" onchange="window.updateHistoryFilters('svn')" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-[#F97316]"></select>
+                <select id="history_filter_svn" onchange="window.updateHistoryFilters('svn')" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-[#F97316] cursor-pointer transition-colors hover:bg-white"></select>
             </div>
             <div class="xl:col-span-1 flex items-end">
-                <button onclick="window.resetHistoryFilters()" class="w-full bg-gray-100 text-gray-600 px-4 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-gray-200 transition border border-gray-200 flex items-center justify-center gap-2">
+                <!-- FIX 2: Viết lại logic nút Bỏ lọc để reset trắng select và tải lại bảng -->
+                <button onclick="document.getElementById('history_filter_director').value=''; document.getElementById('history_filter_sale').value=''; document.getElementById('history_filter_svn').value=''; window.updateHistoryFilters('init'); window.renderHistoryMatrix();" class="w-full bg-gray-100 text-gray-600 px-4 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-gray-200 transition border border-gray-200 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rotate-right"></i> Bỏ Lọc
                 </button>
             </div>
@@ -45,7 +51,7 @@ export const historyHTML = `
     <!-- KHỐI BẢNG DỮ LIỆU S.O (DẠNG MA TRẬN) -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
         <p class="text-[10px] text-gray-400 font-bold p-3 bg-gray-50 border-b border-gray-100 italic">💡 Bấm vào ô có số liệu màu cam để chỉnh sửa/xóa báo cáo của ngày đó.</p>
-        <div class="overflow-x-auto" id="historyTableContainer">
+        <div class="overflow-x-auto custom-scrollbar w-full" id="historyTableContainer">
             <!-- Bảng ma trận sẽ được JS đổ vào đây -->
         </div>
     </div>
@@ -61,7 +67,7 @@ export const historyHTML = `
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div class="p-6 overflow-y-auto bg-red-50/30 flex-1">
+            <div class="p-6 overflow-y-auto bg-red-50/30 flex-1 custom-scrollbar">
                 <div id="missingReportContent" class="text-sm font-medium text-red-800 space-y-4 whitespace-pre-wrap leading-relaxed">
                 </div>
             </div>

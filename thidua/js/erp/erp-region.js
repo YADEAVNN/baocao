@@ -194,7 +194,7 @@ window.initErpRegion = async function() {
                             </div>
                         </div>
 
-                        <!-- 3. DUAL PACE TIMELINE -->
+                        <!-- 3. DUAL PACE TIMELINE VỚI THIẾT KẾ MỚI CÓ MỤC TIÊU/DỰ BÁO -->
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                             <div class="flex justify-between items-center mb-5">
                                 <h3 class="text-sm font-black text-blue-800 uppercase flex items-center gap-2">
@@ -211,28 +211,52 @@ window.initErpRegion = async function() {
                                 <div class="flex items-center gap-2 text-red-500"><i class="fa-solid fa-diamond text-[8px]"></i> Lọc hiện tại</div>
                             </div>
 
-                            <div class="space-y-6">
+                            <div class="space-y-6 mt-2">
                                 <!-- Chart SI -->
-                                <div class="flex relative">
-                                    <div class="w-24 flex flex-col items-center justify-center py-4 border-r border-gray-200 pr-2">
-                                        <div class="w-10 h-10 rounded-full border border-blue-200 text-blue-600 flex items-center justify-center mb-1 bg-blue-50"><i class="fa-solid fa-truck-fast"></i></div>
-                                        <span class="text-[10px] font-black text-blue-600 uppercase text-center leading-tight">SELLIN<br>(Phát hàng)</span>
+                                <div class="flex flex-col md:flex-row relative bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="w-full md:w-36 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-100 p-4 flex flex-col items-center justify-center gap-3 shrink-0">
+                                        <div class="w-10 h-10 rounded-full border border-blue-200 text-blue-600 flex items-center justify-center mb-1 bg-blue-50">
+                                            <i class="fa-solid fa-truck-fast"></i>
+                                        </div>
+                                        <span class="text-[10px] font-black text-blue-600 uppercase text-center leading-tight mb-2">SELLIN<br>(Phát hàng)</span>
+                                        
+                                        <div class="w-full space-y-2">
+                                            <div class="bg-white border border-gray-200 rounded-lg p-2 text-center shadow-sm">
+                                                <p class="text-[9px] font-bold text-gray-500 uppercase mb-0.5">Mục tiêu</p>
+                                                <p class="text-sm font-black text-slate-800" id="reg-trend-si-target">0 xe</p>
+                                            </div>
+                                            <div class="bg-white border border-blue-100 rounded-lg p-2 text-center shadow-sm">
+                                                <p class="text-[9px] font-bold text-blue-500 uppercase mb-0.5">Dự báo nhịp độ</p>
+                                                <p class="text-sm font-black text-blue-600 leading-tight"><span id="reg-trend-si-forecast">0</span> xe <br><span class="text-[10px]" id="reg-trend-si-forecast-pct">(0%)</span></p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="flex-1 relative pl-2 h-[220px]">
-                                        <div id="reg-chart-si" class="w-full h-full"></div>
+                                    <div class="flex-1 relative p-3 h-[250px] w-full">
+                                        <div id="reg-chart-si" class="w-full h-full -ml-2"></div>
                                     </div>
                                 </div>
                                 
-                                <div class="border-t border-dashed border-gray-200"></div>
-
                                 <!-- Chart SO -->
-                                <div class="flex relative">
-                                    <div class="w-24 flex flex-col items-center justify-center py-4 border-r border-gray-200 pr-2">
-                                        <div class="w-10 h-10 rounded-full border border-emerald-200 text-emerald-600 flex items-center justify-center mb-1 bg-emerald-50"><i class="fa-solid fa-cart-shopping"></i></div>
-                                        <span class="text-[10px] font-black text-emerald-600 uppercase text-center leading-tight">SELLOUT<br>(Bán ra)</span>
+                                <div class="flex flex-col md:flex-row relative bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="w-full md:w-36 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-100 p-4 flex flex-col items-center justify-center gap-3 shrink-0">
+                                        <div class="w-10 h-10 rounded-full border border-emerald-200 text-emerald-600 flex items-center justify-center mb-1 bg-emerald-50">
+                                            <i class="fa-solid fa-cart-shopping"></i>
+                                        </div>
+                                        <span class="text-[10px] font-black text-emerald-600 uppercase text-center leading-tight mb-2">SELLOUT<br>(Bán ra)</span>
+                                        
+                                        <div class="w-full space-y-2">
+                                            <div class="bg-white border border-gray-200 rounded-lg p-2 text-center shadow-sm">
+                                                <p class="text-[9px] font-bold text-gray-500 uppercase mb-0.5">Mục tiêu</p>
+                                                <p class="text-sm font-black text-slate-800" id="reg-trend-so-target">0 xe</p>
+                                            </div>
+                                            <div class="bg-white border border-emerald-100 rounded-lg p-2 text-center shadow-sm">
+                                                <p class="text-[9px] font-bold text-emerald-600 uppercase mb-0.5">Dự báo nhịp độ</p>
+                                                <p class="text-sm font-black text-emerald-600 leading-tight"><span id="reg-trend-so-forecast">0</span> xe <br><span class="text-[10px]" id="reg-trend-so-forecast-pct">(0%)</span></p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="flex-1 relative pl-2 h-[220px]">
-                                        <div id="reg-chart-so" class="w-full h-full"></div>
+                                    <div class="flex-1 relative p-3 h-[250px] w-full">
+                                        <div id="reg-chart-so" class="w-full h-full -ml-2"></div>
                                     </div>
                                 </div>
                             </div>
@@ -473,10 +497,6 @@ window.loadDataRegionTab = async function() {
         const mienBacRegions = ["tây bắc", "hà nội", "đông bắc", "hồng hà", "bắc trung bộ", "trung trung bộ"];
         const isMienBac = mienBacRegions.includes(norm(regionFilterNorm)); 
 
-        // ===============================================
-        // ĐÃ FIX: SMART FALLBACK - TRÍCH XUẤT HÀNG CHƯA PHÁT VÀ TARGET S.I
-        // Bổ sung lấy cột r.chua_xuat
-        // ===============================================
         const adminLatestData = resAdminLatest.data || [];
         for (let r of adminLatestData) {
             if (getNormalizedRegion(r.region_name) === regionFilterNorm) {
@@ -650,8 +670,8 @@ window.loadDataRegionTab = async function() {
             }).join('');
         }
 
-        // 9. Update Chart 3: Dual Pace
-        updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, chartDaysInMonth, currentPassed);
+        // 9. Update Chart 3: Dual Pace VÀ THÔNG SỐ FORECAST
+        updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, chartDaysInMonth, currentPassed, daysPassed, daysLeft, totalActSI, totalActSO);
 
         if(lastUpdate) {
             const now = new Date();
@@ -664,9 +684,35 @@ window.loadDataRegionTab = async function() {
     }
 };
 
-function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, daysPassed) {
+// ĐÃ FIX: Thêm tham số tính Forecast
+function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, currentPassed, daysPassed, daysLeft, totalActSI, totalActSO) {
     if (window.regChartSI) window.regChartSI.destroy();
     if (window.regChartSO) window.regChartSO.destroy();
+
+    // TÍNH TOÁN DỰ BÁO NHỊP ĐỘ (FORECAST)
+    const siActPace = daysPassed > 0 ? totalActSI / daysPassed : 0;
+    const siForecast = Math.round(totalActSI + (siActPace * daysLeft));
+    const siForecastPct = totalTarSI > 0 ? (siForecast / totalTarSI) * 100 : 0;
+
+    const soActPace = daysPassed > 0 ? totalActSO / daysPassed : 0;
+    const soForecast = Math.round(totalActSO + (soActPace * daysLeft));
+    const soForecastPct = totalTarSO > 0 ? (soForecast / totalTarSO) * 100 : 0;
+
+    // GÁN LÊN GIAO DIỆN MỚI
+    const elSiTarget = document.getElementById('reg-trend-si-target');
+    const elSiForecast = document.getElementById('reg-trend-si-forecast');
+    const elSiForecastPct = document.getElementById('reg-trend-si-forecast-pct');
+    if(elSiTarget) elSiTarget.innerText = fmtRegNum(totalTarSI) + ' xe';
+    if(elSiForecast) elSiForecast.innerText = fmtRegNum(siForecast);
+    if(elSiForecastPct) elSiForecastPct.innerText = `(${Math.round(siForecastPct)}%)`;
+
+    const elSoTarget = document.getElementById('reg-trend-so-target');
+    const elSoForecast = document.getElementById('reg-trend-so-forecast');
+    const elSoForecastPct = document.getElementById('reg-trend-so-forecast-pct');
+    if(elSoTarget) elSoTarget.innerText = fmtRegNum(totalTarSO) + ' xe';
+    if(elSoForecast) elSoForecast.innerText = fmtRegNum(soForecast);
+    if(elSoForecastPct) elSoForecastPct.innerText = `(${Math.round(soForecastPct)}%)`;
+
 
     const cats = [];
     const planSI = [], planSO = [];
@@ -681,7 +727,7 @@ function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, da
         planSI.push(Math.round(paceStepSI * (i+1)));
         planSO.push(Math.round(paceStepSO * (i+1)));
         
-        if (i < daysPassed) {
+        if (i < currentPassed) {
             cumSI += dailyStats[i].si;
             cumSO += dailyStats[i].so;
             actSI.push(cumSI);
@@ -693,7 +739,7 @@ function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, da
     }
 
     const commonOptions = {
-        chart: { height: 220, type: 'line', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+        chart: { height: 230, type: 'line', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
         stroke: { width: [3, 2], curve: 'straight', dashArray: [0, 4] },
         dataLabels: {
             enabled: true,
@@ -709,7 +755,7 @@ function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, da
         grid: { borderColor: '#f1f5f9', strokeDashArray: 3, padding: { top: 0, bottom: 0, left: 10, right: 10 } },
         legend: { show: false },
         annotations: {
-            xaxis: [{ x: String(daysPassed).padStart(2,'0'), strokeDashArray: 0, borderColor: '#ef4444', label: { borderColor: '#ef4444', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 800 }, text: 'Lọc hiện tại', offsetY: 0 } }]
+            xaxis: [{ x: String(currentPassed).padStart(2,'0'), strokeDashArray: 0, borderColor: '#ef4444', label: { borderColor: '#ef4444', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 800 }, text: 'Lọc hiện tại', offsetY: 0 } }]
         }
     };
 

@@ -193,54 +193,11 @@
                     </div>
                 </div>
 
-                <!-- HÀNG 3: XẾP HẠNG SALE & THI ĐUA -->
+                <!-- HÀNG 3: THI ĐUA KHU VỰC & CẢNH BÁO -->
                 <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
-                    <div class="xl:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                        <!-- BẢNG 1: XẾP HẠNG SELLIN -->
-                        <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-                            <h3 class="text-[11px] md:text-xs font-black text-blue-600 uppercase mb-3"><i class="fa-solid fa-medal text-blue-500"></i> TOP SALE - SELLIN</h3>
-                            <div class="flex-1">
-                                <div class="max-h-[235px] overflow-y-auto custom-scrollbar pr-1 border border-gray-50 rounded-lg">
-                                    <table class="w-full text-left text-[11px] md:text-xs whitespace-nowrap relative">
-                                        <thead class="text-gray-400 font-bold uppercase text-[9px] sticky top-0 bg-white z-20 shadow-[0_1px_0_0_#f1f5f9]">
-                                            <tr>
-                                                <th class="py-2 px-2 w-6 bg-white border-b border-gray-100 sticky left-0 z-30 shadow-[1px_0_0_0_#f1f5f9]">#</th>
-                                                <th class="py-2 px-2 bg-white border-b border-gray-100">Sale</th>
-                                                <th class="py-2 px-2 bg-white border-b border-gray-100 text-center">Mục tiêu</th>
-                                                <th class="py-2 px-2 bg-blue-50 border-b border-gray-100 text-center text-blue-600">Thực đạt</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="erp-top-si-body" class="font-bold text-slate-700 divide-y divide-gray-50">
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- BẢNG 2: XẾP HẠNG SELLOUT -->
-                        <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-                            <h3 class="text-[11px] md:text-xs font-black text-green-600 uppercase mb-3"><i class="fa-solid fa-medal text-green-500"></i> TOP SALE - SELLOUT</h3>
-                            <div class="flex-1">
-                                <div class="max-h-[235px] overflow-y-auto custom-scrollbar pr-1 border border-gray-50 rounded-lg">
-                                    <table class="w-full text-left text-[11px] md:text-xs whitespace-nowrap relative">
-                                        <thead class="text-gray-400 font-bold uppercase text-[9px] sticky top-0 bg-white z-20 shadow-[0_1px_0_0_#f1f5f9]">
-                                            <tr>
-                                                <th class="py-2 px-2 w-6 bg-white border-b border-gray-100 sticky left-0 z-30 shadow-[1px_0_0_0_#f1f5f9]">#</th>
-                                                <th class="py-2 px-2 bg-white border-b border-gray-100">Sale</th>
-                                                <th class="py-2 px-2 bg-white border-b border-gray-100 text-center">Mục tiêu</th>
-                                                <th class="py-2 px-2 bg-green-50 border-b border-gray-100 text-center text-green-600">Thực đạt</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="erp-top-so-body" class="font-bold text-slate-700 divide-y divide-gray-50">
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- BẢNG THI ĐUA 12 KHU VỰC SELLIN -->
-                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-6 relative flex flex-col">
+                    
+                    <!-- BẢNG THI ĐUA 12 KHU VỰC SELLIN (Chiếm 8 cột) -->
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-8 relative flex flex-col">
                         <h3 class="text-[11px] md:text-xs font-black text-slate-700 uppercase flex flex-wrap items-center justify-between mb-4 gap-2">
                             <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-gantt text-blue-500"></i> THI ĐUA 12 KHU VỰC (SELLIN)</span>
                             <div class="flex gap-2 text-[9px] font-bold text-gray-500">
@@ -249,7 +206,7 @@
                             </div>
                         </h3>
                         
-                        <div class="overflow-y-auto flex-1 custom-scrollbar pr-1 max-h-[235px]">
+                        <div class="overflow-y-auto flex-1 custom-scrollbar pr-1 max-h-[300px]">
                             <div class="min-w-[350px]">
                                 <table class="w-full text-left text-[11px] md:text-xs whitespace-nowrap relative">
                                     <thead class="text-gray-400 font-bold uppercase text-[9px] sticky top-0 bg-white z-30 shadow-[0_1px_0_0_#f1f5f9]">
@@ -267,29 +224,74 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- HÀNG 4: XU HƯỚNG & CẢNH BÁO -->
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
-                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-4">
-                        <h3 class="text-[11px] md:text-xs font-black text-blue-600 uppercase mb-2">XU HƯỚNG SELLIN (NGÀY)</h3>
-                        <div id="line-si" class="h-[180px] -ml-2"></div>
-                    </div>
-                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-4">
-                        <h3 class="text-[11px] md:text-xs font-black text-green-600 uppercase mb-2">XU HƯỚNG SELLOUT (NGÀY)</h3>
-                        <div id="line-so" class="h-[180px] -ml-2"></div>
-                    </div>
                     
-                    <!-- TRUNG TÂM CẢNH BÁO TỰ ĐỘNG -->
+                    <!-- TRUNG TÂM CẢNH BÁO TỰ ĐỘNG (Chiếm 4 cột) -->
                     <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 xl:col-span-4 flex flex-col">
                         <h3 class="text-[11px] md:text-xs font-black text-red-600 uppercase mb-3 flex items-center gap-2" id="erp-alert-header-title">
                             <i class="fa-regular fa-bell"></i> TRUNG TÂM CẢNH BÁO
                         </h3>
-                        <div id="erp-warnings-container" class="space-y-2.5 flex-1 overflow-y-auto max-h-[200px] custom-scrollbar text-[11px] pr-2">
+                        <div id="erp-warnings-container" class="space-y-2.5 flex-1 overflow-y-auto max-h-[300px] custom-scrollbar text-[11px] pr-2">
                             <div class="flex items-center justify-center h-full"><i class="fa-solid fa-spinner fa-spin text-gray-300 text-lg"></i></div>
                         </div>
                     </div>
+
                 </div>
+
+                <!-- HÀNG 4: XU HƯỚNG FULL NGANG -->
+                <div class="grid grid-cols-1 gap-4 md:gap-6">
+                    
+                    <!-- XU HƯỚNG SELLIN -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row overflow-hidden">
+                        <!-- Bảng thông tin Mục tiêu/Dự báo bên trái -->
+                        <div class="w-full md:w-44 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-100 p-4 flex flex-col items-center justify-center gap-3 shrink-0">
+                            <div class="text-center">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg mx-auto mb-1"><i class="fa-solid fa-truck-fast"></i></div>
+                                <h3 class="text-[11px] font-black text-blue-600 uppercase leading-tight">SELLIN<br><span class="text-[9px] text-gray-500 font-bold">(PHÁT HÀNG)</span></h3>
+                            </div>
+                            <div class="w-full space-y-2 mt-2">
+                                <div class="bg-white border border-gray-200 rounded-lg p-2 text-center shadow-sm">
+                                    <p class="text-[9px] font-bold text-gray-500 uppercase mb-0.5">Mục tiêu</p>
+                                    <p class="text-sm font-black text-slate-800" id="trend-si-target">0 xe</p>
+                                </div>
+                                <div class="bg-white border border-blue-100 rounded-lg p-2 text-center shadow-sm">
+                                    <p class="text-[9px] font-bold text-blue-500 uppercase mb-0.5">Dự báo nhịp độ</p>
+                                    <p class="text-sm font-black text-blue-600 leading-tight"><span id="trend-si-forecast">0</span> xe <br><span class="text-[10px]" id="trend-si-forecast-pct">(0%)</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Biểu đồ đường bên phải -->
+                        <div class="flex-1 p-3 w-full overflow-hidden flex flex-col justify-center">
+                            <div id="line-si" class="h-[210px] w-full -ml-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- XU HƯỚNG SELLOUT -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row overflow-hidden">
+                        <!-- Bảng thông tin Mục tiêu/Dự báo bên trái -->
+                        <div class="w-full md:w-44 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-100 p-4 flex flex-col items-center justify-center gap-3 shrink-0">
+                            <div class="text-center">
+                                <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-lg mx-auto mb-1"><i class="fa-solid fa-cart-shopping"></i></div>
+                                <h3 class="text-[11px] font-black text-green-600 uppercase leading-tight">SELLOUT<br><span class="text-[9px] text-gray-500 font-bold">(BÁN RA)</span></h3>
+                            </div>
+                            <div class="w-full space-y-2 mt-2">
+                                <div class="bg-white border border-gray-200 rounded-lg p-2 text-center shadow-sm">
+                                    <p class="text-[9px] font-bold text-gray-500 uppercase mb-0.5">Mục tiêu</p>
+                                    <p class="text-sm font-black text-slate-800" id="trend-so-target">0 xe</p>
+                                </div>
+                                <div class="bg-white border border-green-100 rounded-lg p-2 text-center shadow-sm">
+                                    <p class="text-[9px] font-bold text-green-600 uppercase mb-0.5">Dự báo nhịp độ</p>
+                                    <p class="text-sm font-black text-green-600 leading-tight"><span id="trend-so-forecast">0</span> xe <br><span class="text-[10px]" id="trend-so-forecast-pct">(0%)</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Biểu đồ đường bên phải -->
+                        <div class="flex-1 p-3 w-full overflow-hidden flex flex-col justify-center">
+                            <div id="line-so" class="h-[210px] w-full -ml-2"></div>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
         </div>
 

@@ -1,3 +1,8 @@
+// ==========================================
+// FILE: js/views/view-competition.js
+// Giao diện Bảng Xếp Hạng Thi Đua S.O / S.I
+// ==========================================
+
 export const competitionHTML = `
 <div class="p-4 md:p-6 fade-in max-w-[1200px] mx-auto bg-[#F8FAFC]">
     <!-- Header Campaign -->
@@ -140,20 +145,20 @@ window.renderSaleLeaderboard = async () => {
         let targetData = [];
         let shops = [];
 
+        // --- ĐÃ SỬA LỖI: Lọc dữ liệu mục tiêu theo tháng (report_month) ---
         if (type === 'SO') {
             const [resSO, resTarget, resShops] = await Promise.all([
                 window.sb.from('daily_so_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
-                window.sb.from('monthly_sale_targets').select('*'),
+                window.sb.from('monthly_sale_targets').select('*').like('report_month', `${yearStr}-${monthStr}%`),
                 window.sb.from('master_shop_list').select('*')
             ]);
             reports = resSO.data || [];
             targetData = resTarget.data || [];
             shops = resShops.data || [];
         } else {
-            // Lấy dữ liệu thi đua S.I từ bảng game_si_reports
             const [resSI, resTarget, resShops] = await Promise.all([
                 window.sb.from('game_si_reports').select('*').gte('report_date', startDate).lte('report_date', endDate),
-                window.sb.from('monthly_sale_targets').select('*'),
+                window.sb.from('monthly_sale_targets').select('*').like('report_month', `${yearStr}-${monthStr}%`),
                 window.sb.from('master_shop_list').select('*')
             ]);
             reports = resSI.data || [];
@@ -161,7 +166,6 @@ window.renderSaleLeaderboard = async () => {
             shops = resShops.data || [];
         }
 
-        // --- FIX: Hàm chuẩn hóa tên nhân viên để gộp chung ---
         const normalizeName = (name) => {
             if (!name) return null;
             return name.trim().toLowerCase().replace(/\s+/g, ' ').split(' ')
@@ -169,7 +173,6 @@ window.renderSaleLeaderboard = async () => {
                 .join(' ');
         };
 
-        // --- FIX: Chỉ lấy danh sách NVKD thực sự (có trong master_shop_list) ---
         const validSales = new Set();
         shops.forEach(s => {
             const name = normalizeName(s.sale_name || s.sale || s.nhan_vien || s.ten_nvkd || s.nvkd);
@@ -179,8 +182,7 @@ window.renderSaleLeaderboard = async () => {
         let saleStats = {};
 
         targetData.forEach(row => {
-            const name = normalizeName(row.sale_name); // Gọi hàm chuẩn hóa
-            // Chỉ thêm vào bảng xếp hạng nếu có trong danh sách hợp lệ
+            const name = normalizeName(row.sale_name); 
             if (name && validSales.has(name)) {
                 if (!saleStats[name]) saleStats[name] = { name: name, target: 0, actual: 0 };
                 if (type === 'SO') {
@@ -192,8 +194,7 @@ window.renderSaleLeaderboard = async () => {
         });
 
         reports.forEach(row => {
-            const name = normalizeName(row.sale_name); // Gọi hàm chuẩn hóa
-            // Chỉ thêm vào bảng xếp hạng nếu có trong danh sách hợp lệ
+            const name = normalizeName(row.sale_name); 
             if (name && validSales.has(name)) {
                 let val = 0;
                 

@@ -21,7 +21,8 @@ import { masterReportHTML } from './views/view-master-report.js';
 
 // TÍCH HỢP GIAO DIỆN GAME
 import { game01HTML } from './views/view-game01.js';
-import { game02HTML } from './views/view-game02.js'; // Tích hợp Game 02
+import { game02HTML } from './views/view-game02.js'; 
+import { game03HTML } from './views/view-game03.js'; // Bổ sung import Game 03
 
 import './sellout.js';
 import './sellin.js';
@@ -112,8 +113,8 @@ const viewMap = {
     'leaderboard': competitionHTML,
     'master': masterReportHTML, 
     'game01': game01HTML, 
-    'game02': game02HTML, // ĐÃ ĐỔI TỪ PLACEHOLDER THÀNH BIẾN game02HTML
-    'game03': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Game đang phát triển...</div>',
+    'game02': game02HTML, 
+    'game03': game03HTML, // Cập nhật gán HTML thực tế của Game 03
     'fund': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Quỹ đang phát triển...</div>',
     'reward': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Lịch sử thưởng đang phát triển...</div>'
 };
@@ -191,6 +192,11 @@ window.switchView = (viewId) => {
     // Khởi tạo Game 02 - Chiến Trường Khu Vực
     if (viewId === 'game02' && typeof window.loadGame02Data === 'function') {
         window.loadGame02Data();
+    }
+
+    // Khởi tạo Game 03 - Đại Chiến Toàn Quốc
+    if (viewId === 'game03' && typeof window.loadGame03Data === 'function') {
+        window.loadGame03Data();
     }
 
     // Highlight Menu Trái

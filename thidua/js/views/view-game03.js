@@ -1,7 +1,6 @@
 // ==========================================
 // MODULE: GAME 03 - ĐẠI CHIẾN TOÀN QUỐC
 // Thi đua SELL-IN Toàn quốc - 12 Khu vực (Quý III)
-// Data Source: Miền Bắc (Sale nhập) + Miền Nam (Admin nhập)
 // ==========================================
 
 export const game03HTML = `
@@ -15,7 +14,7 @@ export const game03HTML = `
                 <i class="fa-solid fa-globe text-[#F97316]"></i> GAME 03 – ĐẠI CHIẾN TOÀN QUỐC
                 <span class="bg-red-100 text-red-600 text-[10px] font-black px-2 py-1 rounded border border-red-200 ml-2 shadow-sm">LIVE RANKING - QUÝ III</span>
             </h1>
-            <p class="text-sm font-bold text-gray-500 mt-1 ml-9">Thi đua SELL-IN – Số liệu: Miền Bắc (Sale nhập) & Miền Nam (Admin nhập)</p>
+            <p class="text-sm font-bold text-gray-500 mt-1 ml-9">Thi đua SELL-IN – Xếp hạng theo Tỷ lệ % Hoàn thành mục tiêu</p>
         </div>
         <div class="flex items-center gap-4">
             <div class="text-right hidden md:block">
@@ -92,7 +91,7 @@ export const game03HTML = `
     <!-- MARQUEE CẢNH BÁO BIẾN ĐỘNG -->
     <div class="bg-white border border-red-100 rounded-xl p-3 mb-6 shadow-sm flex items-center gap-3 overflow-hidden">
         <div class="bg-red-50 text-red-600 px-3 py-1 rounded text-[10px] font-black uppercase shrink-0 flex items-center gap-1.5 border border-red-100">
-            <i class="fa-solid fa-fire text-red-500 animate-pulse"></i> <span id="g3-marquee-title">BIẾN ĐỘNG HÔM NAY</span>
+            <i class="fa-solid fa-fire text-red-500 animate-pulse"></i> <span id="g3-marquee-title">TÌNH HÌNH ĐƯỜNG ĐUA</span>
         </div>
         <div class="flex-1 overflow-hidden relative h-5">
             <div class="absolute whitespace-nowrap text-sm font-bold text-slate-700 animate-[marquee_20s_linear_infinite]" id="g3-marquee-content">
@@ -128,7 +127,7 @@ export const game03HTML = `
                             
                             <th class="py-2 px-2 border-r border-gray-700 font-medium text-gray-400">MỤC TIÊU (xe)</th>
                             <th class="py-2 px-2 border-r border-gray-700">LŨY KẾ (xe)</th>
-                            <th class="py-2 px-2 border-r border-gray-700">% HOÀN THÀNH QUÝ</th>
+                            <th class="py-2 px-2 border-r border-gray-700 text-green-400">% HOÀN THÀNH</th>
                             
                             <th class="py-2 px-2 border-r border-gray-700">THÁNG 7<br><span class="text-[8px] font-normal text-gray-400">(31 ngày)</span></th>
                             <th class="py-2 px-2 border-r border-gray-700">THÁNG 8<br><span class="text-[8px] font-normal text-gray-400">(31 ngày)</span></th>
@@ -172,11 +171,11 @@ export const game03HTML = `
                 </div>
             </div>
 
-            <!-- AI Nhận định -->
+            <!-- Nhận định tự động (Đã đổi tên & icon) -->
             <div class="bg-blue-50/50 rounded-xl shadow-sm border border-blue-100 p-4">
                 <div class="flex justify-between items-center mb-3 border-b border-blue-100 pb-2">
-                    <h3 class="text-[11px] font-black text-blue-800 uppercase">AI NHẬN ĐỊNH</h3>
-                    <span class="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded font-black">AI</span>
+                    <h3 class="text-[11px] font-black text-blue-800 uppercase">NHẬN ĐỊNH TỰ ĐỘNG</h3>
+                    <i class="fa-solid fa-bolt text-blue-500"></i>
                 </div>
                 <ul class="text-[11px] text-slate-700 space-y-2 font-medium leading-relaxed" id="g3-ai-insights">
                     <li><i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5 relative -top-0.5"></i> Đang phân tích...</li>
@@ -194,22 +193,18 @@ window.loadGame03Data = async () => {
         const today = new Date();
         const year = today.getFullYear();
         
-        // Cố định cấu hình Quý 3
         const q3Start = `${year}-07-01`;
         const q3End = `${year}-09-30`;
-        const q3FirstDays = [`${year}-07-01`, `${year}-08-01`, `${year}-09-01`]; // Các ngày Admin chốt Target
+        const q3FirstDays = [`${year}-07-01`, `${year}-08-01`, `${year}-09-01`]; 
 
-        // Lấy ngày báo cáo
         let reportDate = today.toISOString().split('T')[0];
         if (reportDate > q3End) reportDate = q3End;
         if (reportDate < q3Start) reportDate = q3Start;
 
-        // Ngày hôm qua để so sánh hạng
         let prevDateObj = new Date(reportDate);
         prevDateObj.setDate(prevDateObj.getDate() - 1);
         let yesterday = prevDateObj.toISOString().split('T')[0];
 
-        // Mảng 7 ngày qua cho biểu đồ Sparkline
         const last7Days = [];
         for(let i=6; i>=0; i--) {
             let d = new Date(reportDate);
@@ -217,8 +212,7 @@ window.loadGame03Data = async () => {
             if(d >= new Date(q3Start)) last7Days.push(d.toISOString().split('T')[0]);
         }
 
-        // Cập nhật UI Thời gian
-        const totalDaysQ3 = 92; // 31 + 31 + 30
+        const totalDaysQ3 = 92; 
         const daysPassed = Math.floor((new Date(reportDate) - new Date(q3Start)) / (1000 * 60 * 60 * 24)) + 1;
         const daysLeft = Math.max(0, totalDaysQ3 - daysPassed);
         const timePct = Math.min(100, Math.round((daysPassed / totalDaysQ3) * 100));
@@ -228,8 +222,6 @@ window.loadGame03Data = async () => {
         document.getElementById('g3-days-left').innerText = daysLeft;
 
         // --- 2. FETCH DỮ LIỆU ---
-        // Fetch Admin SI (Để lấy Target tất cả vùng & Actual Miền Nam)
-        // Fetch Game SI (Để lấy Actual Miền Bắc do Sale nhập)
         const [resAdminSI, resGameSI, resShops] = await Promise.all([
             window.sb.from('daily_si_reports').select('*').gte('report_date', q3Start).lte('report_date', reportDate),
             window.sb.from('game_si_reports').select('*').gte('report_date', q3Start).lte('report_date', reportDate),
@@ -240,7 +232,7 @@ window.loadGame03Data = async () => {
         const rawGameSI = resGameSI.data || [];
         const rawShops = resShops.data || [];
 
-        // --- 3. ĐỊNH NGHĨA 12 KHU VỰC VÀ MAP TÊN GIÁM ĐỐC ---
+        // --- 3. ĐỊNH NGHĨA KHU VỰC ---
         const mienBacRegions = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ"];
         const validRegions = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ", "Nam Trung Bộ", "Tây Nguyên", "Đông Nam", "Hồ Chí Minh", "Tây Nam", "Sông Cửu Long"];
         
@@ -257,20 +249,11 @@ window.loadGame03Data = async () => {
             return null;
         };
 
-        // Bộ từ điển để Map nếu r.region_name là tên GĐ
         const dirToRegionMap = {
-            "khổng văn trọng": "Tây Bắc",
-            "khuất văn đức": "Hà Nội",
-            "trịnh trần cường": "Đông Bắc",
-            "đỗ tuấn minh": "Hồng Hà",
-            "nông đức long": "Bắc Trung Bộ",
-            "bùi minh trung": "Trung Trung Bộ",
-            "cấn đình nguyên": "Nam Trung Bộ",
-            "lê thế duy": "Tây Nguyên",
-            "nguyễn văn hùng": "Đông Nam",
-            "nguyễn thành nam": "Hồ Chí Minh",
-            "trần đức cường": "Tây Nam",
-            "bùi trung tuấn": "Sông Cửu Long"
+            "khổng văn trọng": "Tây Bắc", "khuất văn đức": "Hà Nội", "trịnh trần cường": "Đông Bắc", "đỗ tuấn minh": "Hồng Hà",
+            "nông đức long": "Bắc Trung Bộ", "bùi minh trung": "Trung Trung Bộ", "cấn đình nguyên": "Nam Trung Bộ",
+            "lê thế duy": "Tây Nguyên", "nguyễn văn hùng": "Đông Nam", "nguyễn thành nam": "Hồ Chí Minh",
+            "trần đức cường": "Tây Nam", "bùi trung tuấn": "Sông Cửu Long"
         };
 
         const saleToRegionMap = {};
@@ -278,57 +261,43 @@ window.loadGame03Data = async () => {
             const sName = norm(s.sale_name);
             const dName = norm(s.director_name);
             const reg = getNormalizedRegion(s.area || s.khu_vuc || s.region);
-            if (sName && reg && !dName.includes(sName)) { 
-                saleToRegionMap[sName] = reg;
-            }
+            if (sName && reg && !dName.includes(sName)) saleToRegionMap[sName] = reg;
         });
 
-        // Khởi tạo Object cấu trúc 12 khu vực
         const regionsData = {};
         validRegions.forEach(r => {
             regionsData[r] = { 
                 name: r, target: 0, actualTotal: 0, actualYest: 0, 
-                actM7: 0, actM8: 0, actM9: 0,
-                daily7: Array(last7Days.length).fill(0)
+                actM7: 0, actM8: 0, actM9: 0, daily7: Array(last7Days.length).fill(0)
             };
         });
 
-        // --- 4. TÍNH TOÁN TARGET VÀ THỰC ĐẠT THEO LUẬT MỚI ---
-        let totalSITarget = 0;
-        let totalSIActual = 0;
-
-        // XỬ LÝ DỮ LIỆU ADMIN (Lấy TARGET cho 12 Khu vực + Lấy THỰC ĐẠT cho 6 Khu vực Miền Nam)
+        // --- 4. TÍNH TOÁN DỮ LIỆU ---
         rawAdminSI.forEach(r => {
             let reg = getNormalizedRegion(r.region_name || r.khu_vuc);
-            
             if (!reg && r.region_name) {
                 const nDir = norm(r.region_name);
                 for (const [key, val] of Object.entries(dirToRegionMap)) {
-                    if (nDir.includes(key)) {
-                        reg = val; break;
-                    }
+                    if (nDir.includes(key)) { reg = val; break; }
                 }
             }
 
             if (reg && regionsData[reg]) {
                 const rDate = r.report_date;
-
-                // A. Cộng dồn Target (Chỉ lấy ở các ngày mùng 1 của Quý 3 do Admin khai báo)
+                // Target Quý (Mùng 1 các tháng 7,8,9)
                 if (q3FirstDays.includes(rDate) && r.target_ph) {
                     regionsData[reg].target += Number(r.target_ph || 0);
                 }
-
-                // B. Cộng dồn Thực đạt (Chỉ áp dụng nếu là khu vực MIỀN NAM)
+                // Thực đạt Miền Nam
                 if (!mienBacRegions.includes(reg)) {
                     const val = Number(r.xuat_hang || r.phat_hang || 0);
                     if (val > 0) {
                         regionsData[reg].actualTotal += val;
                         if (rDate <= yesterday) regionsData[reg].actualYest += val;
-
                         if (rDate.startsWith(`${year}-07`)) regionsData[reg].actM7 += val;
                         else if (rDate.startsWith(`${year}-08`)) regionsData[reg].actM8 += val;
                         else if (rDate.startsWith(`${year}-09`)) regionsData[reg].actM9 += val;
-
+                        
                         const idx = last7Days.indexOf(rDate);
                         if (idx !== -1) regionsData[reg].daily7[idx] += val;
                     }
@@ -336,20 +305,17 @@ window.loadGame03Data = async () => {
             }
         });
 
-        // XỬ LÝ DỮ LIỆU SALE GAME (Lấy THỰC ĐẠT cho 6 Khu vực Miền Bắc)
         rawGameSI.forEach(r => {
             const sName = norm(r.sale_name);
             const reg = getNormalizedRegion(r.region_name || r.khu_vuc) || saleToRegionMap[sName];
             
-            // Chỉ xử lý nếu khu vực thuộc MIỀN BẮC
+            // Thực đạt Miền Bắc (Sale nhập)
             if (reg && regionsData[reg] && mienBacRegions.includes(reg)) {
                 const val = Number(r.xuat_hang || 0);
                 const rDate = r.report_date;
-
                 if (val > 0) {
                     regionsData[reg].actualTotal += val;
                     if (rDate <= yesterday) regionsData[reg].actualYest += val;
-
                     if (rDate.startsWith(`${year}-07`)) regionsData[reg].actM7 += val;
                     else if (rDate.startsWith(`${year}-08`)) regionsData[reg].actM8 += val;
                     else if (rDate.startsWith(`${year}-09`)) regionsData[reg].actM9 += val;
@@ -360,23 +326,28 @@ window.loadGame03Data = async () => {
             }
         });
 
-        // Tính tổng toàn quốc
-        Object.values(regionsData).forEach(r => totalSITarget += r.target);
-
-        // --- 5. TÍNH TOÁN XẾP HẠNG ---
+        // --- 5. TÍNH TOÁN % VÀ XẾP HẠNG (ƯU TIÊN % HOÀN THÀNH QUÝ) ---
         let arr = Object.values(regionsData);
+        let totalSITarget = 0;
+        let totalSIActual = 0;
 
-        // Xếp hạng hôm qua
-        arr.sort((a,b) => b.actualYest - a.actualYest || b.target - a.target);
+        // Tính % cho hôm nay và hôm qua
+        arr.forEach(r => {
+            r.pct = r.target > 0 ? (r.actualTotal / r.target) * 100 : 0;
+            r.pctYest = r.target > 0 ? (r.actualYest / r.target) * 100 : 0;
+            totalSITarget += r.target;
+            totalSIActual += r.actualTotal;
+        });
+
+        // Xếp hạng hôm qua (By PCT, then Actual)
+        arr.sort((a,b) => b.pctYest - a.pctYest || b.actualYest - a.actualYest);
         arr.forEach((r, i) => r.rankYest = i + 1);
 
-        // Xếp hạng hôm nay
-        arr.sort((a,b) => b.actualTotal - a.actualTotal || b.target - a.target);
+        // Xếp hạng hôm nay (By PCT, then Actual)
+        arr.sort((a,b) => b.pct - a.pct || b.actualTotal - a.actualTotal);
         arr.forEach((r, i) => {
             r.rankToday = i + 1;
-            r.rankChange = r.rankYest - r.rankToday; // > 0: Tăng hạng, < 0: Tụt hạng
-            totalSIActual += r.actualTotal;
-            r.pct = r.target > 0 ? (r.actualTotal / r.target) * 100 : 0;
+            r.rankChange = r.rankYest - r.rankToday; 
         });
 
         // --- 6. RENDER UI TỔNG QUAN ---
@@ -384,46 +355,71 @@ window.loadGame03Data = async () => {
         document.getElementById('g3-total-target').innerText = Math.round(totalSITarget).toLocaleString('vi-VN');
         renderRadialGame03('g3-radial-total', totalSITarget > 0 ? (totalSIActual/totalSITarget)*100 : 0, '#10b981');
 
-        // Phân tích biến động
         let countUp = 0, countDown = 0, countUnchanged = 0;
-        let aiInsights = [];
-
         arr.forEach(r => {
             if (r.rankChange > 0) countUp++;
             else if (r.rankChange < 0) countDown++;
             else countUnchanged++;
-
-            // AI Insight Logic
-            if (r.rankToday === 1 && r.rankChange > 0) {
-                aiInsights.push(`<i class="fa-solid fa-circle text-[4px] text-green-500 mr-1.5 relative -top-0.5"></i> <span class="font-bold text-slate-800">${r.name}</span> xuất sắc giành lại <b>Top 1</b> toàn quốc!`);
-            }
-            if (r.rankYest <= 3 && r.rankToday > 3) {
-                aiInsights.push(`<i class="fa-solid fa-circle text-[4px] text-red-500 mr-1.5 relative -top-0.5"></i> <span class="font-bold text-slate-800">${r.name}</span> trượt khỏi Top 3, hiện đang ở hạng ${r.rankToday}.`);
-            }
-            if (r.rankChange >= 2) {
-                aiInsights.push(`<i class="fa-solid fa-circle text-[4px] text-green-500 mr-1.5 relative -top-0.5"></i> <span class="font-bold text-slate-800">${r.name}</span> bứt phá mạnh mẽ, thăng ${r.rankChange} bậc lên hạng ${r.rankToday}.`);
-            }
         });
 
         document.getElementById('g3-count-up').innerText = countUp;
         document.getElementById('g3-count-down').innerText = countDown;
         document.getElementById('g3-count-unchanged').innerText = countUnchanged;
 
-        // Bổ sung Insight mặc định nếu không có biến động lớn
-        if (aiInsights.length === 0) {
-            aiInsights.push(`<i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5 relative -top-0.5"></i> Cục diện Top 3 hiện tại đang khá ổn định.`);
-            aiInsights.push(`<i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5 relative -top-0.5"></i> Các khu vực top dưới đang duy trì nhịp độ đều đặn.`);
+        // --- Cập nhật Marquee thông minh ---
+        let changedArr = arr.filter(r => r.rankChange !== 0);
+        let marqueeTitle = "TÌNH HÌNH ĐƯỜNG ĐUA";
+        let marqueeContent = "";
+
+        if (changedArr.length > 0) {
+            marqueeTitle = `HÔM NAY CÓ ${countUp + countDown} KHU VỰC ĐỔI HẠNG!`;
+            marqueeContent = changedArr.map(r => `${r.name} ${r.rankChange > 0 ? 'tăng' : 'tụt'} ${Math.abs(r.rankChange)} bậc`).join(' • ');
+        } else {
+            // ĐÃ SỬA: Quét khu vực bứt tốc mới nhất tính bằng tổng 2 ngày gần nhất (đề phòng Admin nhập số hôm nay cho hôm qua)
+            let topRecent = [...arr].sort((a,b) => {
+                let aLen = a.daily7.length;
+                let aVol = (a.daily7[aLen - 1] || 0) + (a.daily7[aLen - 2] || 0);
+                
+                let bLen = b.daily7.length;
+                let bVol = (b.daily7[bLen - 1] || 0) + (b.daily7[bLen - 2] || 0);
+                
+                return bVol - aVol;
+            })[0];
+            
+            let len = topRecent ? topRecent.daily7.length : 0;
+            let recentVol = topRecent ? ((topRecent.daily7[len - 1] || 0) + (topRecent.daily7[len - 2] || 0)) : 0;
+            
+            if (recentVol > 0) {
+                marqueeContent = `${topRecent.name} đang bứt tốc mạnh mẽ với ${Math.round(recentVol).toLocaleString('vi-VN')} xe vừa được ghi nhận!`;
+            } else {
+                marqueeContent = `Các khu vực đang nỗ lực bám đuổi, thứ hạng tạm thời được giữ nguyên so với hôm qua.`;
+            }
         }
-        document.getElementById('g3-ai-insights').innerHTML = aiInsights.slice(0, 3).map(i => `<li>${i}</li>`).join('');
+        document.getElementById('g3-marquee-title').innerText = marqueeTitle;
+        document.getElementById('g3-marquee-content').innerText = marqueeContent;
 
-        // Cập nhật Marquee
-        document.getElementById('g3-marquee-title').innerText = countUp > 0 ? `HÔM NAY CÓ ${countUp + countDown} KHU VỰC ĐỔI HẠNG!` : `NHỊP ĐỘ ĐANG DUY TRÌ ỔN ĐỊNH`;
-        document.getElementById('g3-marquee-content').innerText = arr.filter(r => r.rankChange !== 0).map(r => `${r.name} ${r.rankChange > 0 ? 'tăng' : 'tụt'} ${Math.abs(r.rankChange)} bậc`).join(' • ') || 'Không có khu vực nào thay đổi thứ hạng so với hôm qua.';
+        // --- Cập nhật Nhận định tự động (Bỏ AI) ---
+        let autoInsights = [];
+        if (arr[0].pct >= 90) {
+            autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-green-500 mr-1.5 relative -top-0.5"></i> <span class="font-bold text-slate-800">${arr[0].name}</span> đã xuất sắc đạt điều kiện thưởng quý (≥ 90%).`);
+        }
+        let closeToTarget = arr.find(r => r.pct >= 75 && r.pct < 90);
+        if (closeToTarget) {
+            autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-orange-500 mr-1.5 relative -top-0.5"></i> <span class="font-bold text-slate-800">${closeToTarget.name}</span> đang áp sát mốc 90%, cần tập trung cao độ để nhận thưởng.`);
+        }
+        if (autoInsights.length === 0) {
+            autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5 relative -top-0.5"></i> Cục diện Top 3 hiện tại đang khá ổn định.`);
+            autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5 relative -top-0.5"></i> Các khu vực top dưới đang duy trì nhịp độ đều đặn.`);
+        }
+        document.getElementById('g3-ai-insights').innerHTML = autoInsights.slice(0, 3).map(i => `<li>${i}</li>`).join('');
 
-        // Render Top 3 Bám đuổi
+        // --- Render Top 3 Bám đuổi theo logic Cần thêm số lượng xe để vượt % ---
         const rank3 = arr[2];
         const htmlChasing = arr.slice(3, 6).map(r => {
-            const gap = Math.max(0, rank3.actualTotal + 1 - r.actualTotal);
+            const targetPct = rank3.pct;
+            const targetVol = (targetPct / 100) * r.target;
+            const gap = Math.max(0, targetVol - r.actualTotal + 1); // Cần hơn ít nhất 1 xe để vượt
+            
             return `
             <div class="flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-100">
                 <div class="flex items-center gap-2">
@@ -441,18 +437,15 @@ window.loadGame03Data = async () => {
         // --- 7. RENDER MAIN TABLE ---
         const tbody = document.getElementById('g3-table-body');
         tbody.innerHTML = arr.map((r, i) => {
-            // Định dạng Hạng
             let rankHtml = `<span class="font-bold text-gray-400">${r.rankToday}</span>`;
             if (r.rankToday === 1) rankHtml = `<span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center font-black mx-auto shadow-sm">1</span>`;
             if (r.rankToday === 2) rankHtml = `<span class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-black mx-auto shadow-sm">2</span>`;
             if (r.rankToday === 3) rankHtml = `<span class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-black mx-auto shadow-sm">3</span>`;
 
-            // Định dạng thay đổi
             let changeHtml = `<span class="text-gray-300 font-bold">-</span>`;
             if (r.rankChange > 0) changeHtml = `<span class="text-green-500 font-black flex items-center justify-center gap-1"><i class="fa-solid fa-caret-up"></i> ${r.rankChange}</span>`;
             if (r.rankChange < 0) changeHtml = `<span class="text-red-500 font-black flex items-center justify-center gap-1"><i class="fa-solid fa-caret-down"></i> ${Math.abs(r.rankChange)}</span>`;
 
-            // Progress bar Quý
             const barW = Math.min(100, r.pct);
             let barColor = 'bg-blue-500';
             if (r.pct >= 100) barColor = 'bg-emerald-500';
@@ -488,7 +481,6 @@ window.loadGame03Data = async () => {
             </tr>`;
         }).join('');
 
-        // Vẽ Sparkline sau khi DOM update
         setTimeout(() => {
             arr.forEach((r, i) => {
                 const el = document.querySelector(`#g3-spark-${i}`);
@@ -511,7 +503,6 @@ window.loadGame03Data = async () => {
     }
 };
 
-// Hàm hỗ trợ vẽ biểu đồ vòng
 function renderRadialGame03(id, val, color) {
     if (typeof ApexCharts === 'undefined') return;
     const el = document.getElementById(id);

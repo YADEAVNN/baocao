@@ -171,7 +171,7 @@ export const game03HTML = `
                 </div>
             </div>
 
-            <!-- Nhận định tự động (Đã đổi tên & icon) -->
+            <!-- Nhận định tự động -->
             <div class="bg-blue-50/50 rounded-xl shadow-sm border border-blue-100 p-4">
                 <div class="flex justify-between items-center mb-3 border-b border-blue-100 pb-2">
                     <h3 class="text-[11px] font-black text-blue-800 uppercase">NHẬN ĐỊNH TỰ ĐỘNG</h3>
@@ -195,7 +195,6 @@ window.loadGame03Data = async () => {
         
         const q3Start = `${year}-07-01`;
         const q3End = `${year}-09-30`;
-        const q3FirstDays = [`${year}-07-01`, `${year}-08-01`, `${year}-09-01`]; 
 
         let reportDate = today.toISOString().split('T')[0];
         if (reportDate > q3End) reportDate = q3End;
@@ -222,9 +221,11 @@ window.loadGame03Data = async () => {
         document.getElementById('g3-days-left').innerText = daysLeft;
 
         // --- 2. FETCH DỮ LIỆU ---
+        // SỬA LỖI: Fetch toàn bộ dữ liệu đến hết Quý 3 (q3End) thay vì chỉ đến hôm nay (reportDate)
+        // để đảm bảo lấy được Target của cả tháng 7, 8 và 9 (kể cả các tháng ở tương lai)
         const [resAdminSI, resGameSI, resShops] = await Promise.all([
-            window.sb.from('daily_si_reports').select('*').gte('report_date', q3Start).lte('report_date', reportDate),
-            window.sb.from('game_si_reports').select('*').gte('report_date', q3Start).lte('report_date', reportDate),
+            window.sb.from('daily_si_reports').select('*').gte('report_date', q3Start).lte('report_date', q3End),
+            window.sb.from('game_si_reports').select('*').gte('report_date', q3Start).lte('report_date', q3End),
             window.sb.from('master_shop_list').select('sale_name, director_name, area, khu_vuc, region')
         ]);
 
@@ -268,11 +269,16 @@ window.loadGame03Data = async () => {
         validRegions.forEach(r => {
             regionsData[r] = { 
                 name: r, target: 0, actualTotal: 0, actualYest: 0, 
-                actM7: 0, actM8: 0, actM9: 0, daily7: Array(last7Days.length).fill(0)
+                actM7: 0, actM8: 0, actM9: 0, daily7: Array(last7Days.length).fill(0),
+                tarM7: 0, tarM8: 0, tarM9: 0 // Biến lưu Target từng tháng
             };
         });
 
         // --- 4. TÍNH TOÁN DỮ LIỆU ---
+        
+        // Sắp xếp dữ liệu Admin tăng dần theo ngày (Để lấy giá trị Target được nạp gần nhất trong tháng đó)
+        rawAdminSI.sort((a,b) => a.report_date.localeCompare(b.report_date));
+
         rawAdminSI.forEach(r => {
             let reg = getNormalizedRegion(r.region_name || r.khu_vuc);
             if (!reg && r.region_name) {
@@ -284,16 +290,22 @@ window.loadGame03Data = async () => {
 
             if (reg && regionsData[reg]) {
                 const rDate = r.report_date;
-                // Target Quý (Mùng 1 các tháng 7,8,9)
-                if (q3FirstDays.includes(rDate) && r.target_ph) {
-                    regionsData[reg].target += Number(r.target_ph || 0);
+                
+                // A. Tính Target thông minh (Lấy mốc Target mới nhất của mỗi tháng 7, 8, 9)
+                const tVal = Number(r.target_ph || r.target_si || r.target || 0);
+                if (tVal > 0) {
+                    if (rDate.startsWith(`${year}-07`)) regionsData[reg].tarM7 = tVal;
+                    else if (rDate.startsWith(`${year}-08`)) regionsData[reg].tarM8 = tVal;
+                    else if (rDate.startsWith(`${year}-09`)) regionsData[reg].tarM9 = tVal;
                 }
-                // Thực đạt Miền Nam
-                if (!mienBacRegions.includes(reg)) {
+
+                // B. Thực đạt Miền Nam (Chỉ tính đến ngày hiện tại reportDate)
+                if (!mienBacRegions.includes(reg) && rDate <= reportDate) {
                     const val = Number(r.xuat_hang || r.phat_hang || 0);
                     if (val > 0) {
                         regionsData[reg].actualTotal += val;
                         if (rDate <= yesterday) regionsData[reg].actualYest += val;
+                        
                         if (rDate.startsWith(`${year}-07`)) regionsData[reg].actM7 += val;
                         else if (rDate.startsWith(`${year}-08`)) regionsData[reg].actM8 += val;
                         else if (rDate.startsWith(`${year}-09`)) regionsData[reg].actM9 += val;
@@ -308,14 +320,15 @@ window.loadGame03Data = async () => {
         rawGameSI.forEach(r => {
             const sName = norm(r.sale_name);
             const reg = getNormalizedRegion(r.region_name || r.khu_vuc) || saleToRegionMap[sName];
-            
-            // Thực đạt Miền Bắc (Sale nhập)
-            if (reg && regionsData[reg] && mienBacRegions.includes(reg)) {
+            const rDate = r.report_date;
+
+            // C. Thực đạt Miền Bắc (Sale nhập) - Cũng chỉ tính đến ngày hiện tại
+            if (reg && regionsData[reg] && mienBacRegions.includes(reg) && rDate <= reportDate) {
                 const val = Number(r.xuat_hang || 0);
-                const rDate = r.report_date;
                 if (val > 0) {
                     regionsData[reg].actualTotal += val;
                     if (rDate <= yesterday) regionsData[reg].actualYest += val;
+                    
                     if (rDate.startsWith(`${year}-07`)) regionsData[reg].actM7 += val;
                     else if (rDate.startsWith(`${year}-08`)) regionsData[reg].actM8 += val;
                     else if (rDate.startsWith(`${year}-09`)) regionsData[reg].actM9 += val;
@@ -326,24 +339,28 @@ window.loadGame03Data = async () => {
             }
         });
 
-        // --- 5. TÍNH TOÁN % VÀ XẾP HẠNG (ƯU TIÊN % HOÀN THÀNH QUÝ) ---
+        // --- 5. TỔNG HỢP & XẾP HẠNG ---
         let arr = Object.values(regionsData);
         let totalSITarget = 0;
         let totalSIActual = 0;
 
         // Tính % cho hôm nay và hôm qua
         arr.forEach(r => {
+            // Cộng dồn Target 3 tháng
+            r.target = r.tarM7 + r.tarM8 + r.tarM9; 
+
             r.pct = r.target > 0 ? (r.actualTotal / r.target) * 100 : 0;
             r.pctYest = r.target > 0 ? (r.actualYest / r.target) * 100 : 0;
+            
             totalSITarget += r.target;
             totalSIActual += r.actualTotal;
         });
 
-        // Xếp hạng hôm qua (By PCT, then Actual)
+        // Xếp hạng hôm qua
         arr.sort((a,b) => b.pctYest - a.pctYest || b.actualYest - a.actualYest);
         arr.forEach((r, i) => r.rankYest = i + 1);
 
-        // Xếp hạng hôm nay (By PCT, then Actual)
+        // Xếp hạng hôm nay
         arr.sort((a,b) => b.pct - a.pct || b.actualTotal - a.actualTotal);
         arr.forEach((r, i) => {
             r.rankToday = i + 1;
@@ -375,7 +392,6 @@ window.loadGame03Data = async () => {
             marqueeTitle = `HÔM NAY CÓ ${countUp + countDown} KHU VỰC ĐỔI HẠNG!`;
             marqueeContent = changedArr.map(r => `${r.name} ${r.rankChange > 0 ? 'tăng' : 'tụt'} ${Math.abs(r.rankChange)} bậc`).join(' • ');
         } else {
-            // ĐÃ SỬA: Quét khu vực bứt tốc mới nhất tính bằng tổng 2 ngày gần nhất (đề phòng Admin nhập số hôm nay cho hôm qua)
             let topRecent = [...arr].sort((a,b) => {
                 let aLen = a.daily7.length;
                 let aVol = (a.daily7[aLen - 1] || 0) + (a.daily7[aLen - 2] || 0);
@@ -398,7 +414,7 @@ window.loadGame03Data = async () => {
         document.getElementById('g3-marquee-title').innerText = marqueeTitle;
         document.getElementById('g3-marquee-content').innerText = marqueeContent;
 
-        // --- Cập nhật Nhận định tự động (Bỏ AI) ---
+        // --- Cập nhật Nhận định tự động ---
         let autoInsights = [];
         if (arr[0].pct >= 90) {
             autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-green-500 mr-1.5 relative -top-0.5"></i> <span class="font-bold text-slate-800">${arr[0].name}</span> đã xuất sắc đạt điều kiện thưởng quý (≥ 90%).`);
@@ -413,12 +429,12 @@ window.loadGame03Data = async () => {
         }
         document.getElementById('g3-ai-insights').innerHTML = autoInsights.slice(0, 3).map(i => `<li>${i}</li>`).join('');
 
-        // --- Render Top 3 Bám đuổi theo logic Cần thêm số lượng xe để vượt % ---
+        // --- Render Top 3 Bám đuổi ---
         const rank3 = arr[2];
         const htmlChasing = arr.slice(3, 6).map(r => {
             const targetPct = rank3.pct;
             const targetVol = (targetPct / 100) * r.target;
-            const gap = Math.max(0, targetVol - r.actualTotal + 1); // Cần hơn ít nhất 1 xe để vượt
+            const gap = Math.max(0, targetVol - r.actualTotal + 1);
             
             return `
             <div class="flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-100">
@@ -464,7 +480,7 @@ window.loadGame03Data = async () => {
                 <td class="py-3 px-2 text-center font-black text-slate-800 border-r border-gray-100">${Math.round(r.actualTotal).toLocaleString('vi-VN')}</td>
                 <td class="py-3 px-2 border-r border-gray-100 w-32">
                     <div class="flex items-center gap-2">
-                        <span class="font-black text-xs w-10 text-right ${r.pct>=90?'text-emerald-600':''}">${r.pct.toFixed(0)}%</span>
+                        <span class="font-black text-xs w-10 text-right ${r.pct>=90?'text-emerald-600':''}">${r.pct.toFixed(1)}%</span>
                         <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                             <div class="h-full ${barColor}" style="width: ${barW}%"></div>
                         </div>

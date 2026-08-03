@@ -163,23 +163,20 @@ export const game03HTML = `
                 </div>
             </div>
 
+            <!-- Cuộc đua Top Đầu (Thay thế Nhận định tự động) -->
+            <div class="bg-yellow-50/50 rounded-xl shadow-sm border border-yellow-100 p-4">
+                <h3 class="text-[11px] font-black text-yellow-700 uppercase mb-3 border-b border-yellow-100 pb-2">CUỘC ĐUA TOP ĐẦU <span class="text-[9px] font-medium text-yellow-600 normal-case">(Hạng 1, 2, 3)</span></h3>
+                <div class="space-y-3" id="g3-top-race-list">
+                    <div class="text-center py-4 text-xs text-yellow-600"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                </div>
+            </div>
+
             <!-- Top 3 Bám đuổi -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                 <h3 class="text-[11px] font-black text-red-600 uppercase mb-3 border-b border-gray-100 pb-2">TOP 3 BÁM ĐUỔI <span class="text-[9px] font-medium text-gray-400 normal-case">(Hạng 4, 5, 6)</span></h3>
                 <div class="space-y-3" id="g3-chasing-list">
                     <div class="text-center py-4 text-xs text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div>
                 </div>
-            </div>
-
-            <!-- Nhận định tự động -->
-            <div class="bg-blue-50/50 rounded-xl shadow-sm border border-blue-100 p-4">
-                <div class="flex justify-between items-center mb-3 border-b border-blue-100 pb-2">
-                    <h3 class="text-[11px] font-black text-blue-800 uppercase">NHẬN ĐỊNH TỰ ĐỘNG</h3>
-                    <i class="fa-solid fa-bolt text-blue-500"></i>
-                </div>
-                <ul class="text-[11px] text-slate-700 space-y-2 font-medium leading-relaxed" id="g3-ai-insights">
-                    <li><i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5 relative -top-0.5"></i> Đang phân tích...</li>
-                </ul>
             </div>
 
         </div>
@@ -221,8 +218,6 @@ window.loadGame03Data = async () => {
         document.getElementById('g3-days-left').innerText = daysLeft;
 
         // --- 2. FETCH DỮ LIỆU ---
-        // SỬA LỖI: Fetch toàn bộ dữ liệu đến hết Quý 3 (q3End) thay vì chỉ đến hôm nay (reportDate)
-        // để đảm bảo lấy được Target của cả tháng 7, 8 và 9 (kể cả các tháng ở tương lai)
         const [resAdminSI, resGameSI, resShops] = await Promise.all([
             window.sb.from('daily_si_reports').select('*').gte('report_date', q3Start).lte('report_date', q3End),
             window.sb.from('game_si_reports').select('*').gte('report_date', q3Start).lte('report_date', q3End),
@@ -270,13 +265,11 @@ window.loadGame03Data = async () => {
             regionsData[r] = { 
                 name: r, target: 0, actualTotal: 0, actualYest: 0, 
                 actM7: 0, actM8: 0, actM9: 0, daily7: Array(last7Days.length).fill(0),
-                tarM7: 0, tarM8: 0, tarM9: 0 // Biến lưu Target từng tháng
+                tarM7: 0, tarM8: 0, tarM9: 0 
             };
         });
 
         // --- 4. TÍNH TOÁN DỮ LIỆU ---
-        
-        // Sắp xếp dữ liệu Admin tăng dần theo ngày (Để lấy giá trị Target được nạp gần nhất trong tháng đó)
         rawAdminSI.sort((a,b) => a.report_date.localeCompare(b.report_date));
 
         rawAdminSI.forEach(r => {
@@ -291,7 +284,6 @@ window.loadGame03Data = async () => {
             if (reg && regionsData[reg]) {
                 const rDate = r.report_date;
                 
-                // A. Tính Target thông minh (Lấy mốc Target mới nhất của mỗi tháng 7, 8, 9)
                 const tVal = Number(r.target_ph || r.target_si || r.target || 0);
                 if (tVal > 0) {
                     if (rDate.startsWith(`${year}-07`)) regionsData[reg].tarM7 = tVal;
@@ -299,7 +291,6 @@ window.loadGame03Data = async () => {
                     else if (rDate.startsWith(`${year}-09`)) regionsData[reg].tarM9 = tVal;
                 }
 
-                // B. Thực đạt Miền Nam (Chỉ tính đến ngày hiện tại reportDate)
                 if (!mienBacRegions.includes(reg) && rDate <= reportDate) {
                     const val = Number(r.xuat_hang || r.phat_hang || 0);
                     if (val > 0) {
@@ -322,7 +313,6 @@ window.loadGame03Data = async () => {
             const reg = getNormalizedRegion(r.region_name || r.khu_vuc) || saleToRegionMap[sName];
             const rDate = r.report_date;
 
-            // C. Thực đạt Miền Bắc (Sale nhập) - Cũng chỉ tính đến ngày hiện tại
             if (reg && regionsData[reg] && mienBacRegions.includes(reg) && rDate <= reportDate) {
                 const val = Number(r.xuat_hang || 0);
                 if (val > 0) {
@@ -344,11 +334,8 @@ window.loadGame03Data = async () => {
         let totalSITarget = 0;
         let totalSIActual = 0;
 
-        // Tính % cho hôm nay và hôm qua
         arr.forEach(r => {
-            // Cộng dồn Target 3 tháng
             r.target = r.tarM7 + r.tarM8 + r.tarM9; 
-
             r.pct = r.target > 0 ? (r.actualTotal / r.target) * 100 : 0;
             r.pctYest = r.target > 0 ? (r.actualYest / r.target) * 100 : 0;
             
@@ -356,11 +343,9 @@ window.loadGame03Data = async () => {
             totalSIActual += r.actualTotal;
         });
 
-        // Xếp hạng hôm qua
         arr.sort((a,b) => b.pctYest - a.pctYest || b.actualYest - a.actualYest);
         arr.forEach((r, i) => r.rankYest = i + 1);
 
-        // Xếp hạng hôm nay
         arr.sort((a,b) => b.pct - a.pct || b.actualTotal - a.actualTotal);
         arr.forEach((r, i) => {
             r.rankToday = i + 1;
@@ -383,7 +368,6 @@ window.loadGame03Data = async () => {
         document.getElementById('g3-count-down').innerText = countDown;
         document.getElementById('g3-count-unchanged').innerText = countUnchanged;
 
-        // --- Cập nhật Marquee thông minh ---
         let changedArr = arr.filter(r => r.rankChange !== 0);
         let marqueeTitle = "TÌNH HÌNH ĐƯỜNG ĐUA";
         let marqueeContent = "";
@@ -414,22 +398,51 @@ window.loadGame03Data = async () => {
         document.getElementById('g3-marquee-title').innerText = marqueeTitle;
         document.getElementById('g3-marquee-content').innerText = marqueeContent;
 
-        // --- Cập nhật Nhận định tự động ---
-        let autoInsights = [];
-        if (arr[0].pct >= 90) {
-            autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-green-500 mr-1.5 relative -top-0.5"></i> <span class="font-bold text-slate-800">${arr[0].name}</span> đã xuất sắc đạt điều kiện thưởng quý (≥ 90%).`);
-        }
-        let closeToTarget = arr.find(r => r.pct >= 75 && r.pct < 90);
-        if (closeToTarget) {
-            autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-orange-500 mr-1.5 relative -top-0.5"></i> <span class="font-bold text-slate-800">${closeToTarget.name}</span> đang áp sát mốc 90%, cần tập trung cao độ để nhận thưởng.`);
-        }
-        if (autoInsights.length === 0) {
-            autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5 relative -top-0.5"></i> Cục diện Top 3 hiện tại đang khá ổn định.`);
-            autoInsights.push(`<i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5 relative -top-0.5"></i> Các khu vực top dưới đang duy trì nhịp độ đều đặn.`);
-        }
-        document.getElementById('g3-ai-insights').innerHTML = autoInsights.slice(0, 3).map(i => `<li>${i}</li>`).join('');
+        // --- Render Cuộc Đua Top Đầu (1, 2, 3) ---
+        const top3Arr = arr.slice(0, 3);
+        const top1Pct = arr[0] ? arr[0].pct : 0;
+        const top2Pct = arr[1] ? arr[1].pct : 0;
+        
+        const htmlTopRace = top3Arr.map((r, index) => {
+            let gapText = '';
+            let targetRank = '';
+            let rankIcon = '';
+            
+            if (index === 0) {
+                rankIcon = '<i class="fa-solid fa-crown text-yellow-500 text-sm"></i>';
+                gapText = '<span class="text-yellow-600 font-bold text-[10px]">Đang dẫn đầu</span>';
+                targetRank = 'Bảo vệ ngôi vương';
+            } else if (index === 1) {
+                rankIcon = '<i class="fa-solid fa-medal text-slate-400 text-sm"></i>';
+                const targetVol = (top1Pct / 100) * r.target;
+                const gap = Math.max(0, targetVol - r.actualTotal + 1);
+                gapText = `Cần thêm <span class="font-black text-slate-800 text-[10px]">${Math.round(gap).toLocaleString('vi-VN')} xe</span>`;
+                targetRank = 'để lên TOP 1';
+            } else if (index === 2) {
+                rankIcon = '<i class="fa-solid fa-medal text-amber-600 text-sm"></i>';
+                const targetVol = (top2Pct / 100) * r.target;
+                const gap = Math.max(0, targetVol - r.actualTotal + 1);
+                gapText = `Cần thêm <span class="font-black text-slate-800 text-[10px]">${Math.round(gap).toLocaleString('vi-VN')} xe</span>`;
+                targetRank = 'để lên TOP 2';
+            }
+            
+            return `
+            <div class="flex justify-between items-center bg-white p-2 rounded border border-yellow-100 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <span class="w-5 text-center">${rankIcon}</span>
+                    <span class="font-bold text-slate-700 uppercase text-[10px]">${r.name}</span>
+                </div>
+                <div class="text-right">
+                    <p class="text-[8px] text-gray-500">${gapText}</p>
+                    <p class="text-[8px] text-yellow-600 font-semibold mt-0.5">${targetRank}</p>
+                </div>
+            </div>`;
+        }).join('');
+        
+        const topRaceEl = document.getElementById('g3-top-race-list');
+        if(topRaceEl) topRaceEl.innerHTML = htmlTopRace;
 
-        // --- Render Top 3 Bám đuổi ---
+        // --- Render Top 3 Bám đuổi (4, 5, 6) ---
         const rank3 = arr[2];
         const htmlChasing = arr.slice(3, 6).map(r => {
             const targetPct = rank3.pct;

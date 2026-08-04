@@ -45,11 +45,13 @@ async function setupErpFilters() {
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
     
-    // Mặc định lọc dữ liệu của ngày hôm nay
-    dStart.value = `${yyyy}-${mm}-${dd}`;
-    dEnd.value = `${yyyy}-${mm}-${dd}`;
+    // Đã set mặc định từ ngày mùng 1 đến ngày cuối cùng của tháng
+    const lastDay = new Date(yyyy, today.getMonth() + 1, 0).getDate();
+    const lastDayStr = String(lastDay).padStart(2, '0');
+
+    dStart.value = `${yyyy}-${mm}-01`;
+    dEnd.value = `${yyyy}-${mm}-${lastDayStr}`;
 
     const defaultRegions = ['Tây Bắc', 'Hà Nội', 'Đông Bắc', 'Hồng Hà', 'Bắc Trung Bộ', 'Trung Trung Bộ', 'Nam Trung Bộ', 'Tây Nguyên', 'Đông Nam', 'Hồ Chí Minh', 'Tây Nam', 'Sông Cửu Long'];
     rFilter.innerHTML = '<option value="ALL">Toàn quốc</option>' + defaultRegions.map(r => `<option value="${r}">${r}</option>`).join('');
@@ -152,24 +154,24 @@ async function fetchAndRenderErpDashboard() {
 }
 
 function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToRegionMap, dataGameSI, validSales) {
+    // FIX: Lấy mốc "Hôm nay" chính là ngày kết thúc (End Date) của bộ lọc
+    // Để khi filter đúng 1 ngày, hệ thống vẫn hiển thị chính xác chỉ số của ngày đó
     const todayStr = end; 
-    let prevDate = new Date(todayStr); prevDate.setDate(prevDate.getDate() - 1);
+    const filterEndD = new Date(todayStr);
+    
+    let prevDate = new Date(filterEndD); 
+    prevDate.setDate(prevDate.getDate() - 1);
     const yesterdayStr = prevDate.toISOString().split('T')[0];
     
     const baseDateSI = start.substring(0, 7) + '-01'; 
 
-    const startD = new Date(start);
-    const endD = new Date(end);
-    const daysPassed = Math.max(1, Math.floor((endD - startD) / (1000 * 60 * 60 * 24)) + 1);
-    
-    const eom = new Date(endD.getFullYear(), endD.getMonth() + 1, 0);
-    let daysLeft = Math.floor((eom - endD) / (1000 * 60 * 60 * 24));
-    if (daysLeft < 1) daysLeft = 1; 
+    const eom = new Date(filterEndD.getFullYear(), filterEndD.getMonth() + 1, 0);
+    const totalDaysInMonth = eom.getDate();
 
     let res = {
         si_total: 0, si_today: 0, si_yest: 0, si_target: 0,
         so_total: 0, so_today: 0, so_yest: 0, so_target: 0,
-        daysPassed: daysPassed, daysLeft: daysLeft,
+        si_days_passed: 1, so_days_passed: 1, totalDaysInMonth: totalDaysInMonth,
         regions: {}, sales: {}, daily: {}
     };
 
@@ -256,16 +258,9 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
             const val = safeNum(r.xuat_hang); 
             const paidVal = safeNum(r.thanh_toan);
 
-            res.regions[regAll].si_act += val; 
-            res.regions[regAll].si_paid += paidVal;
-
-            if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
-            res.daily[r.report_date].si += val; 
-
-            if (soRegions.includes(regAll)) { 
-                res.si_total += val;
-                if (r.report_date === todayStr) res.si_today += val;
-                if (r.report_date === yesterdayStr) res.si_yest += val;
+            if (r.report_date <= todayStr) {
+                res.regions[regAll].si_act += val; 
+                res.regions[regAll].si_paid += paidVal;
             }
         }
     });
@@ -278,28 +273,31 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         const regAll = getNormalizedRegion(rawReg);
         const isMienBac = mienBacRegions.includes(norm(regAll));
 
-        if (!res.regions[regAll]) res.regions[regAll] = { name: regAll, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0, si_game_act: 0 };
-        res.regions[regAll].si_game_act += val; 
+        if (r.report_date <= todayStr) {
+            if (!res.regions[regAll]) res.regions[regAll] = { name: regAll, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0, si_game_act: 0 };
+            res.regions[regAll].si_game_act += val; 
 
-        if (r.sale_name) {
-            const dName = normalizeDisplayName(r.sale_name);
-            if (dName && validSales.has(dName)) {
-                if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
-                res.sales[dName].si_act += val;
+            if (r.sale_name) {
+                const dName = normalizeDisplayName(r.sale_name);
+                if (dName && validSales.has(dName)) {
+                    if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
+                    res.sales[dName].si_act += val;
+                }
             }
-        }
 
-        if (isMienBac) {
-            res.regions[regAll].si_act += val; 
-            res.regions[regAll].si_paid += paidVal;
+            if (isMienBac) {
+                res.regions[regAll].si_act += val; 
+                res.regions[regAll].si_paid += paidVal;
 
-            if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
-            res.daily[r.report_date].si += val; 
+                if (soRegions.includes(regAll)) {
+                    res.si_total += val;
+                    
+                    if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
+                    res.daily[r.report_date].si += val; 
 
-            if (soRegions.includes(regAll)) {
-                res.si_total += val;
-                if (r.report_date === todayStr) res.si_today += val;
-                if (r.report_date === yesterdayStr) res.si_yest += val;
+                    if (r.report_date === todayStr) res.si_today += val;
+                    if (r.report_date === yesterdayStr) res.si_yest += val;
+                }
             }
         }
     });
@@ -309,27 +307,40 @@ function calculateAggregations(dataSI, dataSO, dataTarget, start, end, saleToReg
         const sName = norm(r.sale_name);
         const rawReg = saleToRegionMap[sName] || r.region_name || r.khu_vuc || 'Khác';
         const regAll = getNormalizedRegion(rawReg);
+        
+        if (r.report_date <= todayStr) {
+            if (!res.regions[regAll]) res.regions[regAll] = { name: regAll, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0, si_game_act: 0 };
+            res.regions[regAll].so_act += val;
 
-        if (!res.regions[regAll]) res.regions[regAll] = { name: regAll, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0, si_game_act: 0 };
-        res.regions[regAll].so_act += val;
+            if (soRegions.includes(regAll)) {
+                res.so_total += val;
+                
+                if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
+                res.daily[r.report_date].so += val;
 
-        if (!res.daily[r.report_date]) res.daily[r.report_date] = { date: r.report_date, si: 0, so: 0 };
-        res.daily[r.report_date].so += val;
+                if (r.report_date === todayStr) res.so_today += val;
+                if (r.report_date === yesterdayStr) res.so_yest += val;
+            }
 
-        if (soRegions.includes(regAll)) {
-            res.so_total += val;
-            if (r.report_date === todayStr) res.so_today += val;
-            if (r.report_date === yesterdayStr) res.so_yest += val;
-        }
-
-        if (r.sale_name) {
-            const dName = normalizeDisplayName(r.sale_name);
-            if (dName && validSales.has(dName)) {
-                if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
-                res.sales[dName].so_act += val;
+            if (r.sale_name) {
+                const dName = normalizeDisplayName(r.sale_name);
+                if (dName && validSales.has(dName)) {
+                    if (!res.sales[dName]) res.sales[dName] = { name: dName, si_act: 0, so_act: 0, si_tar: 0, so_tar: 0, si_paid: 0 };
+                    res.sales[dName].so_act += val;
+                }
             }
         }
     });
+
+    // TÍNH TOÁN SỐ NGÀY ĐÃ NHẬP LIỆU (DATA-DRIVEN CHO CẢ SI VÀ SO)
+    let siDaysEntered = 0;
+    let soDaysEntered = 0;
+    for (const dStr in res.daily) {
+        if (res.daily[dStr].si > 0) siDaysEntered++;
+        if (res.daily[dStr].so > 0) soDaysEntered++;
+    }
+    res.si_days_passed = Math.max(1, siDaysEntered);
+    res.so_days_passed = Math.max(1, soDaysEntered);
 
     return res;
 }
@@ -358,7 +369,7 @@ function renderCards(agg) {
     document.getElementById('kpi-si-accum-val').innerText = fmt(agg.si_total);
     document.getElementById('kpi-si-accum-target').innerText = fmt(agg.si_target);
     
-    let paceSI = safeDiv(agg.si_total, (agg.si_target / 30) * agg.daysPassed) * 100 - 100;
+    let paceSI = safeDiv(agg.si_total, (agg.si_target / agg.totalDaysInMonth) * agg.si_days_passed) * 100 - 100;
     let si_acc_color = paceSI >= 0 ? 'text-emerald-500' : 'text-rose-500';
     let si_acc_icon = paceSI >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     
@@ -393,7 +404,7 @@ function renderCards(agg) {
     document.getElementById('kpi-so-accum-val').innerText = fmt(agg.so_total);
     document.getElementById('kpi-so-accum-target').innerText = fmt(agg.so_target);
     
-    let paceSO = safeDiv(agg.so_total, (agg.so_target / 30) * agg.daysPassed) * 100 - 100;
+    let paceSO = safeDiv(agg.so_total, (agg.so_target / agg.totalDaysInMonth) * agg.so_days_passed) * 100 - 100;
     let so_acc_color = paceSO >= 0 ? 'text-emerald-500' : 'text-rose-500';
     let so_acc_icon = paceSO >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     
@@ -468,25 +479,25 @@ function renderGauges(agg) {
     const soMissing = Math.max(0, agg.so_target - agg.so_total);
     document.getElementById('g-so-missing').innerText = fmt(soMissing) + ' xe';
 
-    const dLeft = agg.daysLeft;
-    const dPass = agg.daysPassed;
+    const siDaysLeft = Math.max(1, agg.totalDaysInMonth - agg.si_days_passed);
+    const soDaysLeft = Math.max(1, agg.totalDaysInMonth - agg.so_days_passed);
     
-    const siPaceNeed = Math.ceil(siMissing / dLeft);
-    const siPaceAct = Math.ceil(agg.si_total / dPass);
+    const siPaceNeed = Math.ceil(safeDiv(siMissing, siDaysLeft));
+    const siPaceAct = Math.ceil(safeDiv(agg.si_total, agg.si_days_passed));
     const siPaceDiff = siPaceAct - siPaceNeed;
 
-    const soPaceNeed = Math.ceil(soMissing / dLeft);
-    const soPaceAct = Math.ceil(agg.so_total / dPass);
+    const soPaceNeed = Math.ceil(safeDiv(soMissing, soDaysLeft));
+    const soPaceAct = Math.ceil(safeDiv(agg.so_total, agg.so_days_passed));
     const soPaceDiff = soPaceAct - soPaceNeed;
 
-    document.getElementById('g-si-days-left').innerText = dLeft;
+    document.getElementById('g-si-days-left').innerText = siDaysLeft;
     document.getElementById('g-si-pace-need').innerText = fmt(siPaceNeed);
     document.getElementById('g-si-pace-act').innerText = fmt(siPaceAct);
     const elSiDiff = document.getElementById('g-si-pace-diff');
     elSiDiff.innerText = (siPaceDiff > 0 ? '+' : '') + fmt(siPaceDiff) + ' xe/ngày';
     elSiDiff.className = siPaceDiff >= 0 ? "text-sm font-black text-emerald-500 whitespace-nowrap" : "text-sm font-black text-rose-500 whitespace-nowrap";
 
-    document.getElementById('g-so-days-left').innerText = dLeft;
+    document.getElementById('g-so-days-left').innerText = soDaysLeft;
     document.getElementById('g-so-pace-need').innerText = fmt(soPaceNeed);
     document.getElementById('g-so-pace-act').innerText = fmt(soPaceAct);
     const elSoDiff = document.getElementById('g-so-pace-diff');
@@ -538,8 +549,8 @@ function renderRegionTable(agg) {
     if(!tbody) return;
     
     const regionsObj = agg.regions;
-    const dLeft = agg.daysLeft;
-    const dPass = agg.daysPassed;
+    const siDaysLeft = Math.max(1, agg.totalDaysInMonth - agg.si_days_passed);
+    const soDaysLeft = Math.max(1, agg.totalDaysInMonth - agg.so_days_passed);
     
     const soRegionsOrder = ["Tây Bắc", "Hà Nội", "Đông Bắc", "Hồng Hà", "Bắc Trung Bộ", "Trung Trung Bộ"];
 
@@ -552,13 +563,13 @@ function renderRegionTable(agg) {
         let soPct = Math.round(safeDiv(r.so_act, r.so_tar) * 100);
 
         let siMissing = Math.max(0, r.si_tar - r.si_act);
-        let siPaceNeed = Math.ceil(siMissing / dLeft);
-        let siPaceAct = Math.ceil(r.si_act / dPass);
+        let siPaceNeed = Math.ceil(safeDiv(siMissing, siDaysLeft));
+        let siPaceAct = Math.ceil(safeDiv(r.si_act, agg.si_days_passed));
         let siPaceDiff = siPaceAct - siPaceNeed;
 
         let soMissing = Math.max(0, r.so_tar - r.so_act);
-        let soPaceNeed = Math.ceil(soMissing / dLeft);
-        let soPaceAct = Math.ceil(r.so_act / dPass);
+        let soPaceNeed = Math.ceil(safeDiv(soMissing, soDaysLeft));
+        let soPaceAct = Math.ceil(safeDiv(r.so_act, agg.so_days_passed));
         let soPaceDiff = soPaceAct - soPaceNeed;
         
         let status = 'Tốt', badge = 'bg-green-100 text-green-700 border border-green-200';
@@ -670,12 +681,13 @@ function renderLineCharts(dailyObj, startStr, endStr, agg) {
         const siTarget = agg.si_target;
         const soTarget = agg.so_target;
         
-        const siActPace = agg.daysPassed > 0 ? agg.si_total / agg.daysPassed : 0;
-        const siForecast = Math.round(agg.si_total + (siActPace * agg.daysLeft));
+        // CÔNG THỨC MỚI DỰA THEO SỐ NGÀY THỰC TẾ ĐÃ NHẬP DỮ LIỆU
+        const siActPace = agg.si_days_passed > 0 ? agg.si_total / agg.si_days_passed : 0;
+        const siForecast = Math.round(siActPace * agg.totalDaysInMonth);
         const siForecastPct = siTarget > 0 ? (siForecast / siTarget) * 100 : 0;
 
-        const soActPace = agg.daysPassed > 0 ? agg.so_total / agg.daysPassed : 0;
-        const soForecast = Math.round(agg.so_total + (soActPace * agg.daysLeft));
+        const soActPace = agg.so_days_passed > 0 ? agg.so_total / agg.so_days_passed : 0;
+        const soForecast = Math.round(soActPace * agg.totalDaysInMonth);
         const soForecastPct = soTarget > 0 ? (soForecast / soTarget) * 100 : 0;
 
         const elSiTarget = document.getElementById('trend-si-target');
@@ -769,11 +781,12 @@ function createOverallProgressAlert(agg, selectedRegion) {
     const sellinRate = (agg.si_total / agg.si_target) * 100;
     const sellinRemaining = Math.max(agg.si_target - agg.si_total, 0);
     
-    const sellinRequiredPerDay = agg.daysLeft > 0 ? sellinRemaining / agg.daysLeft : sellinRemaining;
-    const sellinActualPerDay = agg.daysPassed > 0 ? agg.si_total / agg.daysPassed : 0;
+    const siDaysLeft = Math.max(1, agg.totalDaysInMonth - agg.si_days_passed);
+    const sellinRequiredPerDay = siDaysLeft > 0 ? sellinRemaining / siDaysLeft : sellinRemaining;
+    const sellinActualPerDay = agg.si_days_passed > 0 ? agg.si_total / agg.si_days_passed : 0;
     const sellinPaceGap = sellinActualPerDay - sellinRequiredPerDay;
 
-    const forecast = agg.si_total + (sellinActualPerDay * agg.daysLeft);
+    const forecast = (sellinActualPerDay * agg.totalDaysInMonth);
     const forecastRate = (forecast / agg.si_target) * 100;
 
     let level, priority;

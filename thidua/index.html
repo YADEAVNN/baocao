@@ -121,7 +121,8 @@
             
             <!-- MENU HỆ THỐNG -->
             <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
-                <a onclick="window.customSwitchView('dashboard')" id="nav-dashboard" class="nav-item bg-[#F97316] text-white hover:bg-orange-600 rounded-lg mx-2 mb-4 justify-center">
+                <!-- ĐÃ ẨN TRANG CHỦ THEO YÊU CẦU -->
+                <a onclick="window.customSwitchView('dashboard')" id="nav-dashboard" class="hidden nav-item rounded-lg mx-2 mb-4 justify-center">
                     <i class="fa-solid fa-house mr-2"></i>
                     <span class="font-bold uppercase tracking-wider">TRANG CHỦ</span>
                 </a>
@@ -253,6 +254,11 @@
     <script>
         // Cập nhật hàm switchView để load ERP linh hoạt
         window.customSwitchView = (view) => {
+            // ĐÃ THÊM: Tự động chuyển hướng từ "Trang chủ" sang "Hệ thống ERP"
+            if (view === 'dashboard') {
+                view = 'erp';
+            }
+
             if (view === 'erp') {
                 document.getElementById('app-content').classList.add('hidden');
                 document.getElementById('erp-view').classList.remove('hidden');
@@ -261,6 +267,16 @@
                 if (typeof window.initErpModule === 'function') {
                     window.initErpModule();
                 }
+
+                // Cập nhật hiệu ứng đổi màu highlight cho thanh menu
+                setTimeout(() => {
+                    document.querySelectorAll('.nav-item').forEach(el => {
+                        el.classList.remove('active', 'bg-[#F97316]', 'text-white');
+                    });
+                    const erpNav = document.getElementById('nav-erp');
+                    if (erpNav) erpNav.classList.add('active', 'bg-[#F97316]', 'text-white');
+                }, 100);
+
             } else {
                 document.getElementById('erp-view').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');

@@ -74,7 +74,7 @@ export const game01HTML = `
             <div class="p-5 border-b border-gray-100 flex justify-between items-center">
                 <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
                     BẢNG XẾP HẠNG THƯỞNG HÔM NAY (<span id="g1-display-date">--/--</span>) 
-                    <i class="fa-solid fa-circle-info text-orange-400 text-xs" title="Phải được duyệt và nhập trong ngày mới được tính!"></i>
+                    <i class="fa-solid fa-circle-info text-orange-400 text-xs" title="Hạn chót nộp và duyệt số là 12h00 trưa ngày kế tiếp để không bị phạt!"></i>
                 </h2>
                 <select id="g1-status-filter" onchange="window.renderGame01Table()" class="bg-gray-50 border border-gray-200 text-xs font-bold py-1.5 px-3 rounded-lg outline-none">
                     <option value="ALL">Tất cả trạng thái</option>
@@ -298,18 +298,24 @@ window.loadGame01Data = async () => {
                     // XỬ LÝ LUẬT SẮT 1: CHỈ LẤY CÁC BÁO CÁO ĐÃ ĐƯỢC DUYỆT (Loại bỏ pending, rejected)
                     if (r.status !== 'approved') return;
 
-                    // XỬ LÝ LUẬT SẮT 2: CHỈ LẤY BÁO CÁO CẬP NHẬT TRONG NGÀY
+                    // XỬ LÝ LUẬT SẮT 2: HẠN CHÓT LÀ 12H TRƯA NGÀY HÔM SAU
                     let createdStr = r.created_at || r.inserted_at;
                     if (createdStr) {
                         let createdDateObj = new Date(createdStr);
-                        // Đưa về múi giờ VN tránh sai lệch (UTC+7)
-                        let vnTimeStr = new Date(createdDateObj.getTime() + 7 * 3600 * 1000).toISOString().split('T')[0];
                         
-                        // Nếu giờ ấn nút Gửi <= Ngày báo cáo (Trong ngày báo cáo)
-                        if (vnTimeStr <= dDateStr) {
+                        // Lấy ngày báo cáo (dDateStr = YYYY-MM-DD)
+                        let [rY, rM, rD] = dDateStr.split('-').map(Number);
+                        
+                        // Tính mốc deadline: 12h00 trưa giờ VN (UTC+7) của ngày hôm sau.
+                        // 12h trưa VN = 5h sáng UTC.
+                        let deadlineMs = Date.UTC(rY, rM - 1, rD + 1, 5, 0, 0);
+
+                        // Nếu giờ ấn nút Gửi <= Mốc 12h trưa ngày hôm sau
+                        if (createdDateObj.getTime() <= deadlineMs) {
                             actualForGame += Number(r.total_so || 0);
                         }
                     } else {
+                        // Nếu không có timestamp thì vẫn cộng (tránh lỗi data cũ)
                         actualForGame += Number(r.total_so || 0);
                     }
                 });

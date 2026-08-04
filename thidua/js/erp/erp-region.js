@@ -194,7 +194,7 @@ window.initErpRegion = async function() {
                             </div>
                         </div>
 
-                        <!-- 3. DUAL PACE TIMELINE VỚI THIẾT KẾ MỚI CÓ MỤC TIÊU/DỰ BÁO -->
+                        <!-- 3. BẢNG THEO DÕI NHỊP ĐỘ MỖI NGÀY & DỰ ĐOÁN (CẬP NHẬT KIỂU AREA CHART) -->
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                             <div class="flex justify-between items-center mb-5">
                                 <h3 class="text-sm font-black text-blue-800 uppercase flex items-center gap-2">
@@ -203,14 +203,6 @@ window.initErpRegion = async function() {
                                 </h3>
                             </div>
                             
-                            <!-- Chú thích Legend -->
-                            <div class="flex flex-wrap gap-6 mb-4 text-[11px] font-bold text-gray-600 border-b border-gray-100 pb-3">
-                                <div class="flex items-center gap-2"><span class="w-6 h-0 border-b-2 border-dashed border-gray-400"></span> Kế hoạch lũy kế</div>
-                                <div class="flex items-center gap-2"><span class="w-4 h-0 border-b-2 border-blue-600"></span> Thực đạt (SI)</div>
-                                <div class="flex items-center gap-2"><span class="w-4 h-0 border-b-2 border-emerald-500"></span> Thực đạt (SO)</div>
-                                <div class="flex items-center gap-2 text-red-500"><i class="fa-solid fa-diamond text-[8px]"></i> Lọc hiện tại</div>
-                            </div>
-
                             <div class="space-y-6 mt-2">
                                 <!-- Chart SI -->
                                 <div class="flex flex-col md:flex-row relative bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
@@ -454,8 +446,6 @@ window.loadDataRegionTab = async function() {
             }
         });
 
-        const siFiltered = rawSI.filter(r => getNormalizedRegion(r.region_name) === regionFilterNorm);
-
         const soFiltered = rawSO.filter(r => {
             const sNorm = norm(r.sale_name);
             if (salesInRegion.has(sNorm)) return true;
@@ -492,11 +482,9 @@ window.loadDataRegionTab = async function() {
         
         const saleStats = {};
         const chartDaysInMonth = new Date(year, month, 0).getDate();
-        const dailyStats = Array.from({length: chartDaysInMonth}, (_, i) => ({ day: i+1, si: 0, so: 0 }));
+        const dailyStats = {};
 
-        const mienBacRegions = ["tây bắc", "hà nội", "đông bắc", "hồng hà", "bắc trung bộ", "trung trung bộ"];
-        const isMienBac = mienBacRegions.includes(norm(regionFilterNorm)); 
-
+        // Lấy Target tổng và Tồn kho từ Admin Data
         const adminLatestData = resAdminLatest.data || [];
         for (let r of adminLatestData) {
             if (getNormalizedRegion(r.region_name) === regionFilterNorm) {
@@ -510,40 +498,25 @@ window.loadDataRegionTab = async function() {
             }
         }
 
-        // A. Xử lý Admin S.I (Actual chỉ cộng nếu là miền Nam)
-        siFiltered.forEach(r => {
-            if (!isMienBac) {
-                const tt = Number(r.thanh_toan) || 0;
-                const xh = Number(r.xuat_hang) || 0;
+        // B. Tính tổng Sale S.O (Tính tổng từ dữ liệu nhập của Sale)
+        soFiltered.forEach(r => {
+            const val = Number(r.total_so || r.so_luong || r.ban_ra || 0);
+            
+            if (r.report_date <= endStr) {
+                totalActSO += val;
+                
+                if (!dailyStats[r.report_date]) dailyStats[r.report_date] = { si: 0, so: 0 };
+                dailyStats[r.report_date].so += val;
 
-                totalActTT += tt;
-                totalActSI += xh;
-
-                const dayNum = parseInt(r.report_date.slice(-2));
-                if(dayNum >= 1 && dayNum <= chartDaysInMonth) {
-                    dailyStats[dayNum-1].si += xh;
+                const dName = normalizeDisplayName(r.sale_name);
+                if (dName) {
+                    if (!saleStats[dName]) saleStats[dName] = { name: dName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
+                    saleStats[dName].actSO += val;
                 }
             }
         });
 
-        // B. Tính tổng Sale S.O
-        soFiltered.forEach(r => {
-            const val = Number(r.total_so || r.so_luong || r.ban_ra || 0);
-            totalActSO += val;
-            
-            const dayNum = parseInt(r.report_date.slice(-2));
-            if(dayNum >= 1 && dayNum <= chartDaysInMonth) {
-                dailyStats[dayNum-1].so += val;
-            }
-
-            const dName = normalizeDisplayName(r.sale_name);
-            if (dName) {
-                if (!saleStats[dName]) saleStats[dName] = { name: dName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
-                saleStats[dName].actSO += val;
-            }
-        });
-
-        // C. Lấy Target của Sale
+        // C. Lấy Target của Sale (Từ bảng Kế hoạch tháng)
         targetFiltered.forEach(t => {
             const dName = normalizeDisplayName(t.sale_name);
             const tSI = Number(t.target_si) || 0;
@@ -557,29 +530,38 @@ window.loadDataRegionTab = async function() {
             }
         });
 
-        // D. Lấy Số liệu Game S.I của Sale (Chỉ cộng vào tổng Khu vực nếu là Miền Bắc)
+        // D. Lấy Số liệu S.I (Tính tổng trực tiếp từ nhập liệu của toàn bộ Sale thuộc khu vực)
         gameSiFiltered.forEach(r => {
             const xh = Number(r.xuat_hang) || 0;
             const tt = Number(r.thanh_toan) || 0;
             
-            const dName = normalizeDisplayName(r.sale_name);
-            if (dName) {
-                if (!saleStats[dName]) saleStats[dName] = { name: dName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
-                saleStats[dName].actSI += xh;
-            }
+            if (r.report_date <= endStr) {
+                const dName = normalizeDisplayName(r.sale_name);
+                if (dName) {
+                    if (!saleStats[dName]) saleStats[dName] = { name: dName, tarSI: 0, tarSO: 0, actSI: 0, actSO: 0 };
+                    saleStats[dName].actSI += xh;
+                }
 
-            if (isMienBac) {
+                // Cộng vào tổng toàn bộ khu vực
                 totalActTT += tt;
                 totalActSI += xh;
 
-                const dayNum = parseInt(r.report_date.slice(-2));
-                if(dayNum >= 1 && dayNum <= chartDaysInMonth) {
-                    dailyStats[dayNum-1].si += xh;
-                }
+                if (!dailyStats[r.report_date]) dailyStats[r.report_date] = { si: 0, so: 0 };
+                dailyStats[r.report_date].si += xh;
             }
         });
 
         const totalChuaPhat = totalChuaPhatAdmin;
+
+        // TÍNH TOÁN SỐ NGÀY ĐÃ NHẬP LIỆU (ĐỂ TÍNH FORECAST)
+        let siDaysEntered = 0;
+        let soDaysEntered = 0;
+        for (const dStr in dailyStats) {
+            if (dailyStats[dStr].si > 0) siDaysEntered++;
+            if (dailyStats[dStr].so > 0) soDaysEntered++;
+        }
+        const siDaysPassed = Math.max(1, siDaysEntered);
+        const soDaysPassed = Math.max(1, soDaysEntered);
 
         // 5. Update UI Block 1: Chuỗi vận hành
         document.getElementById('reg-val-tt').innerHTML = `${fmtRegNum(totalActTT)} <span class="text-sm font-bold text-gray-400">xe</span>`;
@@ -618,8 +600,8 @@ window.loadDataRegionTab = async function() {
         // 7. Update UI Block 4: Trung tâm hành động
         const missSI = totalActSI - (totalTarSI * safeDivR(daysPassed, daysPassed + daysLeft));
         const paceSIReq = totalTarSI > 0 ? safeDivR(totalTarSI, daysPassed + daysLeft) : 0;
-        const paceSIAct = safeDivR(totalActSI, daysPassed);
-        const paceSINeed = safeDivR(Math.max(0, totalTarSI - totalActSI), daysLeft);
+        const paceSIAct = safeDivR(totalActSI, siDaysPassed);
+        const paceSINeed = safeDivR(Math.max(0, totalTarSI - totalActSI), Math.max(1, chartDaysInMonth - siDaysPassed));
 
         document.getElementById('reg-act-si-miss').innerHTML = `${missSI > 0 ? '+' : ''}${fmtRegNum(Math.round(missSI))} <span class="text-[9px] font-bold">xe</span>`;
         document.getElementById('reg-act-si-miss').className = `font-black text-sm ${missSI >= 0 ? 'text-emerald-500' : 'text-red-500'}`;
@@ -632,8 +614,8 @@ window.loadDataRegionTab = async function() {
 
         const missSO = totalActSO - (totalTarSO * safeDivR(daysPassed, daysPassed + daysLeft));
         const paceSOReq = totalTarSO > 0 ? safeDivR(totalTarSO, daysPassed + daysLeft) : 0;
-        const paceSOAct = safeDivR(totalActSO, daysPassed);
-        const paceSONeed = safeDivR(Math.max(0, totalTarSO - totalActSO), daysLeft);
+        const paceSOAct = safeDivR(totalActSO, soDaysPassed);
+        const paceSONeed = safeDivR(Math.max(0, totalTarSO - totalActSO), Math.max(1, chartDaysInMonth - soDaysPassed));
 
         document.getElementById('reg-act-so-miss').innerHTML = `${missSO > 0 ? '+' : ''}${fmtRegNum(Math.round(missSO))} <span class="text-[9px] font-bold">xe</span>`;
         document.getElementById('reg-act-so-miss').className = `font-black text-sm ${missSO >= 0 ? 'text-emerald-500' : 'text-red-500'}`;
@@ -670,8 +652,8 @@ window.loadDataRegionTab = async function() {
             }).join('');
         }
 
-        // 9. Update Chart 3: Dual Pace VÀ THÔNG SỐ FORECAST
-        updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, chartDaysInMonth, currentPassed, daysPassed, daysLeft, totalActSI, totalActSO);
+        // 9. Render lại biểu đồ giống Market (Area Chart theo ngày)
+        renderLineChartsRegion(dailyStats, startStr, endStr, totalTarSI, totalTarSO, chartDaysInMonth, siDaysPassed, soDaysPassed, totalActSI, totalActSO);
 
         if(lastUpdate) {
             const now = new Date();
@@ -684,21 +666,23 @@ window.loadDataRegionTab = async function() {
     }
 };
 
-// ĐÃ FIX: Thêm tham số tính Forecast
-function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, currentPassed, daysPassed, daysLeft, totalActSI, totalActSO) {
+// ==========================================
+// HÀM VẼ BIỂU ĐỒ AREA THEO NGÀY (GIỐNG ERP-MARKET)
+// ==========================================
+function renderLineChartsRegion(dailyObj, startStr, endStr, totalTarSI, totalTarSO, daysInMonth, siDaysPassed, soDaysPassed, totalActSI, totalActSO) {
     if (window.regChartSI) window.regChartSI.destroy();
     if (window.regChartSO) window.regChartSO.destroy();
 
-    // TÍNH TOÁN DỰ BÁO NHỊP ĐỘ (FORECAST)
-    const siActPace = daysPassed > 0 ? totalActSI / daysPassed : 0;
-    const siForecast = Math.round(totalActSI + (siActPace * daysLeft));
+    // TÍNH TOÁN DỰ BÁO NHỊP ĐỘ (FORECAST) DỰA TRÊN SỐ NGÀY THỰC TẾ
+    const siActPace = siDaysPassed > 0 ? totalActSI / siDaysPassed : 0;
+    const siForecast = Math.round(siActPace * daysInMonth);
     const siForecastPct = totalTarSI > 0 ? (siForecast / totalTarSI) * 100 : 0;
 
-    const soActPace = daysPassed > 0 ? totalActSO / daysPassed : 0;
-    const soForecast = Math.round(totalActSO + (soActPace * daysLeft));
+    const soActPace = soDaysPassed > 0 ? totalActSO / soDaysPassed : 0;
+    const soForecast = Math.round(soActPace * daysInMonth);
     const soForecastPct = totalTarSO > 0 ? (soForecast / totalTarSO) * 100 : 0;
 
-    // GÁN LÊN GIAO DIỆN MỚI
+    // GÁN LÊN GIAO DIỆN
     const elSiTarget = document.getElementById('reg-trend-si-target');
     const elSiForecast = document.getElementById('reg-trend-si-forecast');
     const elSiForecastPct = document.getElementById('reg-trend-si-forecast-pct');
@@ -713,77 +697,46 @@ function updateDualPaceChart(dailyStats, totalTarSI, totalTarSO, daysInMonth, cu
     if(elSoForecast) elSoForecast.innerText = fmtRegNum(soForecast);
     if(elSoForecastPct) elSoForecastPct.innerText = `(${Math.round(soForecastPct)}%)`;
 
-
-    const cats = [];
-    const planSI = [], planSO = [];
-    const actSI = [], actSO = [];
+    const dates = [];
+    const siData = []; const soData = [];
     
-    let cumSI = 0, cumSO = 0;
-    const paceStepSI = totalTarSI / daysInMonth;
-    const paceStepSO = totalTarSO / daysInMonth;
-
-    for (let i = 0; i < daysInMonth; i++) {
-        cats.push(String(i+1).padStart(2,'0'));
-        planSI.push(Math.round(paceStepSI * (i+1)));
-        planSO.push(Math.round(paceStepSO * (i+1)));
-        
-        if (i < currentPassed) {
-            cumSI += dailyStats[i].si;
-            cumSO += dailyStats[i].so;
-            actSI.push(cumSI);
-            actSO.push(cumSO);
-        } else {
-            actSI.push(null);
-            actSO.push(null);
-        }
+    let curr = new Date(startStr); const end = new Date(endStr);
+    while(curr <= end) {
+        const dStr = curr.toISOString().split('T')[0];
+        dates.push(dStr.slice(5).replace('-', '/'));
+        siData.push(dailyObj[dStr] ? dailyObj[dStr].si : 0);
+        soData.push(dailyObj[dStr] ? dailyObj[dStr].so : 0);
+        curr.setDate(curr.getDate() + 1);
     }
 
-    const commonOptions = {
-        chart: { height: 230, type: 'line', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-        stroke: { width: [3, 2], curve: 'straight', dashArray: [0, 4] },
-        dataLabels: {
-            enabled: true,
-            enabledOnSeries: [0],
-            style: { fontSize: '9px', fontWeight: 'bold' },
-            background: { enabled: true, opacity: 0.8, borderRadius: 2 },
+    const baseOpts = {
+        chart: { type: 'area', height: 210, toolbar: { show: false }, fontFamily: 'Inter, system-ui, sans-serif' },
+        stroke: { curve: 'smooth', width: 2.5 },
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] } },
+        markers: { size: 3, colors: ['#fff'], strokeWidth: 2, hover: { size: 5 } },
+        dataLabels: { 
+            enabled: true, 
             offsetY: -5,
-            formatter: function (val) { return val ? val : ''; }
+            style: { fontSize: '9px', fontWeight: 800 },
+            background: { enabled: true, foreColor: '#fff', borderRadius: 2, padding: 3, opacity: 1, borderWidth: 0 },
+            formatter: function(val) { return val > 0 ? fmtRegNum(val) : ''; } 
         },
-        markers: { size: [4, 0], hover: { size: 6 } },
-        xaxis: { categories: cats, labels: { style: { fontSize: '9px', colors: '#9ca3af', fontWeight: 600 } } },
-        yaxis: { min: 0, tickAmount: 4, labels: { style: { fontSize: '10px', colors: '#64748b', fontWeight: 700 }, formatter: (val) => Math.round(val) } },
-        grid: { borderColor: '#f1f5f9', strokeDashArray: 3, padding: { top: 0, bottom: 0, left: 10, right: 10 } },
-        legend: { show: false },
-        annotations: {
-            xaxis: [{ x: String(currentPassed).padStart(2,'0'), strokeDashArray: 0, borderColor: '#ef4444', label: { borderColor: '#ef4444', style: { color: '#fff', background: '#ef4444', fontSize: '9px', fontWeight: 800 }, text: 'Lọc hiện tại', offsetY: 0 } }]
-        }
+        xaxis: { categories: dates, labels: { style: { fontSize: '9px', colors: '#94a3b8' } }, tickAmount: Math.min(10, dates.length) },
+        yaxis: { labels: { style: { fontSize: '9px', colors: '#94a3b8' } } },
+        grid: { borderColor: '#f1f5f9', strokeDashArray: 4 }
     };
 
-    // Chart SELLIN (Xanh dương)
-    const optSI = {
-        ...commonOptions,
-        series: [
-            { name: 'Thực đạt lũy kế (SI)', type: 'line', data: actSI },
-            { name: 'Kế hoạch lũy kế (SI)', type: 'line', data: planSI }
-        ],
-        colors: ['#2563eb', '#9ca3af'],
-        dataLabels: { ...commonOptions.dataLabels, style: { colors: ['#1e40af'] } }
-    };
-
-    // Chart SELLOUT (Xanh ngọc)
-    const optSO = {
-        ...commonOptions,
-        series: [
-            { name: 'Thực đạt lũy kế (SO)', type: 'line', data: actSO },
-            { name: 'Kế hoạch lũy kế (SO)', type: 'line', data: planSO }
-        ],
-        colors: ['#10b981', '#9ca3af'],
-        dataLabels: { ...commonOptions.dataLabels, style: { colors: ['#065f46'] } }
-    };
-
-    window.regChartSI = new ApexCharts(document.querySelector("#reg-chart-si"), optSI);
+    window.regChartSI = new ApexCharts(document.querySelector("#reg-chart-si"), { 
+        ...baseOpts, 
+        series: [{ name: 'Thực tế', data: siData }], 
+        colors: ['#3b82f6'] 
+    });
     window.regChartSI.render();
 
-    window.regChartSO = new ApexCharts(document.querySelector("#reg-chart-so"), optSO);
+    window.regChartSO = new ApexCharts(document.querySelector("#reg-chart-so"), { 
+        ...baseOpts, 
+        series: [{ name: 'Thực tế', data: soData }], 
+        colors: ['#22c55e'] 
+    });
     window.regChartSO.render();
 }

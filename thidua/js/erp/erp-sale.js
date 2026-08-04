@@ -100,7 +100,6 @@ window.renderErpSalePersonal = async () => {
         if (daysLeft < 1) daysLeft = 1;
 
         // 4. Fetch Dữ Liệu Từ Supabase
-        // Gộp tên khi truy vấn: Chúng ta lấy toàn bộ dữ liệu rồi lọc bằng JS để đảm bảo case-insensitive
         const [soRes, siRes, tgtRes] = await Promise.all([
             window.sb.from('daily_so_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
             window.sb.from('game_si_reports').select('*').gte('report_date', startStr).lte('report_date', endStr),
@@ -133,16 +132,39 @@ window.renderErpSalePersonal = async () => {
         dYesterday.setDate(dYesterday.getDate() - 1);
         let yesterdayStr = `${dYesterday.getFullYear()}-${String(dYesterday.getMonth() + 1).padStart(2, '0')}-${String(dYesterday.getDate()).padStart(2, '0')}`;
 
+        // Cập nhật thu thập số liệu từng ngày để tính ngày nhập liệu thực tế
+        let dailyMap = {};
+
         soData.forEach(r => {
-            actualSO += Number(r.total_so || 0);
-            if(r.report_date !== endStr) yesterdaySO += Number(r.total_so || 0);
+            let val = Number(r.total_so || 0);
+            actualSO += val;
+            if(r.report_date !== endStr) yesterdaySO += val;
+
+            if (!dailyMap[r.report_date]) dailyMap[r.report_date] = { si: 0, so: 0 };
+            dailyMap[r.report_date].so += val;
         });
         
         siData.forEach(r => {
-            actualSI += Number(r.xuat_hang || 0);
+            let val = Number(r.xuat_hang || 0);
+            actualSI += val;
             actualTT += Number(r.thanh_toan || 0);
-            if(r.report_date !== endStr) yesterdaySI += Number(r.xuat_hang || 0);
+            if(r.report_date !== endStr) yesterdaySI += val;
+
+            if (!dailyMap[r.report_date]) dailyMap[r.report_date] = { si: 0, so: 0 };
+            dailyMap[r.report_date].si += val;
         });
+
+        // ĐẾM SỐ NGÀY DATA-DRIVEN (CHỈ ĐẾM CÁC NGÀY CÓ PHÁT SINH SỐ LIỆU > 0)
+        let siDaysEntered = 0;
+        let soDaysEntered = 0;
+        for (const dStr in dailyMap) {
+            if (dStr >= startStr && dStr <= endStr) {
+                if (dailyMap[dStr].si > 0) siDaysEntered++;
+                if (dailyMap[dStr].so > 0) soDaysEntered++;
+            }
+        }
+        const siDaysPassed = Math.max(1, siDaysEntered);
+        const soDaysPassed = Math.max(1, soDaysEntered);
 
         // 7. Xử lý Chỉ số Hiệu Suất, Áp Lực & DỰ BÁO (Forecast)
         const missingSI = Math.max(0, targetSI - actualSI);
@@ -151,8 +173,9 @@ window.renderErpSalePersonal = async () => {
         const pctSI = Math.min(100, Math.round((actualSI / targetSI) * 100));
         const pctSO = Math.min(100, Math.round((actualSO / targetSO) * 100));
 
-        const avgPaceSI = (actualSI / daysPassed).toFixed(1);
-        const avgPaceSO = (actualSO / daysPassed).toFixed(1);
+        // TÍNH TOÁN THEO SỐ NGÀY THỰC TẾ
+        const avgPaceSI = (actualSI / siDaysPassed).toFixed(1);
+        const avgPaceSO = (actualSO / soDaysPassed).toFixed(1);
         
         const avgPaceYesterdaySI = daysPassed > 1 ? (yesterdaySI / (daysPassed - 1)).toFixed(1) : 0;
         const avgPaceYesterdaySO = daysPassed > 1 ? (yesterdaySO / (daysPassed - 1)).toFixed(1) : 0;
@@ -170,11 +193,11 @@ window.renderErpSalePersonal = async () => {
         const maxPaceSO = targetSO / 10;
         const pressurePctSO = Math.min(100, Math.max(0, (reqPaceSO / maxPaceSO) * 100));
 
-        // TÍNH TOÁN DỰ BÁO DỰA TRÊN NHỊP ĐỘ HIỆN TẠI (RUN-RATE)
-        const forecastSI = daysPassed > 0 ? Math.round((actualSI / daysPassed) * daysInMonth) : 0;
+        // TÍNH TOÁN DỰ BÁO DỰA TRÊN NHỊP ĐỘ HIỆN TẠI (DATA-DRIVEN RUN-RATE)
+        const forecastSI = Math.round((actualSI / siDaysPassed) * daysInMonth);
         const forecastPctSI = targetSI > 0 ? Math.round((forecastSI / targetSI) * 100) : 0;
 
-        const forecastSO = daysPassed > 0 ? Math.round((actualSO / daysPassed) * daysInMonth) : 0;
+        const forecastSO = Math.round((actualSO / soDaysPassed) * daysInMonth);
         const forecastPctSO = targetSO > 0 ? Math.round((forecastSO / targetSO) * 100) : 0;
 
         // 8. Chuẩn bị dữ liệu cho Chart (MIXED: Line + Column)

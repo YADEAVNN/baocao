@@ -120,14 +120,18 @@ const viewMap = {
 };
 
 window.switchView = (viewId) => {
+    // ĐÃ FIX: Chặn đứng mọi nỗ lực gọi trang chủ (dashboard) từ lõi hệ thống
+    if (viewId === 'dashboard') {
+        if (typeof window.customSwitchView === 'function') {
+            return window.customSwitchView('erp');
+        }
+        viewId = 'erp';
+    }
+
     const appContent = document.getElementById('app-content');
     
     if (viewMap[viewId]) { appContent.innerHTML = viewMap[viewId]; } 
     else { appContent.innerHTML = ''; }
-
-    if (viewId === 'dashboard' && typeof window.renderDashboardView === 'function') {
-        window.renderDashboardView();
-    }
 
     // Khởi tạo tab S.O
     if (viewId === 'sellout' && window.STATE?.currentUser) {
@@ -251,7 +255,13 @@ async function init() {
         }
 
         if (typeof api_loadShopsAndLock === 'function') await api_loadShopsAndLock(profile);
-        window.switchView('dashboard'); 
+        
+        // ĐÃ FIX: Chuyển thẳng sang hệ thống ERP mặc định khi load xong Init
+        if (typeof window.customSwitchView === 'function') {
+            window.customSwitchView('erp');
+        } else {
+            window.switchView('erp'); 
+        }
 
     } catch (err) { 
         alert("Có lỗi khi tải ứng dụng. Vui lòng F5."); 

@@ -21,6 +21,9 @@ window.refreshCRMCarList = () => {
 };
 
 async function init() {
+    // FIX: Nếu đang ở chế độ khôi phục mật khẩu thì chặn không cho load vào màn hình quản lý
+    if (window.location.hash.includes('type=recovery')) return;
+
     try {
         const profile = await api_checkSession();
         if (!profile || !profile.is_approved) {
@@ -201,6 +204,10 @@ if(document.getElementById('btnUpdatePassword')) {
             ui_showMsg("Đang cập nhật...", "blue");
             await api_updatePassword(newPass);
             ui_showMsg("Đổi mật khẩu thành công! Đang chuyển hướng...", "green");
+            
+            // FIX: Xóa chuỗi recovery trên URL để khi reload không bị kẹt lại form đổi mật khẩu
+            window.location.hash = ''; 
+            
             setTimeout(() => { window.location.reload(); }, 2000);
         } catch(err) { ui_showMsg("Lỗi: " + err.message, "red"); }
     };
@@ -990,3 +997,27 @@ window.loadLeaderboard = async () => {
         }
     } catch (err) { console.error("Lỗi dựng bảng xếp hạng: ", err); }
 };
+
+// FIX: Xử lý hiển thị form khi click link khôi phục và tự động init()
+window.addEventListener('DOMContentLoaded', () => {
+    const hash = window.location.hash;
+    
+    // Kiểm tra nếu trên URL có chứa type=recovery do Supabase sinh ra
+    if (hash && hash.includes('type=recovery')) {
+        document.getElementById('authContainer').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+        
+        ['loginFormSection', 'signupFormSection', 'forgotPasswordFormSection'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.classList.add('hidden');
+        });
+        
+        const elUpdate = document.getElementById('updatePasswordFormSection');
+        if(elUpdate) elUpdate.classList.remove('hidden');
+        
+        ui_showMsg("Vui lòng nhập mật khẩu mới.", "blue");
+    } else {
+        // Tự động gọi init() nếu tải trang bình thường (để giữ trạng thái đăng nhập)
+        init();
+    }
+});

@@ -19,10 +19,11 @@ import { competitionHTML } from './views/view-competition.js';
 // TÍCH HỢP GIAO DIỆN MASTER REPORT MỚI
 import { masterReportHTML } from './views/view-master-report.js'; 
 
-// TÍCH HỢP GIAO DIỆN GAME
+// TÍCH HỢP GIAO DIỆN GAME VÀ QUỸ ĐÓNG GÓP
 import { game01HTML } from './views/view-game01.js';
 import { game02HTML } from './views/view-game02.js'; 
-import { game03HTML } from './views/view-game03.js'; // Bổ sung import Game 03
+import { game03HTML } from './views/view-game03.js';
+import { fundHTML } from './views/view-fund.js'; // Bổ sung import view Quỹ đóng góp
 
 import './sellout.js';
 import './sellin.js';
@@ -114,13 +115,13 @@ const viewMap = {
     'master': masterReportHTML, 
     'game01': game01HTML, 
     'game02': game02HTML, 
-    'game03': game03HTML, // Cập nhật gán HTML thực tế của Game 03
-    'fund': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Tính năng Quỹ đang phát triển...</div>',
+    'game03': game03HTML, 
+    'fund': fundHTML, // Cập nhật gán HTML thực tế của tab Quỹ
     'reward': '<div class="p-8 text-center text-gray-500 font-bold mt-10">Lịch sử thưởng đang phát triển...</div>'
 };
 
 window.switchView = (viewId) => {
-    // ĐÃ FIX: Chặn đứng mọi nỗ lực gọi trang chủ (dashboard) từ lõi hệ thống
+    // Chặn đứng mọi nỗ lực gọi trang chủ (dashboard) từ lõi hệ thống
     if (viewId === 'dashboard') {
         if (typeof window.customSwitchView === 'function') {
             return window.customSwitchView('erp');
@@ -203,6 +204,11 @@ window.switchView = (viewId) => {
         window.loadGame03Data();
     }
 
+    // Khởi tạo Quỹ đóng góp
+    if (viewId === 'fund' && typeof window.loadFundData === 'function') {
+        window.loadFundData();
+    }
+
     // Highlight Menu Trái
     const allNavs = ['nav-dashboard', 'nav-sellout', 'nav-sale_si', 'nav-sellin', 'nav-master', 'nav-game01', 'nav-game02', 'nav-game03', 'nav-fund', 'nav-leaderboard', 'nav-reward'];
     allNavs.forEach(n => {
@@ -256,7 +262,7 @@ async function init() {
 
         if (typeof api_loadShopsAndLock === 'function') await api_loadShopsAndLock(profile);
         
-        // ĐÃ FIX: Chuyển thẳng sang hệ thống ERP mặc định khi load xong Init
+        // Chuyển thẳng sang hệ thống ERP mặc định khi load xong Init
         if (typeof window.customSwitchView === 'function') {
             window.customSwitchView('erp');
         } else {

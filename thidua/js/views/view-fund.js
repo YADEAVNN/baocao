@@ -10,7 +10,10 @@ export const fundHTML = `
             </h1>
             <p class="text-sm font-bold text-gray-500 mt-1 ml-9">Theo dõi và gạch nợ quỹ thi đua hàng tháng</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+            <button onclick="document.getElementById('fund_qr_modal').classList.remove('hidden'); document.getElementById('fund_qr_modal').classList.add('flex')" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg shadow-md transition font-black text-xs uppercase flex items-center gap-2 border border-blue-700">
+                <i class="fa-solid fa-qrcode text-base"></i> Mã QR Nộp Quỹ
+            </button>
             <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
                 <i class="fa-regular fa-calendar text-gray-400"></i>
                 <input type="month" id="fund_month_filter" onchange="window.loadFundData(true)" class="bg-transparent border-none font-bold text-slate-700 outline-none cursor-pointer text-sm">
@@ -37,10 +40,29 @@ export const fundHTML = `
         </button>
     </div>
 
+    <!-- BỘ LỌC TÌM KIẾM (CHỈ HIỂN THỊ GAME 1 & GAME 2) -->
+    <div id="fund_filter_container" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6 flex-wrap gap-4 items-end hidden">
+        <div class="flex-1 min-w-[200px]">
+            <label class="text-[10px] font-bold text-gray-500 uppercase mb-1.5 block">Lọc theo Giám Đốc</label>
+            <select id="fund_filter_dir" onchange="window.updateFundSaleOptions(); window.renderFundTable();" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer">
+                <option value="">-- Tất cả Giám Đốc --</option>
+            </select>
+        </div>
+        <div class="flex-1 min-w-[200px]">
+            <label class="text-[10px] font-bold text-gray-500 uppercase mb-1.5 block">Lọc theo Nhân Viên / Khu vực</label>
+            <select id="fund_filter_sale" onchange="window.renderFundTable()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer">
+                <option value="">-- Tất cả Thành viên --</option>
+            </select>
+        </div>
+        <button onclick="document.getElementById('fund_filter_dir').value=''; document.getElementById('fund_filter_sale').value=''; window.updateFundSaleOptions(); window.renderFundTable();" class="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-lg font-bold text-xs hover:bg-gray-200 transition shadow-sm h-[42px]">
+            Bỏ lọc
+        </button>
+    </div>
+
     <!-- MAIN TABLE -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
         <div class="p-4 border-b border-gray-100 flex flex-wrap justify-between items-center bg-gray-50 gap-4">
-            <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2" id="fund_table_title">
+            <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2 w-full md:w-auto" id="fund_table_title">
                 DANH SÁCH CẦN ĐÓNG QUỸ - GAME 01
             </h2>
             
@@ -63,6 +85,32 @@ export const fundHTML = `
                     <tr><td colspan="6" class="p-10 text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- MODAL MÃ QR NỘP QUỸ -->
+    <div id="fund_qr_modal" class="fixed inset-0 z-[110] bg-gray-900/80 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col fade-in">
+            <div class="p-4 flex justify-between items-center border-b border-gray-100 bg-blue-600 text-white">
+                <h3 class="text-lg font-black uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode"></i> THÔNG TIN TÀI KHOẢN
+                </h3>
+                <button onclick="document.getElementById('fund_qr_modal').classList.add('hidden'); document.getElementById('fund_qr_modal').classList.remove('flex')" class="w-8 h-8 rounded-full bg-blue-500 text-white hover:bg-blue-400 transition shadow-sm flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 bg-slate-50 flex flex-col items-center justify-center">
+                <p class="text-xs font-bold text-gray-500 mb-4 text-center leading-relaxed">
+                    Quét mã QR qua ứng dụng ngân hàng để nộp quỹ thi đua.<br>
+                    <span class="text-red-500">Lưu ý: Nhớ ghi rõ nội dung chuyển khoản nhé!</span>
+                </p>
+                <div class="bg-white p-3 rounded-2xl shadow-md border border-gray-200 hover:scale-105 transition-transform duration-300">
+                    <img src="https://raw.githubusercontent.com/YADEAVNN/baocao/refs/heads/main/1786377022953_6421184909690942154_6421184909690942154_90fb3f3b262d02f1d8f524d2c0f6bbea.jpg" alt="Mã QR Chuyển Khoản" class="w-64 h-auto rounded-xl">
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-100 bg-white flex justify-center">
+                <button onclick="document.getElementById('fund_qr_modal').classList.add('hidden'); document.getElementById('fund_qr_modal').classList.remove('flex')" class="px-8 py-2.5 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition w-full shadow-sm">Đóng lại</button>
+            </div>
         </div>
     </div>
 
@@ -111,17 +159,21 @@ export const fundHTML = `
 </div>
 `;
 
-// ==========================================
-// TỐI ƯU CẤU TRÚC LƯU TRỮ DỮ LIỆU ĐỂ UI MƯỢT MÀ
-// ==========================================
 window.fundState = { 
     tab: 'SUMMARY', 
-    cache: null // Lưu trữ dữ liệu đã fetch
+    cache: null,
+    rawFundList: [], 
+    filtersPopulated: false 
 };
 
 window.switchFundTab = (tab) => {
     window.fundState.tab = tab;
     
+    // Đặt lại trạng thái bộ lọc khi chuyển tab
+    window.fundState.filtersPopulated = false;
+    document.getElementById('fund_filter_dir').value = '';
+    document.getElementById('fund_filter_sale').value = '';
+
     const btnSummary = document.getElementById('btn_fund_summary');
     const btnG1 = document.getElementById('btn_fund_g1');
     const btnG2 = document.getElementById('btn_fund_g2');
@@ -130,6 +182,7 @@ window.switchFundTab = (tab) => {
     const thead = document.getElementById('fund_table_head');
     const adminActions = document.getElementById('fund_admin_actions');
     const adminInfo = document.getElementById('fund_admin_info');
+    const filterContainer = document.getElementById('fund_filter_container');
 
     const activeClass = "flex-1 md:flex-none px-6 py-3 rounded-xl font-black uppercase transition-all text-white shadow-lg text-xs md:text-sm border border-transparent";
     const inactiveClass = "flex-1 md:flex-none px-6 py-3 rounded-xl font-black uppercase transition-all bg-white text-gray-500 border border-gray-200 hover:bg-gray-50 shadow-sm text-xs md:text-sm";
@@ -142,9 +195,19 @@ window.switchFundTab = (tab) => {
     adminActions.classList.add('hidden');
     adminInfo.classList.remove('hidden');
 
+    // Cấu hình hiển thị bộ lọc
+    if (tab === 'GAME01' || tab === 'GAME02') {
+        filterContainer.classList.remove('hidden');
+        filterContainer.classList.add('flex');
+    } else {
+        filterContainer.classList.add('hidden');
+        filterContainer.classList.remove('flex');
+    }
+
     if (tab === 'SUMMARY') {
         btnSummary.className = activeClass + " bg-emerald-600 shadow-emerald-500/30";
-        title.innerText = "SỔ TỔNG HỢP GIAO DỊCH QUỸ";
+        title.innerHTML = `SỔ TỔNG HỢP GIAO DỊCH QUỸ`;
+        title.className = "text-sm font-black text-slate-800 uppercase flex flex-col md:flex-row md:items-center justify-between w-full gap-3";
         adminInfo.classList.add('hidden');
         thead.innerHTML = `
             <tr>
@@ -159,6 +222,7 @@ window.switchFundTab = (tab) => {
     else if (tab === 'GAME01') {
         btnG1.className = activeClass + " bg-orange-500 shadow-orange-500/30";
         title.innerText = "DANH SÁCH CẦN ĐÓNG QUỸ - GAME 01 (SOLO)";
+        title.className = "text-sm font-black text-slate-800 uppercase flex items-center gap-2 w-full md:w-auto";
         thead.innerHTML = `
             <tr>
                 <th class="py-3 px-3 border border-slate-600 w-10">STT</th>
@@ -172,6 +236,7 @@ window.switchFundTab = (tab) => {
     else if (tab === 'GAME02') {
         btnG2.className = activeClass + " bg-red-600 shadow-red-500/30";
         title.innerText = "DANH SÁCH TÀI TRỢ PICKLEBALL - GAME 02 (KHU VỰC)";
+        title.className = "text-sm font-black text-slate-800 uppercase flex items-center gap-2 w-full md:w-auto";
         thead.innerHTML = `
             <tr>
                 <th class="py-3 px-3 border border-slate-600 w-10">STT</th>
@@ -185,11 +250,12 @@ window.switchFundTab = (tab) => {
     else if (tab === 'MANUAL') {
         btnManual.className = activeClass + " bg-blue-600 shadow-blue-500/30";
         title.innerText = "SỔ QUỸ: CÁC KHOẢN THU / CHI KHÁC";
+        title.className = "text-sm font-black text-slate-800 uppercase flex items-center gap-2 w-full md:w-auto";
         thead.innerHTML = `
             <tr>
                 <th class="py-3 px-3 border border-slate-600 w-10">STT</th>
                 <th class="py-3 px-4 text-left border border-slate-600">THÀNH VIÊN (NVKD / ASM / RSM)</th>
-                <th class="py-3 px-3 border border-slate-600">SỐ TIỀN GIAO DỊCH</th>
+                <th class="py-3 px-3 border border-slate-600 text-green-400">SỐ TIỀN GIAO DỊCH</th>
                 <th class="py-3 px-4 text-left border border-slate-600">GHI CHÚ / LÝ DO</th>
                 <th class="py-3 px-3 border border-slate-600">NGÀY GHI NHẬN</th>
                 <th class="py-3 px-3 border border-slate-600 w-32">THAO TÁC</th>
@@ -201,7 +267,6 @@ window.switchFundTab = (tab) => {
         }
     }
     
-    // RENDER NGAY LẬP TỨC TỪ CACHE (KHÔNG FETCH LẠI)
     window.renderFundTable();
 };
 
@@ -214,7 +279,8 @@ window.loadFundData = async (forceRefresh = false) => {
     
     const month = monthInput.value;
 
-    // NẾU CÓ CACHE VÀ KHÔNG BẮT BUỘC TẢI LẠI -> RENDER LUÔN
+    if (forceRefresh) window.fundState.filtersPopulated = false;
+
     if (!forceRefresh && window.fundState.cache && window.fundState.cache.month === month) {
         window.renderFundTable();
         return;
@@ -236,7 +302,6 @@ window.loadFundData = async (forceRefresh = false) => {
             window.sb.from('fund_payments').select('*').eq('report_month', month)
         ]);
 
-        // LƯU TOÀN BỘ VÀO CACHE 
         window.fundState.cache = {
             month: month,
             year: year,
@@ -248,13 +313,26 @@ window.loadFundData = async (forceRefresh = false) => {
             payments: paymentRes.data || []
         };
 
-        // Render ra giao diện
         window.renderFundTable();
 
     } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-red-500 font-bold text-center">Lỗi tải dữ liệu: ${err.message}</td></tr>`;
     }
+};
+
+window.updateFundSaleOptions = () => {
+    const dirFilter = document.getElementById('fund_filter_dir').value;
+    const rawList = window.fundState.rawFundList || [];
+    
+    let filteredSales = rawList;
+    if (dirFilter) {
+        filteredSales = filteredSales.filter(s => s.director && s.director.includes(dirFilter));
+    }
+    
+    const sales = [...new Set(filteredSales.map(item => item.name))].filter(Boolean).sort();
+    const saleSelect = document.getElementById('fund_filter_sale');
+    saleSelect.innerHTML = '<option value="">-- Tất cả Thành viên --</option>' + sales.map(s => `<option value="${s}">${s}</option>`).join('');
 };
 
 window.renderFundTable = () => {
@@ -292,10 +370,14 @@ window.renderFundTable = () => {
         const titleEl = document.getElementById('fund_table_title');
         if (titleEl) {
             titleEl.innerHTML = `
-                SỔ TỔNG HỢP GIAO DỊCH QUỸ THÁNG ${monthStr}/${year}
-                <span class="ml-4 text-[10px] font-bold bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 shadow-sm"><i class="fa-solid fa-arrow-down mr-1"></i> TỔNG THU: ${fmt(totalThu)}đ</span>
-                <span class="ml-2 text-[10px] font-bold bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 shadow-sm"><i class="fa-solid fa-arrow-up mr-1"></i> TỔNG CHI: ${fmt(totalChi)}đ</span>
-                <span class="ml-2 text-[11px] font-black bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-md"><i class="fa-solid fa-wallet mr-1"></i> ADMIN ĐANG CẦM: ${fmt(balance)}đ</span>
+                <div class="flex items-center gap-2">
+                    SỔ TỔNG HỢP GIAO DỊCH QUỸ THÁNG ${monthStr}/${year}
+                </div>
+                <div class="flex flex-wrap items-center gap-2 mt-2 md:mt-0 font-sans">
+                    <span class="text-[10px] font-bold bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 shadow-sm"><i class="fa-solid fa-arrow-down mr-1"></i> TỔNG THU: ${fmt(totalThu)}đ</span>
+                    <span class="text-[10px] font-bold bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 shadow-sm"><i class="fa-solid fa-arrow-up mr-1"></i> TỔNG CHI: ${fmt(totalChi)}đ</span>
+                    <span class="text-[11px] font-black bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-md"><i class="fa-solid fa-wallet mr-1"></i> ADMIN ĐANG CẦM: ${fmt(balance)}đ</span>
+                </div>
             `;
         }
 
@@ -340,19 +422,18 @@ window.renderFundTable = () => {
     }
 
     // =====================================
-    // TAB 3: THU PHẠT KHÁC (MANUAL)
+    // TAB 3: SỔ QUỸ THU/CHI KHÁC (MANUAL)
     // =====================================
     if (window.fundState.tab === 'MANUAL') {
         const manualPayments = payments.filter(p => p.game_type === 'MANUAL');
         
         const totalThu = manualPayments.filter(p => p.paid_amount > 0).reduce((sum, p) => sum + Number(p.paid_amount), 0);
         const totalChi = manualPayments.filter(p => p.paid_amount < 0).reduce((sum, p) => sum + Math.abs(Number(p.paid_amount)), 0);
-        const balance = totalThu - totalChi;
 
         const titleEl = document.getElementById('fund_table_title');
         if (titleEl) {
             titleEl.innerHTML = `
-                CÁC KHOẢN THU / CHI KHÁC 
+                SỔ QUỸ: CÁC KHOẢN THU / CHI KHÁC 
                 <span class="ml-4 text-[10px] font-bold bg-green-50 text-green-700 px-2 py-1 rounded border border-green-200 shadow-sm"><i class="fa-solid fa-arrow-down mr-1"></i> TỔNG THU: ${fmt(totalThu)}đ</span>
                 <span class="ml-2 text-[10px] font-bold bg-red-50 text-red-600 px-2 py-1 rounded border border-red-200 shadow-sm"><i class="fa-solid fa-arrow-up mr-1"></i> TỔNG CHI: ${fmt(totalChi)}đ</span>
             `;
@@ -503,8 +584,31 @@ window.renderFundTable = () => {
         });
     }
 
+    // --- APPLY FILTERS ---
+    if (!window.fundState.filtersPopulated) {
+        window.fundState.rawFundList = [...fundList]; 
+        const dirs = [...new Set(fundList.map(item => item.director))].filter(Boolean).sort();
+        const dirSelect = document.getElementById('fund_filter_dir');
+        if (dirSelect) {
+            dirSelect.innerHTML = '<option value="">-- Tất cả Giám Đốc --</option>' + dirs.map(d => `<option value="${d}">${d}</option>`).join('');
+        }
+        window.updateFundSaleOptions(); 
+        window.fundState.filtersPopulated = true;
+    }
+
+    const dirFilter = document.getElementById('fund_filter_dir')?.value || '';
+    const saleFilter = document.getElementById('fund_filter_sale')?.value || '';
+
+    if (dirFilter) {
+        fundList = fundList.filter(s => s.director && s.director.includes(dirFilter));
+    }
+    if (saleFilter) {
+        fundList = fundList.filter(s => s.name === saleFilter);
+    }
+
+    // Render ra bảng
     if (fundList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-gray-400 font-bold text-center">Chưa có phát sinh danh sách đóng quỹ trong kỳ này.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-gray-400 font-bold text-center">Không có dữ liệu phù hợp hoặc chưa có phát sinh công nợ.</td></tr>`;
         return;
     }
 
@@ -549,6 +653,7 @@ window.renderFundTable = () => {
             </tr>
         `;
     }).join('');
+
 };
 
 // =====================================

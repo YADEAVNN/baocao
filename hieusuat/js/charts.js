@@ -35,9 +35,10 @@ export async function loadOverviewDashboard() {
     STATE.priceMap = {};
     if (prices) prices.forEach(p => STATE.priceMap[p.model] = p.selling_price || 0);
 
+    // FIX 3: Thay đổi chiều sắp xếp để lấy dữ liệu mới nhất và tăng limit cho tài khoản Admin
     const [soRes, mediaRes] = await Promise.all([
-        sb.from('daily_so_reports').select('*').in('shop_code', STATE.assignedShopCodes).order('report_date', { ascending: true }),
-        sb.from('media_reports').select('*').in('shop_code', STATE.assignedShopCodes).order('report_date', { ascending: true })
+        sb.from('daily_so_reports').select('*').in('shop_code', STATE.assignedShopCodes).order('report_date', { ascending: false }).limit(10000),
+        sb.from('media_reports').select('*').in('shop_code', STATE.assignedShopCodes).order('report_date', { ascending: false }).limit(10000)
     ]);
 
     currentSOReports = soRes.data || [];
@@ -47,82 +48,76 @@ export async function loadOverviewDashboard() {
 }
 
 window.updateOVFilters = (level) => {
-    const dir = document.getElementById('ov_filter_director')?.value || '';
-    const sale = document.getElementById('ov_filter_sale')?.value || '';
-    const svn = document.getElementById('ov_filter_svn')?.value || '';
+    // FIX 1: Thêm .trim() để lọc sạch khoảng trắng lỗi từ DB
+    const dir = (document.getElementById('ov_filter_director')?.value || '').trim();
+    const sale = (document.getElementById('ov_filter_sale')?.value || '').trim();
+    const svn = (document.getElementById('ov_filter_svn')?.value || '').trim();
     let shops = STATE.globalAssignedShops;
 
     if (level === 'init') {
-        let directors = [...new Set(shops.map(x => x.director_name).filter(Boolean))].sort();
+        let directors = [...new Set(shops.map(x => (x.director_name || '').trim()).filter(Boolean))].sort();
         document.getElementById('ov_filter_director').innerHTML = `<option value="">-- Tất cả GĐ --</option>` + directors.map(x => `<option value="${x}">${x}</option>`).join('');
     }
     if (level === 'init' || level === 'director') {
-        let sales = [...new Set(shops.filter(x => !dir || x.director_name === dir).map(x => x.sale_name).filter(Boolean))].sort();
+        let sales = [...new Set(shops.filter(x => !dir || (x.director_name || '').trim() === dir).map(x => (x.sale_name || '').trim()).filter(Boolean))].sort();
         document.getElementById('ov_filter_sale').innerHTML = `<option value="">-- Tất cả Sale --</option>` + sales.map(x => `<option value="${x}">${x}</option>`).join('');
         if(level === 'director') document.getElementById('ov_filter_sale').value = '';
     }
     if (level === 'init' || level === 'director' || level === 'sale') {
-        let svns = [...new Set(shops.filter(x => (!dir || x.director_name === dir) && (!sale || x.sale_name === sale)).map(x => x.svn_code).filter(Boolean))].sort();
+        let svns = [...new Set(shops.filter(x => (!dir || (x.director_name || '').trim() === dir) && (!sale || (x.sale_name || '').trim() === sale)).map(x => (x.svn_code || '').trim()).filter(Boolean))].sort();
         document.getElementById('ov_filter_svn').innerHTML = `<option value="">-- Tất cả SVN --</option>` + svns.map(x => `<option value="${x}">${x}</option>`).join('');
         if(level !== 'init') document.getElementById('ov_filter_svn').value = '';
     }
-    let finalShops = shops.filter(x => (!dir || x.director_name === dir) && (!document.getElementById('ov_filter_sale')?.value || x.sale_name === document.getElementById('ov_filter_sale').value) && (!document.getElementById('ov_filter_svn')?.value || x.svn_code === document.getElementById('ov_filter_svn').value));
+    
+    let finalShops = shops.filter(x => 
+        (!dir || (x.director_name || '').trim() === dir) && 
+        (!document.getElementById('ov_filter_sale')?.value || (x.sale_name || '').trim() === document.getElementById('ov_filter_sale').value.trim()) && 
+        (!document.getElementById('ov_filter_svn')?.value || (x.svn_code || '').trim() === document.getElementById('ov_filter_svn').value.trim())
+    );
     document.getElementById('ov_filter_shop').innerHTML = `<option value="">-- Tất cả DVN (Shop) --</option>` + finalShops.map(x => `<option value="${x.shop_code}">${x.shop_code} - ${x.shop_name}</option>`).join('');
     
     window.filterOverview();
 };
 
 window.filterOverview = () => {
-    const selDir = document.getElementById('ov_filter_director')?.value || '';
-    const selSale = document.getElementById('ov_filter_sale')?.value || '';
-    const selSVN = document.getElementById('ov_filter_svn')?.value || '';
-    const selShop = document.getElementById('ov_filter_shop')?.value || '';
+    const selDir = (document.getElementById('ov_filter_director')?.value || '').trim();
+    const selSale = (document.getElementById('ov_filter_sale')?.value || '').trim();
+    const selSVN = (document.getElementById('ov_filter_svn')?.value || '').trim();
+    const selShop = (document.getElementById('ov_filter_shop')?.value || '').trim();
     const selDateFrom = document.getElementById('ov_filter_date_from')?.value || '';
     const selDateTo = document.getElementById('ov_filter_date_to')?.value || ''; 
     
-    let filteredSO = currentSOReports.filter(r => {
+    const isMatch = (r) => {
         const s = STATE.globalShopMap[r.shop_code];
         if(!s) return false;
-        if(selDir && s.director_name !== selDir) return false;
-        if(selSale && s.sale_name !== selSale) return false;
-        if(selSVN && s.svn_code !== selSVN) return false;
+        
+        if(selDir && (s.director_name || '').trim() !== selDir) return false;
+        if(selSale && (s.sale_name || '').trim() !== selSale) return false;
+        if(selSVN && (s.svn_code || '').trim() !== selSVN) return false;
         if(selShop && r.shop_code !== selShop) return false;
-        if(selDateFrom && r.report_date < selDateFrom) return false;
-        if(selDateTo && r.report_date > selDateTo) return false;
+        
+        // FIX 2: Cắt lấy YYYY-MM-DD để so sánh ngày chính xác
+        const reportDate = r.report_date ? r.report_date.slice(0, 10) : '';
+        if(selDateFrom && reportDate < selDateFrom) return false;
+        if(selDateTo && reportDate > selDateTo) return false;
+        
         return true;
-    });
+    };
 
-    let filteredMedia = currentMediaReports.filter(r => {
+    const isTrendMatch = (r) => {
         const s = STATE.globalShopMap[r.shop_code];
         if(!s) return false;
-        if(selDir && s.director_name !== selDir) return false;
-        if(selSale && s.sale_name !== selSale) return false;
-        if(selSVN && s.svn_code !== selSVN) return false;
+        if(selDir && (s.director_name || '').trim() !== selDir) return false;
+        if(selSale && (s.sale_name || '').trim() !== selSale) return false;
+        if(selSVN && (s.svn_code || '').trim() !== selSVN) return false;
         if(selShop && r.shop_code !== selShop) return false;
-        if(selDateFrom && r.report_date < selDateFrom) return false;
-        if(selDateTo && r.report_date > selDateTo) return false;
         return true;
-    });
+    };
 
-    let trendSO = currentSOReports.filter(r => {
-        const s = STATE.globalShopMap[r.shop_code];
-        if(!s) return false;
-        if(selDir && s.director_name !== selDir) return false;
-        if(selSale && s.sale_name !== selSale) return false;
-        if(selSVN && s.svn_code !== selSVN) return false;
-        if(selShop && r.shop_code !== selShop) return false;
-        return true;
-    });
-
-    let trendMedia = currentMediaReports.filter(r => {
-        const s = STATE.globalShopMap[r.shop_code];
-        if(!s) return false;
-        if(selDir && s.director_name !== selDir) return false;
-        if(selSale && s.sale_name !== selSale) return false;
-        if(selSVN && s.svn_code !== selSVN) return false;
-        if(selShop && r.shop_code !== selShop) return false;
-        return true;
-    });
+    let filteredSO = currentSOReports.filter(isMatch);
+    let filteredMedia = currentMediaReports.filter(isMatch);
+    let trendSO = currentSOReports.filter(isTrendMatch);
+    let trendMedia = currentMediaReports.filter(isTrendMatch);
 
     renderOverviewVisuals(filteredSO, filteredMedia, trendSO, trendMedia);
 };
@@ -454,10 +449,6 @@ function renderTargetDashboard(shops) {
     document.getElementById('tgt_sum_traffic').innerText = sumTraffic;
     document.getElementById('tgt_sum_digital').innerText = sumDigital;
 }
-
-// ==========================================
-// TÍNH NĂNG: CẢNH BÁO THIẾU SỐ (MODAL & COPY ZALO)
-// ==========================================
 
 window.showMissingReportsModal = () => {
     if (!preCalculatedTargetData || preCalculatedTargetData.length === 0) {

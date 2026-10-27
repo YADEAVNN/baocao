@@ -83,14 +83,164 @@ window.TasksModule = {
     this.hasInjectedI18n = true;
   },
 
-  hideRedundantHeaderBadge() {
+  // 1. Ẩn nút "Bộ lọc" nâng cao trên Header khi ở mục Việc cần làm
+  syncHeaderFilterUI() {
     setTimeout(() => {
+      const isTasksView = window.AppState?.activeModule === 'tasks';
+
       document.querySelectorAll('div, span').forEach(el => {
         if (el.children.length <= 1 && el.textContent && el.textContent.trim().includes('Đồng bộ Cloud Supabase')) {
           el.classList.add('hidden');
         }
       });
+
+      const advPanel = document.getElementById('advanced-filters');
+      if (advPanel && isTasksView) {
+        advPanel.classList.add('hidden');
+      }
+
+      const toggleBtn = document.querySelector('button[onclick*="toggleAdvancedFilters"]');
+      if (toggleBtn) {
+        const divider = toggleBtn.previousElementSibling;
+        if (isTasksView) {
+          toggleBtn.classList.add('hidden');
+          if (divider && divider.classList.contains('w-px')) divider.classList.add('hidden');
+        } else {
+          toggleBtn.classList.remove('hidden');
+          if (divider && divider.classList.contains('w-px')) divider.classList.remove('hidden');
+        }
+      }
+
+      const selectedYM = this.getSelectedYearMonth();
+      const [yStr, mStr] = selectedYM.split('-');
+      const mEl = document.getElementById('filter-month-num');
+      const yEl = document.getElementById('filter-year-num');
+      if (mEl && mEl.value !== mStr) mEl.value = mStr;
+      if (yEl && yEl.value !== yStr) yEl.value = yStr;
     }, 0);
+  },
+
+  // 2. Lấy Tháng/Năm đang chọn trên Header (VD: '2026-10')
+  getSelectedYearMonth() {
+    const mEl = document.getElementById('filter-month-num');
+    const yEl = document.getElementById('filter-year-num');
+    if (mEl && yEl && mEl.value && yEl.value) {
+      const ym = `${yEl.value}-${mEl.value}`;
+      if (window.AppState) window.AppState.month = ym;
+      return ym;
+    }
+    return window.AppState?.month || new Date().toISOString().slice(0, 7);
+  },
+
+  // 3. QUY TẮC LỌC THÁNG NGHIÊM NGẶT: Nhiệm vụ giao ở tháng nào thì CHỈ hiển thị ở đúng tháng đó
+  // Ưu tiên lấy theo ngày giao / ngày bắt đầu (startDate), nếu không có mới lấy deadline hoặc ngày tạo (createdAt)
+  matchesSelectedMonth(task, selectedYM) {
+    if (!selectedYM) return true;
+    const assignedDate = String(task.startDate || task.deadline || task.createdAt || '').trim();
+    if (!assignedDate) return true;
+    const taskYM = assignedDate.slice(0, 7);
+    return taskYM === selectedYM;
+  },
+
+  // 4. LẤY SỐ LIỆU S.O CHO TAB 5 (ĐỀ XUẤT TỪ S.O):
+  // Nếu tháng đang chọn (VD: Tháng 10 hoặc 11) chưa có dữ liệu S.O, tự động lùi về lấy tháng gần nhất trước đó đã có số liệu S.O!
+  getEvaluatedShopsWithFallback() {
+    const selectedYM = this.getSelectedYearMonth();
+    const parts = selectedYM.split('-');
+    const selYear = parseInt(parts[0], 10) || 2026;
+    const selMonth = parseInt(parts[1], 10) || 10;
+    const regionFilter = window.AppState?.region || 'ALL';
+    const rawList = window.AdminShopsModule ? window.AdminShopsModule.getList() : [];
+
+    const getSO = (rawShop, y, m) => {
+      if (window.DashboardModule && typeof window.DashboardModule.getRawSO === 'function') {
+        return window.DashboardModule.getRawSO(rawShop, y, m);
+      }
+      const yKey = `so${y}`;
+      const mKey = `T${Number(m)}`;
+      if (rawShop && rawShop[yKey] && rawShop[yKey][mKey] !== undefined && rawShop[yKey][mKey] !== null) {
+        return Number(rawShop[yKey][mKey]);
+      }
+      return null;
+    };
+
+    // Tìm kỳ (Năm, Tháng) <= kỳ đang chọn mà có dữ liệu S.O thực tế
+    let effY = selYear;
+    let effM = selMonth;
+    let foundData = rawList.some(item => getSO(item, effY, effM) !== null);
+
+    if (!foundData) {
+      let curY = selYear;
+      let curM = selMonth - 1;
+      for (let step = 0; step < 24; step++) {
+        if (curM <= 0) {
+          curM = 12;
+          curY -= 1;
+        }
+        if (rawList.some(item => getSO(item, curY, curM) !== null)) {
+          effY = curY;
+          effM = curM;
+          foundData = true;
+          break;
+        }
+        curM--;
+      }
+    }
+
+    const prevM = effM > 1 ? effM - 1 : 12;
+    const prevY = effM > 1 ? effY : effY - 1;
+
+    const mapped = rawList.map(item => {
+      const enumRegion = window.DashboardModule
+        ? window.DashboardModule.resolveMienCode(item.mien)
+        : (String(item.mien || '').toUpperCase().includes('NAM') ? 'SOUTH' : 'NORTH');
+
+      const curSO = getSO(item, effY, effM);
+      const prevSO = getSO(item, prevY, prevM);
+      const lastYearSO = getSO(item, effY - 1, effM);
+
+      const mom = (curSO !== null && prevSO !== null && prevSO > 0)
+        ? Math.round(((curSO - prevSO) / prevSO) * 100)
+        : null;
+
+      const yoy = (curSO !== null && lastYearSO !== null && lastYearSO > 0)
+        ? Math.round(((curSO - lastYearSO) / lastYearSO) * 100)
+        : null;
+
+      const shopObj = {
+        dvn: String(item.dvn || '').trim(),
+        svn: String(item.svn || '').trim(),
+        name: item.name || '',
+        region: enumRegion,
+        subRegion: item.region || '',
+        province: item.province || '',
+        supervisor: item.supervisor || item.gdMien || 'Chưa phân công',
+        director: item.gdKhuVuc || 'Chưa phân công',
+        sale: item.sale || 'Chưa phân công',
+        currentSO: curSO,
+        prevSO: prevSO,
+        lastYearSO: lastYearSO,
+        mom: mom,
+        yoy: yoy,
+        hasFullData: curSO !== null
+      };
+
+      return {
+        ...shopObj,
+        eval: window.AppStore.evaluateShop(shopObj)
+      };
+    });
+
+    const filteredByRegion = mapped.filter(s => regionFilter === 'ALL' || s.region === regionFilter);
+
+    return {
+      shops: filteredByRegion,
+      selectedYear: selYear,
+      selectedMonth: selMonth,
+      effectiveYear: effY,
+      effectiveMonth: effM,
+      isFallbackFromPrevMonth: (effY !== selYear || effM !== selMonth)
+    };
   },
 
   isManagerRole() {
@@ -155,6 +305,20 @@ window.TasksModule = {
           createdAt: row.created_at || new Date().toISOString()
         }));
         window.AppStore.saveToStorage();
+
+        if (window.AppStore.tasks.length > 0 && !this._hasAutoSyncedMonth) {
+          this._hasAutoSyncedMonth = true;
+          const currentYM = window.AppState?.month || '2026-09';
+          const hasInCurrent = window.AppStore.tasks.some(t => this.matchesSelectedMonth(t, currentYM));
+          if (!hasInCurrent) {
+            const firstTask = window.AppStore.tasks[0];
+            const latestYM = String(firstTask.startDate || firstTask.deadline || firstTask.createdAt || '').slice(0, 7);
+            if (/^\d{4}-\d{2}$/.test(latestYM) && window.AppState) {
+              window.AppState.month = latestYM;
+            }
+          }
+        }
+
         if (window.AppState?.activeModule === 'tasks') {
           window.App.renderCurrentModule();
         }
@@ -171,6 +335,11 @@ window.TasksModule = {
     else list.unshift(taskObj);
     window.AppStore.tasks = list;
     window.AppStore.saveToStorage();
+
+    const taskYM = String(taskObj.startDate || taskObj.deadline || '').slice(0, 7);
+    if (/^\d{4}-\d{2}$/.test(taskYM) && window.AppState) {
+      window.AppState.month = taskYM;
+    }
 
     if (window.SupabaseService && window.SupabaseService.isConnected) {
       try {
@@ -446,13 +615,19 @@ window.TasksModule = {
     `;
   },
 
+  // Lọc danh sách công việc theo đúng Tháng/Năm & Miền đang chọn trên Header
   getFilteredTasks() {
     const region = window.AppState?.region || 'ALL';
-    const allTasks = (window.AppStore.tasks || []).filter(t => t.taskType !== 'KPI_BOARDS_STORAGE');
+    const selectedYM = this.getSelectedYearMonth();
+    const allTasks = (window.AppStore.tasks || []).filter(t =>
+      t.taskType !== 'KPI_BOARDS_STORAGE' && !String(t.id).startsWith('KPI-BOARDS-')
+    );
     const q = this.searchQuery.trim().toLowerCase();
 
     return allTasks.filter(t => {
       const matchRegion = region === 'ALL' || !t.region || t.region === region;
+      const matchMonth = this.matchesSelectedMonth(t, selectedYM);
+
       const isOverdue = this.isTaskOverdue(t);
       const effectiveStatus = isOverdue && this.statusFilter === 'OVERDUE' ? 'OVERDUE' : t.status;
 
@@ -470,7 +645,7 @@ window.TasksModule = {
         String(t.shopName || '').toLowerCase().includes(q) ||
         String(t.assignee || '').toLowerCase().includes(q);
 
-      return matchRegion && matchStatus && matchPriority && matchSup && matchQuery;
+      return matchRegion && matchMonth && matchStatus && matchPriority && matchSup && matchQuery;
     });
   },
 
@@ -1103,6 +1278,9 @@ window.TasksModule = {
 
   renderListTab(tasks) {
     const isManager = this.isManagerRole();
+    const selectedYM = this.getSelectedYearMonth();
+    const [yStr, mStr] = selectedYM.split('-');
+
     return `
       <div class="card-3d overflow-hidden">
         <div class="overflow-x-auto max-h-[60vh]">
@@ -1172,7 +1350,7 @@ window.TasksModule = {
               ${tasks.length === 0 ? `
                 <tr>
                   <td colspan="9" class="py-12 text-center text-slate-400 font-semibold">
-                    Chưa có nhiệm vụ nào. Anh em Giám sát có thể sang tab "3. Kế hoạch thị trường" để liệt kê công việc tuần!
+                    Không có nhiệm vụ nào được giao trong Tháng ${mStr}/${yStr}.
                   </td>
                 </tr>
               ` : ''}
@@ -1468,7 +1646,7 @@ window.TasksModule = {
 
             ${plans.length === 0 ? `
               <div class="py-16 text-center text-slate-400 font-semibold">
-                Chưa có Giám sát nào đăng ký kế hoạch tuần. Hãy điền nhanh vào khung bên trái để hiển thị ngay tại đây!
+                Chưa có Giám sát nào đăng ký kế hoạch tuần trong tháng đang chọn.
               </div>
             ` : ''}
           </div>
@@ -1540,7 +1718,7 @@ window.TasksModule = {
           }).join('')}
           ${visits.length === 0 ? `
             <div class="col-span-full py-12 text-center text-slate-400 font-semibold">
-              Chưa có biên bản Check-in cửa hàng nào. Bấm "+ Check-in & Up Hình Cửa Hàng" để ghi nhận kết quả kiểm tra thực địa!
+              Chưa có biên bản Check-in cửa hàng nào trong tháng đang chọn. Bấm "+ Check-in & Up Hình Cửa Hàng" để ghi nhận kết quả kiểm tra thực địa!
             </div>
           ` : ''}
         </div>
@@ -1548,9 +1726,16 @@ window.TasksModule = {
     `;
   },
 
+  // Tab 5: Đề xuất từ S.O (Tự động lùi về lấy số liệu S.O của tháng trước nếu tháng đang chọn chưa có số liệu)
   renderSOProposalTab() {
-    if (!window.DashboardModule) return '';
-    const { shops, effectiveYear, effectiveMonth } = window.DashboardModule.getEvaluatedRealShops();
+    const {
+      shops,
+      selectedYear,
+      selectedMonth,
+      effectiveYear,
+      effectiveMonth,
+      isFallbackFromPrevMonth
+    } = this.getEvaluatedShopsWithFallback();
 
     const allWeakOrDeclining = shops
       .filter(s => s.eval.grade === 'WEAK' || (s.yoy !== null && s.yoy <= -20))
@@ -1589,15 +1774,26 @@ window.TasksModule = {
       return matchDir && matchSup && matchSale && matchQ;
     });
 
+    const effMStr = String(effectiveMonth).padStart(2, '0');
+    const selMStr = String(selectedMonth).padStart(2, '0');
+
     return `
       <div class="card-3d p-5 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
           <div>
-            <h3 class="font-extrabold text-sm uppercase text-slate-900 dark:text-white flex items-center gap-2">
-              <i class="fa-solid fa-bolt text-[#F26522]"></i>
-              Đề Xuất Giao Việc Hỗ Trợ Từ Dữ Liệu S.O Thực Tế (Tháng ${effectiveMonth}/${effectiveYear})
-            </h3>
-            <p class="text-xs text-slate-500">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="font-extrabold text-sm uppercase text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-[#F26522]"></i>
+                Đề Xuất Giao Việc Hỗ Trợ Từ Dữ Liệu S.O Thực Tế (Tháng ${effMStr}/${effectiveYear})
+              </h3>
+              ${isFallbackFromPrevMonth ? `
+                <span class="px-2.5 py-0.5 rounded-lg bg-amber-100 text-amber-800 border border-amber-300 text-[11px] font-extrabold">
+                  <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+                  Tháng ${selMStr}/${selectedYear} chưa có S.O → Tự động lấy số liệu Tháng ${effMStr}/${effectiveYear}
+                </span>
+              ` : ''}
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
               Danh sách các cửa hàng có sản lượng <strong>Yếu (&lt; 15 xe)</strong> hoặc <strong>Suy giảm sâu</strong> để lọc theo Giám đốc, Giám sát, Sale và giao nhiệm vụ hỗ trợ.
             </p>
           </div>
@@ -1675,7 +1871,7 @@ window.TasksModule = {
                 <th class="py-3 px-3">Giám Sát</th>
                 <th class="py-3 px-3">Sale Phụ Trách</th>
                 <th class="py-3 px-3 text-right">Cùng Kỳ / Tháng Trước</th>
-                <th class="py-3 px-3 text-right text-rose-600">S.O T${effectiveMonth}/${effectiveYear}</th>
+                <th class="py-3 px-3 text-right text-rose-600">S.O T${effMStr}/${effectiveYear}</th>
                 <th class="py-3 px-3 text-center">Biến Động YoY</th>
                 <th class="py-3 px-3 text-center">Cảnh Báo</th>
                 <th class="py-3 px-3 text-right">Hành Động</th>
@@ -1686,7 +1882,7 @@ window.TasksModule = {
                 const safeName = String(s.name || '').replace(/'/g, "\\'");
                 const safeSup = String(s.supervisor || '').replace(/'/g, "\\'");
                 const presetTitle = `Hỗ trợ thúc đẩy S.O & Kiểm tra thực địa tại ${safeName} (${s.dvn})`;
-                const presetNote = `Sản lượng S.O T${effectiveMonth}/${effectiveYear} đạt ${s.currentSO ?? 'NULL'} xe (Cùng kỳ: ${s.lastYearSO ?? 'N/A'} xe, YoY: ${s.yoy !== null ? s.yoy + '%' : 'N/A'}). Sale phụ trách: ${s.sale}. Cần khảo sát nguyên nhân và lập phương án cải thiện.`;
+                const presetNote = `Sản lượng S.O T${effMStr}/${effectiveYear} đạt ${s.currentSO ?? 'NULL'} xe (Cùng kỳ: ${s.lastYearSO ?? 'N/A'} xe, YoY: ${s.yoy !== null ? s.yoy + '%' : 'N/A'}). Sale phụ trách: ${s.sale}. Cần khảo sát nguyên nhân và lập phương án cải thiện.`;
 
                 return `
                   <tr class="hover:bg-rose-50/30 transition">
@@ -1741,23 +1937,31 @@ window.TasksModule = {
 
   render() {
     this.ensureI18n();
-    this.hideRedundantHeaderBadge();
+    this.syncHeaderFilterUI();
     this.fetchTasksFromSupabaseIfNeeded();
 
     const region = window.AppState?.region || 'ALL';
-    const allRegionTasks = (window.AppStore.tasks || []).filter(t =>
-      t.taskType !== 'KPI_BOARDS_STORAGE' && (region === 'ALL' || !t.region || t.region === region)
+    const selectedYM = this.getSelectedYearMonth();
+    const [yStr, mStr] = selectedYM.split('-');
+
+    // Lọc các công việc được giao đúng trong Tháng đang chọn trên Header
+    const allMonthTasks = (window.AppStore.tasks || []).filter(t =>
+      t.taskType !== 'KPI_BOARDS_STORAGE' &&
+      !String(t.id).startsWith('KPI-BOARDS-') &&
+      (region === 'ALL' || !t.region || t.region === region) &&
+      this.matchesSelectedMonth(t, selectedYM)
     );
+
     const filteredTasks = this.getFilteredTasks();
     const { supervisors } = this.getRealShopsAndSupervisors();
     const isManager = this.isManagerRole();
 
-    const totalCount = allRegionTasks.length;
-    const inProgressCount = allRegionTasks.filter(t => t.status === 'IN_PROGRESS').length;
-    const completedCount = allRegionTasks.filter(t => t.status === 'COMPLETED').length;
-    const overdueCount = allRegionTasks.filter(t => this.isTaskOverdue(t)).length;
-    const pendingCount = allRegionTasks.filter(t => t.status === 'PENDING_APPROVAL').length;
-    const visitCount = allRegionTasks.filter(t => t.taskType === 'STORE_VISIT' || (t.evidenceUrls && t.evidenceUrls.length > 0)).length;
+    const totalCount = allMonthTasks.length;
+    const inProgressCount = allMonthTasks.filter(t => t.status === 'IN_PROGRESS').length;
+    const completedCount = allMonthTasks.filter(t => t.status === 'COMPLETED').length;
+    const overdueCount = allMonthTasks.filter(t => this.isTaskOverdue(t)).length;
+    const pendingCount = allMonthTasks.filter(t => t.status === 'PENDING_APPROVAL').length;
+    const visitCount = allMonthTasks.filter(t => t.taskType === 'STORE_VISIT' || (t.evidenceUrls && t.evidenceUrls.length > 0)).length;
 
     const kpiCards = [
       { id: 'ALL', label: window.t('tm_kpi_total'), value: totalCount, icon: 'layers', border: 'border-t-slate-800', text: 'text-slate-800' },
@@ -1774,7 +1978,10 @@ window.TasksModule = {
         <div>
           <h2 class="text-lg sm:text-xl font-black tracking-tight uppercase flex items-center gap-2.5">
             <span class="w-2.5 h-6 rounded-full bg-[#F26522]"></span>
-            ${window.t('tm_title')}
+            <span>${window.t('tm_title')}</span>
+            <span class="px-2.5 py-0.5 rounded-lg bg-[#F26522]/20 border border-[#F26522]/40 text-orange-300 text-xs font-mono">
+              Tháng ${mStr}/${yStr}
+            </span>
           </h2>
           <p class="text-xs text-slate-300 mt-0.5">${window.t('tm_subtitle')}</p>
         </div>
@@ -1806,7 +2013,7 @@ window.TasksModule = {
         </div>
       </div>
 
-      <!-- 6 KPI CARDS -->
+      <!-- 6 KPI CARDS THEO ĐÚNG THÁNG ĐƯỢC GIAO -->
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         ${kpiCards.map(c => `
           <div
@@ -1818,7 +2025,7 @@ window.TasksModule = {
               <i data-lucide="${c.icon}" class="w-4 h-4 ${c.text}"></i>
             </div>
             <div class="my-1.5 text-2xl font-black font-mono text-slate-900 dark:text-white">${c.value}</div>
-            <div class="text-[10px] text-slate-400 font-semibold">Bấm để lọc nhanh</div>
+            <div class="text-[10px] text-slate-400 font-semibold">Tháng ${mStr}/${yStr} • Bấm để lọc</div>
           </div>
         `).join('')}
       </div>

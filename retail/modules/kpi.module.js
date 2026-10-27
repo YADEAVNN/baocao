@@ -1,6 +1,6 @@
 // modules/kpi.module.js
 window.KpiModule = {
-  activeBoardId: 'KPI-3824-OCT',
+  activeBoardId: null,
   searchQuery: '',
   supervisorFilter: 'ALL',
   subRegionFilter: 'ALL',
@@ -8,7 +8,7 @@ window.KpiModule = {
   isEditingInline: false,
   hasLoadedFromSupabase: false,
 
-  // Nạp sẵn cả 2 Bảng KPI chuẩn (Bao gồm chính xác 100% file QUẢN LÝ CỬA HÀNG THÁNG 10.xlsx của bạn)
+  // Danh sách Bảng KPI mặc định (Gắn rõ month: '2026-10' và '2026-09')
   defaultBoards: [
     {
       id: 'KPI-3824-OCT',
@@ -56,7 +56,6 @@ window.KpiModule = {
         { supervisor: 'HÀ TRẦN QUANG HIỆP', region: 'Trung Trung Bộ 中中部', name: 'Lê Minh Đức 黎明德', total: 2, actual: 2, rate: 100, rowType: 'STAFF', mien: 'NORTH' },
         { supervisor: 'HÀ TRẦN QUANG HIỆP', region: 'Trung Trung Bộ 中中部', name: 'Bùi Minh Trung 裴明中', total: 7, actual: 6, rate: 86, rowType: 'SUBTOTAL', mien: 'NORTH' },
 
-        // TỔNG MIỀN BẮC (Khuất Văn Đức)
         { supervisor: 'HÀ TRẦN QUANG HIỆP', region: 'Khuất Văn Đức 庆文德 (Tổng Miền Bắc)', name: 'Khuất Văn Đức 庆文德', total: 65, actual: 61, rate: 94, rowType: 'MIEN_TOTAL', mien: 'NORTH' },
 
         { supervisor: 'HÀ TRẦN QUANG HIỆP', region: 'Nam Trung Bộ 南中部', name: 'Võ Đức Nam 武德南', total: 3, actual: 3, rate: 100, rowType: 'STAFF', mien: 'SOUTH' },
@@ -88,7 +87,6 @@ window.KpiModule = {
         { supervisor: 'NGUYỄN VĂN TIẾN', region: 'Sông Cửu Long 九龙江', name: 'Bùi Trung Tuấn 裴中俊', total: 2, actual: 2, rate: 100, rowType: 'STAFF', mien: 'SOUTH' },
         { supervisor: 'NGUYỄN VĂN TIẾN', region: 'Sông Cửu Long 九龙江', name: 'Bùi Trung Tuấn 裴中俊', total: 5, actual: 5, rate: 100, rowType: 'SUBTOTAL', mien: 'SOUTH' },
 
-        // TỔNG MIỀN NAM (Trần Phi Long) & TỔNG TOÀN QUỐC
         { supervisor: '', region: 'Trần Phi Long 陈飞龙 (Tổng Miền Nam)', name: 'Trần Phi Long 陈飞龙', total: 68, actual: 48, rate: 71, rowType: 'MIEN_TOTAL', mien: 'SOUTH' },
         { supervisor: 'TỔNG', region: 'TỔNG', name: 'TỔNG TOÀN QUỐC', total: 133, actual: 109, rate: 82, rowType: 'GRAND_TOTAL', mien: 'ALL' }
       ]
@@ -162,20 +160,107 @@ window.KpiModule = {
     return window.AppState?.role === 'ADMIN';
   },
 
-  // 1. Lấy danh sách các Bảng KPI (Tự động sửa các bảng bị lỗi 0 ở cột Sales do phiên bản cũ)
+  // 1. Đồng bộ & Ẩn nút "Bộ lọc" nâng cao trên Header khi ở mục 3. Tiến độ KPI
+  syncHeaderFilterUI() {
+    setTimeout(() => {
+      const isKpiView = window.AppState?.activeModule === 'kpi';
+
+      document.querySelectorAll('div, span').forEach(el => {
+        if (el.children.length <= 1 && el.textContent && el.textContent.trim().includes('Đồng bộ Cloud Supabase')) {
+          el.classList.add('hidden');
+        }
+      });
+
+      const advPanel = document.getElementById('advanced-filters');
+      if (advPanel && isKpiView) {
+        advPanel.classList.add('hidden');
+      }
+
+      const toggleBtn = document.querySelector('button[onclick*="toggleAdvancedFilters"]');
+      if (toggleBtn) {
+        const divider = toggleBtn.previousElementSibling;
+        if (isKpiView) {
+          toggleBtn.classList.add('hidden');
+          if (divider && divider.classList.contains('w-px')) divider.classList.add('hidden');
+        } else {
+          toggleBtn.classList.remove('hidden');
+          if (divider && divider.classList.contains('w-px')) divider.classList.remove('hidden');
+        }
+      }
+
+      const selectedYM = this.getSelectedYearMonth();
+      const [yStr, mStr] = selectedYM.split('-');
+      const mEl = document.getElementById('filter-month-num');
+      const yEl = document.getElementById('filter-year-num');
+      if (mEl && mEl.value !== mStr) mEl.value = mStr;
+      if (yEl && yEl.value !== yStr) yEl.value = yStr;
+    }, 0);
+  },
+
+  // 2. Lấy Tháng/Năm đang chọn trên thanh Header (VD: '2026-10')
+  getSelectedYearMonth() {
+    const mEl = document.getElementById('filter-month-num');
+    const yEl = document.getElementById('filter-year-num');
+    if (mEl && yEl && mEl.value && yEl.value) {
+      const ym = `${yEl.value}-${mEl.value}`;
+      if (window.AppState) window.AppState.month = ym;
+      return ym;
+    }
+    return window.AppState?.month || '2026-10';
+  },
+
+  // Chuyển nhanh sang 1 Tháng/Năm có sẵn KPI khi bấm nút gợi ý
+  switchToMonth(ym) {
+    if (!ym || !ym.includes('-')) return;
+    const [yStr, mStr] = ym.split('-');
+    if (window.AppState) window.AppState.month = ym;
+    const mEl = document.getElementById('filter-month-num');
+    const yEl = document.getElementById('filter-year-num');
+    if (mEl) mEl.value = mStr;
+    if (yEl) yEl.value = yStr;
+    window.App.renderCurrentModule();
+  },
+
+  // Chuẩn hóa trường `month` cho các bảng KPI (Tự động nhận diện nếu tên bảng có ghi "THÁNG 10", "THÁNG 9"...)
+  normalizeBoardMonth(board) {
+    if (board.month && /^\d{4}-\d{2}$/.test(board.month)) {
+      return board.month;
+    }
+    const titleUpper = String(board.title || '').toUpperCase();
+    const matchMonth = titleUpper.match(/THÁNG\s*(\d{1,2})/);
+    if (matchMonth) {
+      const m = String(parseInt(matchMonth[1], 10)).padStart(2, '0');
+      return `2026-${m}`;
+    }
+    return '2026-10';
+  },
+
+  // 3. Lấy toàn bộ các Bảng KPI trong hệ thống
   getBoards() {
     const STORAGE_KEY = 'yadea_kpi_excel_boards_v3';
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsed.forEach(b => {
+            b.month = this.normalizeBoardMonth(b);
+          });
+          return parsed;
+        }
       } catch (e) {
         console.warn('Lỗi đọc KPI boards:', e);
       }
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(this.defaultBoards));
     return this.defaultBoards;
+  },
+
+  // 4. Lọc chỉ lấy các Bảng KPI thuộc đúng Tháng/Năm đang chọn trên Header
+  getBoardsForSelectedMonth() {
+    const selectedYM = this.getSelectedYearMonth();
+    const allBoards = this.getBoards();
+    return allBoards.filter(b => this.normalizeBoardMonth(b) === selectedYM);
   },
 
   saveBoards(boards) {
@@ -216,6 +301,9 @@ window.KpiModule = {
       if (!error && data && data.note) {
         const cloudBoards = JSON.parse(data.note);
         if (Array.isArray(cloudBoards) && cloudBoards.length > 0) {
+          cloudBoards.forEach(b => {
+            b.month = this.normalizeBoardMonth(b);
+          });
           localStorage.setItem('yadea_kpi_excel_boards_v3', JSON.stringify(cloudBoards));
           if (window.AppState?.activeModule === 'kpi') {
             window.App.renderCurrentModule();
@@ -227,12 +315,14 @@ window.KpiModule = {
     }
   },
 
+  // Chỉ lấy Bảng KPI đang chọn trong phạm vi Tháng hiện tại (Nếu tháng đó không có KPI thì trả về null)
   getActiveBoard() {
-    const boards = this.getBoards();
-    if (!this.activeBoardId || !boards.some(b => b.id === this.activeBoardId)) {
-      this.activeBoardId = boards[0]?.id || null;
+    const monthBoards = this.getBoardsForSelectedMonth();
+    if (monthBoards.length === 0) return null;
+    if (!this.activeBoardId || !monthBoards.some(b => b.id === this.activeBoardId)) {
+      this.activeBoardId = monthBoards[0].id;
     }
-    return boards.find(b => b.id === this.activeBoardId) || boards[0];
+    return monthBoards.find(b => b.id === this.activeBoardId) || monthBoards[0];
   },
 
   selectBoard(boardId) {
@@ -265,7 +355,6 @@ window.KpiModule = {
     window.App.renderCurrentModule();
   },
 
-  // 2. Chỉnh sửa trực tiếp trên bảng & Tự động tính lại Tổng Khu vực / Miền / Toàn quốc
   handleInlineCellChange(rowIndex, field, rawVal) {
     const boards = this.getBoards();
     const board = boards.find(b => b.id === this.activeBoardId);
@@ -334,40 +423,56 @@ window.KpiModule = {
   },
 
   // =========================================================================
-  // 3. ĐỌC MỌI ĐỊNH DẠNG FILE EXCEL KPI (CẢ 5 CỘT LẪN 6 CỘT CÓ GIÁM SÁT)
+  // 5. MODAL UPLOAD EXCEL KPI THEO TỪNG THÁNG / NĂM
   // =========================================================================
   openUploadKpiModal(mode = 'NEW') {
     if (!this.isAdmin()) return;
     const currentBoard = this.getActiveBoard();
     const isUpdate = mode === 'UPDATE' && currentBoard;
+    const selectedYM = isUpdate ? (currentBoard.month || this.getSelectedYearMonth()) : this.getSelectedYearMonth();
 
     document.getElementById('modal-title').innerHTML = `
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-file-excel text-emerald-600"></i>
-        <span>${isUpdate ? `Cập Nhật File Excel: ${currentBoard.title}` : 'Thêm Bảng KPI Mới (Từ File Excel)'}</span>
+        <span>${isUpdate ? `Cập Nhật File Excel: ${currentBoard.title}` : 'Thêm Bảng KPI Mới Theo Tháng (Từ File Excel)'}</span>
       </div>
     `;
 
     document.getElementById('modal-body').innerHTML = `
       <form onsubmit="KpiModule.handleExcelKpiSubmit(event, '${mode}')" class="space-y-4 text-xs">
-        <div>
-          <label class="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
-            Tên Bảng KPI (Hoặc để trống hệ thống sẽ tự lấy theo tên File / Sheet)
-          </label>
-          <input
-            id="kpi-upload-title"
-            type="text"
-            value="${isUpdate ? currentBoard.title : ''}"
-            placeholder="VD: QUẢN LÝ CỬA HÀNG THÁNG 10 - TIẾN ĐỘ 3824..."
-            class="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-slate-900 focus:outline-none focus:border-[#F26522]"
-          />
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
+              Tên Bảng KPI (Hoặc để trống sẽ tự lấy theo tên File)
+            </label>
+            <input
+              id="kpi-upload-title"
+              type="text"
+              value="${isUpdate ? currentBoard.title : ''}"
+              placeholder="VD: QUẢN LÝ CỬA HÀNG - TIẾN ĐỘ 3824..."
+              class="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-slate-900 focus:outline-none focus:border-[#F26522]"
+            />
+          </div>
+
+          <div>
+            <label class="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
+              Áp dụng cho Tháng / Năm *
+            </label>
+            <input
+              id="kpi-upload-month"
+              type="month"
+              required
+              value="${selectedYM}"
+              class="w-full p-2.5 rounded-xl border border-orange-300 bg-orange-50/40 font-mono font-extrabold text-[#F26522] focus:outline-none focus:border-[#F26522]"
+            />
+          </div>
         </div>
 
         <div class="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 space-y-1.5 text-[11px] text-emerald-900">
           <div class="font-extrabold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Tự động nhận diện thông minh:</div>
           <div>• <strong>Mẫu 6 cột</strong>: Giám sát (Cột A) | Khu vực (Cột B) | Sales (Cột C) | Chỉ tiêu (Cột D) | Hoàn thành (Cột E) | Tỷ lệ (Cột F).</div>
           <div>• <strong>Mẫu 5 cột</strong>: Khu vực (Cột A) | Họ tên (Cột B) | Tổng số (Cột C) | Đã kích hoạt (Cột D) | Tỷ lệ (Cột E).</div>
-          <div>• Tự động xử lý ô gộp (Merge Cells), dòng tổng GĐKV, dòng Tổng Miền và tự động bỏ qua các dòng đang bị Ẩn (Hidden) trong Excel.</div>
+          <div>• Bảng KPI của tháng nào sẽ chỉ hiển thị khi chọn đúng tháng đó trên thanh công cụ.</div>
         </div>
 
         <div>
@@ -408,6 +513,7 @@ window.KpiModule = {
   async handleExcelKpiSubmit(e, mode) {
     e.preventDefault();
     const rawTitleInput = document.getElementById('kpi-upload-title')?.value.trim();
+    const targetMonth = document.getElementById('kpi-upload-month')?.value || this.getSelectedYearMonth();
     const fileInput = document.getElementById('kpi-excel-file-input');
     const file = fileInput?.files?.[0];
     if (!file) return;
@@ -433,7 +539,6 @@ window.KpiModule = {
         return;
       }
 
-      // 1. Tìm dòng tiêu đề (Header)
       let headerIdx = 0;
       for (let i = 0; i < Math.min(10, rawRows.length); i++) {
         const rowStr = (rawRows[i] || []).map(c => String(c || '')).join(' ').toUpperCase();
@@ -444,8 +549,6 @@ window.KpiModule = {
       }
 
       const hRow = (rawRows[headerIdx] || []).map(c => String(c || '').replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim());
-
-      // Kiểm tra xem đây là bảng 6 cột (Có cột Giám sát ở cột A và Sales ở cột C) hay bảng 5 cột
       const firstColHeader = (hRow[0] || '').toUpperCase();
       const thirdColHeader = (hRow[2] || '').toUpperCase();
       const is6ColLayout =
@@ -472,13 +575,12 @@ window.KpiModule = {
             hRow[4] || 'Tỷ lệ hoàn thành 完成率'
           ];
 
-      // 2. Duyệt từng dòng dữ liệu (Bỏ qua các dòng bị Hidden trong Excel như dòng 48)
       const tempRows = [];
       let lastSupervisor = '';
       let lastRegion = '';
 
       for (let r = headerIdx + 1; r < rawRows.length; r++) {
-        if (rowMeta[r] && rowMeta[r].hidden) continue; // Bỏ qua dòng ẩn trong Excel
+        if (rowMeta[r] && rowMeta[r].hidden) continue;
 
         const row = rawRows[r] || [];
         if (is6ColLayout) {
@@ -490,13 +592,10 @@ window.KpiModule = {
 
           if (!c0 && !c1 && !c2 && rawTarget === null && rawActual === null) continue;
 
-          const upperAll = `${c0} ${c1} ${c2}`.toUpperCase();
           let rowType = 'STAFF';
-
           if (c0.toUpperCase().includes('TỔNG') || c1.toUpperCase() === 'TỔNG') {
             rowType = 'GRAND_TOTAL';
           } else if (c1 && !c2 && rawTarget !== null) {
-            // Như dòng 24 (Khuất Văn Đức | None | 65 | 61) và dòng 46 (Trần Phi Long | None | 68 | 48) -> Dòng Tổng Miền
             rowType = 'MIEN_TOTAL';
           }
 
@@ -518,7 +617,6 @@ window.KpiModule = {
             mien: 'NORTH'
           });
         } else {
-          // Bảng 5 cột
           const c0 = row[0] !== null && row[0] !== undefined ? String(row[0]).replace(/\r?\n/g, ' ').trim() : '';
           const c1 = row[1] !== null && row[1] !== undefined ? String(row[1]).replace(/\r?\n/g, ' ').trim() : '';
           const rawTarget = row[2];
@@ -553,7 +651,6 @@ window.KpiModule = {
         }
       }
 
-      // 3. Nếu có 2 dòng GRAND_TOTAL liên tiếp ở cuối (trường hợp file không đánh dấu hidden nhưng có dòng nháp), chỉ giữ dòng GRAND_TOTAL đầu tiên
       const cleanedRows = [];
       let seenGrandTotal = false;
       for (const item of tempRows) {
@@ -564,7 +661,6 @@ window.KpiModule = {
         cleanedRows.push(item);
       }
 
-      // 4. Phân loại Miền Bắc (NORTH) / Miền Nam (SOUTH)
       let currentMien = 'NORTH';
       const southKeywords = ['NAM TRUNG BỘ', 'TÂY NGUYÊN', 'ĐÔNG NAM', 'HỒ CHÍ MINH', 'TÂY NAM', 'SÔNG CỬU LONG', 'MIỀN NAM', '南部', '胡志明', 'TRẦN PHI LONG'];
 
@@ -580,7 +676,6 @@ window.KpiModule = {
         }
       }
 
-      // 5. Tự động nhận diện dòng SUBTOTAL (Dòng tổng của từng Khu vực như Khổng Văn Trọng, Khuất Văn Đức, Trịnh Trần Cường...)
       let startIdx = 0;
       while (startIdx < cleanedRows.length) {
         if (cleanedRows[startIdx].rowType !== 'STAFF') {
@@ -618,6 +713,7 @@ window.KpiModule = {
             ...boards[idx],
             title: finalTitle,
             boardType: bType,
+            month: targetMonth,
             headers: headers,
             rows: cleanedRows,
             updatedAt: nowStr,
@@ -630,7 +726,7 @@ window.KpiModule = {
           id: newId,
           title: finalTitle,
           boardType: bType,
-          month: window.AppState?.month || '2026-10',
+          month: targetMonth,
           updatedAt: nowStr,
           updatedBy: window.AppState?.userName || 'Admin',
           headers: headers,
@@ -639,6 +735,8 @@ window.KpiModule = {
         this.activeBoardId = newId;
       }
 
+      // Đồng bộ Header sang đúng tháng vừa thêm/cập nhật
+      if (window.AppState) window.AppState.month = targetMonth;
       this.saveBoards(boards);
       window.App.closeModal();
       window.App.renderCurrentModule();
@@ -648,32 +746,48 @@ window.KpiModule = {
   },
 
   // =========================================================================
-  // 4. TÍNH NĂNG MỚI: THÊM BẢNG KPI BẰNG HÌNH ẢNH (UPLOAD HOẶC CTRL+V DÁN ẢNH)
+  // 6. THÊM / DÁN ẢNH KPI THEO TỪNG THÁNG / NĂM
   // =========================================================================
   openImageKpiModal() {
     if (!this.isAdmin()) return;
     this._tempPastedImage = null;
+    const selectedYM = this.getSelectedYearMonth();
 
     document.getElementById('modal-title').innerHTML = `
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-image text-[#F26522]"></i>
-        <span>Thêm / Dán Hình Ảnh Báo Cáo Tiến Độ KPI</span>
+        <span>Thêm / Dán Hình Ảnh Báo Cáo Tiến Độ KPI Theo Tháng</span>
       </div>
     `;
 
     document.getElementById('modal-body').innerHTML = `
       <form onsubmit="KpiModule.handleSaveImageKpiBoard(event)" class="space-y-4 text-xs">
-        <div>
-          <label class="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
-            Tiêu Đề Bảng Tiến Độ KPI *
-          </label>
-          <input
-            id="kpi-img-title"
-            type="text"
-            required
-            placeholder="VD: Tiến độ KPI trưng bày ngày 27/10..."
-            class="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-slate-900 focus:outline-none focus:border-[#F26522]"
-          />
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
+              Tiêu Đề Bảng Tiến Độ KPI *
+            </label>
+            <input
+              id="kpi-img-title"
+              type="text"
+              required
+              placeholder="VD: Tiến độ Case Study / KPI trưng bày..."
+              class="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-slate-900 focus:outline-none focus:border-[#F26522]"
+            />
+          </div>
+
+          <div>
+            <label class="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
+              Áp dụng cho Tháng / Năm *
+            </label>
+            <input
+              id="kpi-img-month"
+              type="month"
+              required
+              value="${selectedYM}"
+              class="w-full p-2.5 rounded-xl border border-orange-300 bg-orange-50/40 font-mono font-extrabold text-[#F26522] focus:outline-none focus:border-[#F26522]"
+            />
+          </div>
         </div>
 
         <div
@@ -684,7 +798,7 @@ window.KpiModule = {
         >
           <i class="fa-solid fa-paste text-2xl text-[#F26522]"></i>
           <div class="font-extrabold text-slate-800 text-sm">
-            Cách 1: Bấm vào khung này rồi nhấn tổ hợp phím <kbd class="px-2 py-0.5 rounded bg-slate-800 text-white font-mono">Ctrl + V</kbd> để dán trực tiếp ảnh chụp màn hình Excel / Zalo
+            Cách 1: Bấm vào khung này rồi nhấn <kbd class="px-2 py-0.5 rounded bg-slate-800 text-white font-mono">Ctrl + V</kbd> để dán trực tiếp ảnh chụp màn hình Excel / Zalo
           </div>
           <div class="text-slate-500">Hoặc Cách 2: Chọn file ảnh từ máy tính ở bên dưới</div>
           <input
@@ -778,6 +892,7 @@ window.KpiModule = {
   handleSaveImageKpiBoard(e) {
     e.preventDefault();
     const title = document.getElementById('kpi-img-title')?.value.trim() || 'Bảng Ảnh Tiến Độ KPI';
+    const targetMonth = document.getElementById('kpi-img-month')?.value || this.getSelectedYearMonth();
     if (!this._tempPastedImage) {
       alert('Vui lòng dán ảnh (Ctrl + V) hoặc chọn file ảnh bảng KPI trước khi lưu!');
       return;
@@ -791,6 +906,7 @@ window.KpiModule = {
       id: newId,
       title: title.toUpperCase(),
       boardType: 'IMAGE_BOARD',
+      month: targetMonth,
       imageUrl: this._tempPastedImage,
       updatedAt: nowStr,
       updatedBy: window.AppState?.userName || 'Admin',
@@ -800,6 +916,7 @@ window.KpiModule = {
 
     this.activeBoardId = newId;
     this._tempPastedImage = null;
+    if (window.AppState) window.AppState.month = targetMonth;
     this.saveBoards(boards);
     window.App.closeModal();
     window.App.renderCurrentModule();
@@ -807,17 +924,13 @@ window.KpiModule = {
 
   deleteCurrentBoard() {
     if (!this.isAdmin()) return;
-    const boards = this.getBoards();
-    if (boards.length <= 1) {
-      alert('Hệ thống cần giữ lại ít nhất 1 bảng KPI!');
-      return;
-    }
     const cur = this.getActiveBoard();
-    if (!confirm(`Bạn có chắc chắn muốn xóa bảng "${cur.title}" không?`)) return;
+    if (!cur) return;
+    if (!confirm(`Bạn có chắc chắn muốn xóa bảng "${cur.title}" khỏi Tháng ${cur.month} không?`)) return;
 
-    const remaining = boards.filter(b => b.id !== cur.id);
-    this.activeBoardId = remaining[0].id;
-    this.saveBoards(remaining);
+    const allBoards = this.getBoards().filter(b => b.id !== cur.id);
+    this.activeBoardId = null;
+    this.saveBoards(allBoards);
     window.App.renderCurrentModule();
   },
 
@@ -848,7 +961,6 @@ window.KpiModule = {
     window.XLSX.writeFile(wb, `YADEA_${safeName}.xlsx`);
   },
 
-  // Tính toán gộp ô (Rowspan) cho cả Cột Giám Sát (Cột 1) và Cột Khu Vực (Cột 2)
   buildTableRowsWithRowspan(rows) {
     const result = rows.map((r, idx) => ({
       ...r,
@@ -859,7 +971,6 @@ window.KpiModule = {
       hideRegCell: false
     }));
 
-    // 1. Gộp ô cột Khu vực
     let i = 0;
     while (i < result.length) {
       const cur = result[i];
@@ -881,7 +992,6 @@ window.KpiModule = {
       i += span;
     }
 
-    // 2. Gộp ô cột Giám sát (cho bảng 6 cột)
     let j = 0;
     while (j < result.length) {
       const cur = result[j];
@@ -907,22 +1017,103 @@ window.KpiModule = {
   },
 
   render() {
+    this.syncHeaderFilterUI();
     this.fetchBoardsFromSupabase(false);
 
-    const boards = this.getBoards();
+    const selectedYM = this.getSelectedYearMonth();
+    const [yStr, mStr] = selectedYM.split('-');
+    const allBoards = this.getBoards();
+    const monthBoards = this.getBoardsForSelectedMonth();
     const board = this.getActiveBoard();
     const isAdmin = this.isAdmin();
     const headerRegion = window.AppState?.region || 'ALL';
 
-    if (!board) return '';
+    // Danh sách các tháng đang có bảng KPI để người dùng bấm chuyển nhanh nếu chọn phải tháng trống
+    const availableMonths = [...new Set(allBoards.map(b => this.normalizeBoardMonth(b)))].sort().reverse();
 
-    // Nếu bảng hiện tại là Bảng Hình Ảnh (IMAGE_BOARD)
+    // TRƯỜNG HỢP 1: THÁNG ĐANG CHỌN CHƯA CÓ BẢNG KPI NÀO ĐƯỢC GIAO
+    if (!board || monthBoards.length === 0) {
+      return `
+        <div class="card-3d p-4 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900">
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-xl bg-orange-50 text-[#F26522] border border-orange-200 text-xs font-extrabold font-mono">
+              Kỳ KPI: Tháng ${mStr}/${yStr}
+            </span>
+            <span class="text-xs font-bold text-slate-500">Chưa có danh mục KPI nào trong tháng này</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            ${isAdmin ? `
+              <button
+                onclick="KpiModule.openUploadKpiModal('NEW')"
+                class="btn-3d-orange px-3.5 py-2 rounded-xl font-extrabold flex items-center gap-1.5 cursor-pointer"
+              >
+                <i class="fa-solid fa-plus"></i>
+                <span>Thêm Bảng KPI Tháng ${mStr}/${yStr} (Excel)</span>
+              </button>
+              <button
+                onclick="KpiModule.openImageKpiModal()"
+                class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+              >
+                <i class="fa-solid fa-image"></i>
+                <span>Thêm Ảnh KPI Tháng ${mStr}/${yStr} (Ctrl+V)</span>
+              </button>
+            ` : `
+              <button
+                onclick="KpiModule.fetchBoardsFromSupabase(true)"
+                class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <i class="fa-solid fa-rotate text-[#F26522]"></i>
+                <span>Đồng Bộ Tiến Độ Mới Nhất</span>
+              </button>
+            `}
+          </div>
+        </div>
+
+        <div class="card-3d p-12 text-center bg-white dark:bg-slate-900 space-y-4">
+          <div class="w-16 h-16 rounded-2xl bg-orange-50 text-[#F26522] flex items-center justify-center mx-auto text-2xl shadow-sm">
+            <i class="fa-solid fa-calendar-xmark"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-base font-extrabold text-slate-900 dark:text-white uppercase">
+              Tháng ${mStr}/${yStr} Chưa Có Danh Mục KPI Nào Được Giao
+            </h3>
+            <p class="text-xs text-slate-500 max-w-lg mx-auto">
+              Mỗi tháng có các hạng mục KPI độc lập. ${isAdmin ? `Hãy bấm nút <strong>"Thêm Bảng KPI Tháng ${mStr}/${yStr}"</strong> ở góc phải phía trên để tải file Excel hoặc dán ảnh KPI cho tháng này.` : 'Vui lòng chọn các tháng trước trên thanh công cụ để xem tiến độ KPI.'}
+            </p>
+          </div>
+
+          ${availableMonths.length > 0 ? `
+            <div class="pt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
+              <span class="font-bold text-slate-400">Xem nhanh các tháng đã có KPI:</span>
+              ${availableMonths.map(ym => {
+                const [y, m] = ym.split('-');
+                const count = allBoards.filter(b => this.normalizeBoardMonth(b) === ym).length;
+                return `
+                  <button
+                    onclick="KpiModule.switchToMonth('${ym}')"
+                    class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-[#111625] text-slate-700 hover:text-white font-extrabold transition cursor-pointer"
+                  >
+                    Tháng ${m}/${y} (${count} KPI)
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    // TRƯỜNG HỢP 2: BẢNG HÌNH ẢNH (IMAGE_BOARD) CỦA THÁNG ĐANG CHỌN
     if (board.boardType === 'IMAGE_BOARD') {
       return `
         <div class="card-3d p-4 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-extrabold uppercase text-slate-400 mr-1">Danh mục KPI (${boards.length}):</span>
-            ${boards.map((b, idx) => `
+            <span class="px-2.5 py-1 rounded-lg bg-orange-50 text-[#F26522] border border-orange-200 text-xs font-extrabold font-mono">
+              T${mStr}/${yStr}
+            </span>
+            <span class="text-xs font-extrabold uppercase text-slate-400 mr-1">DANH MỤC KPI (${monthBoards.length}):</span>
+            ${monthBoards.map((b, idx) => `
               <button
                 onclick="KpiModule.selectBoard('${b.id}')"
                 class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 cursor-pointer ${
@@ -943,16 +1134,24 @@ window.KpiModule = {
               <button onclick="KpiModule.openImageKpiModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold cursor-pointer">
                 <i class="fa-solid fa-image mr-1"></i> + Thêm / Dán Ảnh KPI
               </button>
-              <button onclick="KpiModule.deleteCurrentBoard()" class="p-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 cursor-pointer">
+              <button onclick="KpiModule.deleteCurrentBoard()" class="p-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 cursor-pointer" title="Xóa bảng KPI này">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
-            ` : ''}
+            ` : `
+              <button
+                onclick="KpiModule.fetchBoardsFromSupabase(true)"
+                class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <i class="fa-solid fa-rotate text-[#F26522]"></i>
+                <span>Đồng Bộ Tiến Độ Mới Nhất</span>
+              </button>
+            `}
           </div>
         </div>
 
         <div class="card-3d p-5 bg-white dark:bg-slate-900 space-y-3 text-center">
           <div class="flex items-center justify-between border-b pb-3">
-            <h3 class="font-extrabold text-base text-slate-900 dark:text-white uppercase">${board.title}</h3>
+            <h3 class="font-extrabold text-base text-slate-900 dark:text-white uppercase">${board.title} (Tháng ${mStr}/${yStr})</h3>
             <span class="text-xs font-bold text-emerald-600">Cập nhật: ${board.updatedAt}</span>
           </div>
           <div class="overflow-auto max-h-[75vh] p-2 bg-slate-50 rounded-2xl border">
@@ -962,10 +1161,10 @@ window.KpiModule = {
       `;
     }
 
+    // TRƯỜNG HỢP 3: BẢNG EXCEL TIẾN ĐỘ KPI CỦA THÁNG ĐANG CHỌN
     const is6Col = board.boardType === 'EXCEL_6COL';
     const headers = board.headers || [];
 
-    // Lọc theo Miền trên thanh Header
     const regionFilteredRows = (board.rows || []).filter(r => {
       if (headerRegion === 'ALL') return true;
       if (r.rowType === 'GRAND_TOTAL') return false;
@@ -979,7 +1178,6 @@ window.KpiModule = {
         .map(r => r.region)
     )];
 
-    // Tính toán chuẩn xác từ các dòng STAFF cho 5 thẻ KPI trên cùng
     const staffRows = regionFilteredRows.filter(r => r.rowType === 'STAFF');
     const subtotalRows = regionFilteredRows.filter(r => r.rowType === 'SUBTOTAL');
 
@@ -1015,14 +1213,17 @@ window.KpiModule = {
     const actualHeaderLabel = is6Col ? (headers[4] || 'Hoàn thành') : (headers[3] || 'Đã kích hoạt');
 
     return `
-      <!-- 1. THANH CHUYỂN TAB NHIỀU BẢNG KPI & CÔNG CỤ ADMIN -->
+      <!-- 1. THANH CHUYỂN TAB NHIỀU BẢNG KPI THEO ĐÚNG THÁNG ĐANG CHỌN -->
       <div class="card-3d p-4 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900">
         <div class="flex flex-wrap items-center gap-2">
+          <span class="px-2.5 py-1 rounded-lg bg-orange-50 text-[#F26522] border border-orange-200 text-xs font-extrabold font-mono">
+            Tháng ${mStr}/${yStr}
+          </span>
           <span class="text-xs font-extrabold uppercase text-slate-400 mr-1 flex items-center gap-1.5">
             <i data-lucide="layers" class="w-4 h-4 text-[#F26522]"></i>
-            DANH MỤC KPI (${boards.length}):
+            DANH MỤC KPI (${monthBoards.length}):
           </span>
-          ${boards.map((b, idx) => {
+          ${monthBoards.map((b, idx) => {
             const isActive = b.id === board.id;
             return `
               <button
@@ -1075,15 +1276,13 @@ window.KpiModule = {
               <span>${this.isEditingInline ? 'Đóng Sửa Nhanh' : 'Sửa Số Trực Tiếp'}</span>
             </button>
 
-            ${boards.length > 1 ? `
-              <button
-                onclick="KpiModule.deleteCurrentBoard()"
-                class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition cursor-pointer"
-                title="Xóa bảng KPI này"
-              >
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
-            ` : ''}
+            <button
+              onclick="KpiModule.deleteCurrentBoard()"
+              class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition cursor-pointer"
+              title="Xóa bảng KPI này"
+            >
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
           ` : `
             <button
               onclick="KpiModule.fetchBoardsFromSupabase(true)"
@@ -1163,10 +1362,13 @@ window.KpiModule = {
       <div class="card-3d overflow-hidden bg-white dark:bg-slate-900">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div class="flex items-center gap-2.5">
+            <div class="flex flex-wrap items-center gap-2.5">
               <h3 class="font-extrabold text-base text-slate-900 dark:text-white uppercase tracking-tight">
                 ${board.title}
               </h3>
+              <span class="px-2.5 py-0.5 rounded-md bg-orange-50 text-[#F26522] border border-orange-200 text-[11px] font-extrabold font-mono">
+                Tháng ${mStr}/${yStr}
+              </span>
               <span class="px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
                 Cập nhật: ${board.updatedAt || 'Mới nhất'}
               </span>
@@ -1256,7 +1458,6 @@ window.KpiModule = {
 
                 const barWidth = Math.min(100, Math.max(0, Number(row.rate) || 0));
 
-                // Dòng Tổng Miền hoặc Tổng Toàn Quốc
                 if (isMienTotal || isGrandTotal) {
                   const colSpanCount = is6Col ? 3 : 2;
                   return `
@@ -1287,7 +1488,6 @@ window.KpiModule = {
 
                 return `
                   <tr class="${trClass} transition">
-                    <!-- Cột Giám sát (Nếu là bảng 6 cột) -->
                     ${is6Col && !row.hideSupCell ? `
                       <td
                         rowspan="${row.supRowspan}"
@@ -1297,7 +1497,6 @@ window.KpiModule = {
                       </td>
                     ` : ''}
 
-                    <!-- Cột Khu vực -->
                     ${!row.hideRegCell ? `
                       <td
                         rowspan="${row.regRowspan}"
@@ -1307,12 +1506,10 @@ window.KpiModule = {
                       </td>
                     ` : ''}
 
-                    <!-- Cột Họ tên Sales / GĐKV -->
                     <td class="py-2 px-4 border border-slate-400/80 text-center ${textClass}">
                       ${row.name}
                     </td>
 
-                    <!-- Cột Chỉ tiêu -->
                     <td class="py-2 px-3 border border-slate-400/80 text-center font-mono ${textClass}">
                       ${this.isEditingInline && row.rowType === 'STAFF' ? `
                         <input
@@ -1325,7 +1522,6 @@ window.KpiModule = {
                       ` : row.total}
                     </td>
 
-                    <!-- Cột Thực đạt / Hoàn thành -->
                     <td class="py-2 px-3 border border-slate-400/80 text-center font-mono ${textClass}">
                       ${this.isEditingInline && row.rowType === 'STAFF' ? `
                         <input
@@ -1338,7 +1534,6 @@ window.KpiModule = {
                       ` : row.actual}
                     </td>
 
-                    <!-- Cột Tỷ lệ hoàn thành kèm Thanh tiến độ xanh lá -->
                     <td class="py-1.5 px-2 border border-slate-400/80 text-center relative overflow-hidden">
                       <div class="relative w-full h-6 flex items-center justify-center">
                         ${barWidth > 0 && !isZeroSubtotalAlert ? `

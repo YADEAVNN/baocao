@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YADEA RETAIL SUPERVISOR | 雅迪零售督导管理系统</title>
+  
+  <!-- Tailwind CSS, Lucide Icons, Supabase SDK v2 & SheetJS (XLSX) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Fonts: Plus Jakarta Sans, JetBrains Mono & Noto Sans SC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <!-- CSS 3D Theme -->
+  <link rel="stylesheet" href="./styles/theme-3d.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Noto Sans SC', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            yadea: {
+              500: '#F26522',
+              600: '#ea580c',
+              sidebar: '#111625'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="ambient-bg min-h-screen selection:bg-[#F26522] selection:text-white">
+
+  <!-- =====================================================================
+       1. MÀN HÌNH ĐĂNG NHẬP & ĐĂNG KÝ 3D (CHẠY THẬT - BẮT BUỘC XÁC THỰC)
+  ====================================================================== -->
+  <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl transition-opacity duration-300">
+    <div class="fixed top-6 right-8 z-50 flex items-center gap-3">
+      <button onclick="App.toggleLang()" class="card-3d px-4 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-white hover:scale-105 transition">
+        <i class="fa-solid fa-earth-asia text-blue-500"></i>
+        <span id="lang-label-modal">VN</span>
+      </button>
+    </div>
+
+    <div class="w-full max-w-4xl rounded-3xl overflow-hidden shadow-[0_35px_80px_-15px_rgba(0,0,0,0.65)] border border-white/30 grid grid-cols-1 md:grid-cols-12 bg-white dark:bg-slate-900">
+      
+      <!-- Cột Trái: Phối cảnh Lưới 3D & Logo YADEA -->
+      <div class="md:col-span-5 relative overflow-hidden p-10 flex flex-col items-center justify-center text-center"
+           style="background: radial-gradient(circle at 20% 20%, #3d1e14 0%, #24120d 55%, #120907 100%);">
+        <div class="absolute inset-0 opacity-20" 
+             style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 28px 28px; transform: perspective(400px) rotateX(45deg) scale(1.5);"></div>
+        <div class="absolute -top-16 -left-16 w-52 h-52 bg-orange-500/30 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 -right-16 w-52 h-52 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 mb-6 yadea-logo-3d">
+          <div class="w-24 h-24 rounded-3xl bg-white/95 border-2 border-white/40 backdrop-blur-md flex items-center justify-center shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
+            <svg class="w-16 h-16" viewBox="0 0 200 200" fill="none">
+              <defs>
+                <linearGradient id="yadeaOfficialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FF7833" />
+                  <stop offset="55%" stop-color="#F26522" />
+                  <stop offset="100%" stop-color="#D94E0F" />
+                </linearGradient>
+              </defs>
+              <path d="M 35 45 C 76 19, 124 19, 165 45 C 124 79, 76 79, 35 45 Z" fill="url(#yadeaOfficialGrad)" stroke="url(#yadeaOfficialGrad)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+              <path d="M 28 59 C 72 82, 92 126, 90 178 C 52 146, 31 104, 28 59 Z" fill="url(#yadeaOfficialGrad)" stroke="url(#yadeaOfficialGrad)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+              <path d="M 172 59 C 169 104, 148 146, 110 178 C 108 126, 128 82, 172 59 Z" fill="url(#yadeaOfficialGrad)" stroke="url(#yadeaOfficialGrad)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <h2 class="relative z-10 text-2xl font-extrabold tracking-tight text-white mb-1 uppercase">
+          HỆ THỐNG QUẢN TRỊ
+        </h2>
+        <p class="relative z-10 text-xs text-slate-300 font-semibold tracking-wide">
+          Kinh Doanh & Thi Đua
+        </p>
+        <div class="relative z-10 mt-7 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-orange-300 font-mono flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          雅迪零售督导管理系统 • v2.0-PRO
+        </div>
+      </div>
+
+      <!-- Cột Phải: ĐĂNG NHẬP & ĐĂNG KÝ MỚI -->
+      <div class="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center bg-white dark:bg-slate-900">
+        <div class="max-w-sm mx-auto w-full">
+
+          <!-- Thông báo trạng thái Auth -->
+          <div id="authAlertBox" class="hidden mb-4 p-3 rounded-xl text-xs font-bold border"></div>
+
+          <!-- ================= FORM 1: ĐĂNG NHẬP CHUẨN ================= -->
+          <div id="loginFormContainer">
+            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-6">
+              Đăng Nhập
+            </h3>
+
+            <form onsubmit="App.handleLoginSubmit(event)" class="space-y-4">
+              <div class="input-3d-well rounded-xl px-4 py-3.5 flex items-center gap-3">
+                <i class="fa-regular fa-envelope text-slate-400 text-sm"></i>
+                <input id="loginEmail" type="email" placeholder="Email nhân viên" required
+                       class="w-full bg-transparent text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none" />
+              </div>
+
+              <div class="input-3d-well rounded-xl px-4 py-3.5 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 flex-1">
+                  <i class="fa-solid fa-lock text-slate-400 text-sm"></i>
+                  <input id="loginPassword" type="password" placeholder="Mật khẩu" required
+                         class="w-full bg-transparent text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none" />
+                </div>
+                <button type="button" onclick="App.togglePasswordVisibility('loginPassword', 'loginEyeIcon')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                  <i id="loginEyeIcon" class="fa-solid fa-eye text-sm"></i>
+                </button>
+              </div>
+
+              <div class="pt-2">
+                <button type="submit" class="btn-3d-orange w-full py-3.5 rounded-xl font-extrabold text-sm tracking-wider uppercase flex items-center justify-center gap-2">
+                  <span>TRUY CẬP</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="mt-6 text-center space-y-2 text-xs">
+              <div class="flex items-center justify-center gap-3 text-slate-500 font-semibold">
+                <button type="button" onclick="App.showAuthMessage('Vui lòng nhập Email và liên hệ Admin để đổi mật khẩu.')" class="hover:text-slate-800 dark:hover:text-white">Đổi mật khẩu?</button>
+                <span class="text-slate-300">|</span>
+                <button type="button" onclick="App.showAuthMessage('Hệ thống sẽ gửi yêu cầu cấp lại mật khẩu tới Admin.')" class="hover:text-slate-800 dark:hover:text-white">Quên mật khẩu?</button>
+              </div>
+              <div class="text-slate-400 font-medium pt-1">
+                Chưa có tài khoản?
+                <button type="button" onclick="App.switchAuthMode('REGISTER')" class="text-[#F26522] font-extrabold hover:underline ml-1">Đăng ký ngay</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= FORM 2: ĐĂNG KÝ MỚI ================= -->
+          <div id="registerFormContainer" class="hidden">
+            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-5">
+              Đăng Ký Mới
+            </h3>
+
+            <form onsubmit="App.handleRegisterSubmit(event)" class="space-y-3.5">
+              <div class="input-3d-well rounded-xl px-4 py-3 flex items-center gap-3">
+                <input id="regFullName" type="text" placeholder="Họ và Tên" required
+                       class="w-full bg-transparent text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none" />
+              </div>
+
+              <div class="input-3d-well rounded-xl px-4 py-3 flex items-center">
+                <select id="regRole" onchange="App.toggleRegisterRegionField()" class="w-full bg-transparent text-sm font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer">
+                  <option value="SALE" class="text-black">Nhân viên Kinh doanh (NVKD)</option>
+                  <option value="SUPERVISOR" class="text-black">Giám sát Bán lẻ (Supervisor)</option>
+                  <option value="REGIONAL_DIRECTOR" class="text-black">Giám đốc Khu vực (Regional Director)</option>
+                  <option value="ADMIN" class="text-black">Admin (Quản trị Toàn quốc)</option>
+                </select>
+              </div>
+
+              <div id="regRegionWrapper" class="input-3d-well rounded-xl px-4 py-3 flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-400">Khu vực phụ trách:</span>
+                <select id="regRegion" class="bg-transparent text-sm font-extrabold text-[#F26522] focus:outline-none cursor-pointer">
+                  <option value="SOUTH" class="text-black">Miền Nam</option>
+                  <option value="NORTH" class="text-black">Miền Bắc</option>
+                  <option value="CENTRAL" class="text-black">Miền Trung</option>
+                </select>
+              </div>
+
+              <div class="input-3d-well rounded-xl px-4 py-3 flex items-center gap-3">
+                <input id="regEmail" type="email" placeholder="Email" required
+                       class="w-full bg-transparent text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none" />
+              </div>
+
+              <div class="input-3d-well rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                <input id="regPassword" type="password" placeholder="Mật khẩu" required
+                       class="w-full bg-transparent text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none" />
+                <button type="button" onclick="App.togglePasswordVisibility('regPassword', 'regEyeIcon')" class="text-slate-400 hover:text-slate-600">
+                  <i id="regEyeIcon" class="fa-solid fa-eye text-sm"></i>
+                </button>
+              </div>
+
+              <div class="pt-1">
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-[#0b1120] hover:bg-slate-800 text-white font-extrabold text-sm shadow-[0_6px_0_#020617,0_12px_20px_rgba(0,0,0,0.3)] active:translate-y-1 transition">
+                  Đăng Ký
+                </button>
+              </div>
+            </form>
+
+            <div class="mt-5 text-center">
+              <button type="button" onclick="App.switchAuthMode('LOGIN')" class="text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                ← Quay lại đăng nhập
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =====================================================================
+       2. KHUNG LÀM VIỆC CHÍNH (SIDEBAR 12 MỤC + HEADER 3D + VIEWPORT)
+  ====================================================================== -->
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- DARK 3D SIDEBAR (#111625) -->
+    <aside id="sidebar" class="w-72 bg-yadea-sidebar text-slate-300 flex flex-col justify-between transition-all duration-300 select-none z-30 shadow-[8px_0_30px_rgba(0,0,0,0.3)] border-r border-slate-800/80">
+      <div>
+        <!-- Brand Logo Chuẩn YADEA -->
+        <div class="h-16 px-5 flex items-center justify-between border-b border-white/10">
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shrink-0">
+              <svg class="w-7 h-7" viewBox="0 0 200 200" fill="none">
+                <path d="M 35 45 C 76 19, 124 19, 165 45 C 124 79, 76 79, 35 45 Z" fill="#F26522" stroke="#F26522" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M 28 59 C 72 82, 92 126, 90 178 C 52 146, 31 104, 28 59 Z" fill="#F26522" stroke="#F26522" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M 172 59 C 169 104, 148 146, 110 178 C 108 126, 128 82, 172 59 Z" fill="#F26522" stroke="#F26522" stroke-width="6" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div id="brand-text" class="leading-tight">
+              <div class="font-extrabold text-sm tracking-wider text-white">YADEA RETAIL</div>
+              <div class="text-[10px] text-[#fb923c] font-bold mt-0.5" data-i18n="appSubtitle">HỆ THỐNG GIÁM SÁT BÁN LẺ</div>
+            </div>
+          </div>
+          <button onclick="App.toggleSidebar()" class="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition" title="Thu gọn / Mở rộng">
+            <i data-lucide="panel-left-close" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Thông tin Nhân sự đang đăng nhập (Đã rút gọn tinh tế) -->
+        <div class="px-4 py-3 border-b border-white/10 bg-white/[0.02] sidebar-hideable">
+          <div id="sidebar-user-name" class="text-xs font-extrabold text-white truncate">Chưa đăng nhập</div>
+          <div id="sidebar-user-scope" class="text-[11px] font-bold text-orange-400 mt-0.5 truncate">Vui lòng xác thực tài khoản</div>
+        </div>
+
+        <!-- Danh sách Menu Nghiệp vụ -->
+        <nav id="sidebar-nav" class="p-3 overflow-y-auto max-h-[calc(100vh-200px)]"></nav>
+      </div>
+
+      <!-- Footer Sidebar: Nút Đăng Xuất -->
+      <div class="p-3 border-t border-white/10 bg-black/25 space-y-2">
+        <button onclick="App.logout()" class="w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/40 text-xs font-bold text-slate-200 hover:text-rose-300 flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-right-from-bracket text-rose-400"></i>
+          <span class="sidebar-hideable">Đăng Xuất Tài Khoản</span>
+        </button>
+        <div class="flex items-center justify-between text-[11px] text-gray-400 px-2">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="sidebar-hideable">PRODUCTION READY</span>
+          </span>
+          <span class="font-mono text-[10px] text-orange-400">v2.0-PRO</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- KHU VỰC NỘI DUNG CHÍNH -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- HEADER & BỘ LỌC TỔNG HỢP MỚI -->
+      <div class="flex flex-col z-20 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <!-- Breadcrumb & Nút hệ thống (Dark mode, Lang) -->
+        <div class="h-14 px-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
+          <div class="flex items-center gap-3">
+            <div class="w-1.5 h-5 rounded-full bg-[#F26522]"></div>
+            <div id="header-breadcrumb" class="flex items-center gap-2 text-sm font-bold"></div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="flex items-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold mr-2">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#F26522] mr-1.5"></i>
+              <span id="header-role-badge">Chưa đăng nhập</span>
+            </div>
+            <button onclick="App.toggleDarkMode()" class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-amber-300 hover:text-orange-500 transition">
+              <i id="themeIcon" class="fa-solid fa-moon text-xs"></i>
+            </button>
+            <button onclick="App.toggleLang()" id="lang-btn" class="w-8 h-8 rounded-lg bg-[#F26522] text-white flex items-center justify-center font-bold text-xs transition hover:bg-orange-600">
+              <span id="lang-label">VN</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thanh Bộ Lọc -->
+        <div class="px-6 py-2.5 flex flex-col gap-3">
+          <!-- Hàng 1: Lọc chính (Tháng, Năm, Miền, Nút mở rộng) -->
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-3 sm:gap-4">
+              <!-- Chọn Tháng & Năm tách biệt -->
+              <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100/80 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200/70 dark:border-slate-700">
+                <i data-lucide="calendar" class="w-4 h-4 text-[#F26522]"></i>
+                <select id="filter-month-num" onchange="App.updatePeriodFilter()" class="bg-transparent focus:outline-none cursor-pointer text-[#F26522] font-extrabold">
+                  <option value="01">Tháng 01</option>
+                  <option value="02">Tháng 02</option>
+                  <option value="03">Tháng 03</option>
+                  <option value="04">Tháng 04</option>
+                  <option value="05">Tháng 05</option>
+                  <option value="06">Tháng 06</option>
+                  <option value="07">Tháng 07</option>
+                  <option value="08">Tháng 08</option>
+                  <option value="09" selected>Tháng 09</option>
+                  <option value="10">Tháng 10</option>
+                  <option value="11">Tháng 11</option>
+                  <option value="12">Tháng 12</option>
+                </select>
+                <span class="text-slate-300 dark:text-slate-600">/</span>
+                <select id="filter-year-num" onchange="App.updatePeriodFilter()" class="bg-transparent focus:outline-none cursor-pointer font-extrabold">
+                  <option value="2025">Năm 2025</option>
+                  <option value="2026" selected>Năm 2026</option>
+                  <option value="2027">Năm 2027</option>
+                  <option value="2028">Năm 2028</option>
+                </select>
+              </div>
+              
+              <div class="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+              
+              <!-- Chọn Miền -->
+              <div class="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <i data-lucide="globe" class="w-4 h-4 text-slate-400"></i>
+                <select id="filter-region" onchange="App.updateFilter('region', this.value)" class="bg-transparent focus:outline-none cursor-pointer font-bold">
+                  <option value="ALL">Toàn quốc</option>
+                  <option value="NORTH">Miền Bắc</option>
+                  <option value="CENTRAL">Miền Trung</option>
+                  <option value="SOUTH">Miền Nam</option>
+                </select>
+              </div>
+
+              <div class="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+              
+              <!-- Nút Toggle Bộ lọc nâng cao -->
+              <button onclick="App.toggleAdvancedFilters()" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-[#F26522] transition cursor-pointer">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4 text-amber-500"></i>
+                <span>Bộ lọc</span>
+                <i id="filter-chevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+              </button>
+            </div>
+            
+            <!-- Badge trạng thái Dữ liệu thực tế -->
+            <div class="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/60 px-3 py-1 rounded-lg">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Dữ liệu thực tế • Đồng bộ Cloud Supabase
+            </div>
+          </div>
+
+          <!-- Hàng 2: Bộ lọc nâng cao (Tự động đổ dữ liệu thật từ danh sách Shop) -->
+          <div id="advanced-filters" class="hidden grid grid-cols-1 md:grid-cols-5 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <select id="adv-filter-province" onchange="App.applyQuickAdvancedFilter('province', this.value)" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-none">
+              <option value="ALL">-- Tỉnh / thành --</option>
+            </select>
+            
+            <select id="adv-filter-supervisor" onchange="App.applyQuickAdvancedFilter('supervisor', this.value)" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-none">
+              <option value="ALL">-- Giám sát --</option>
+            </select>
+
+            <select id="adv-filter-sale" onchange="App.applyQuickAdvancedFilter('sale', this.value)" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-none">
+              <option value="ALL">-- Sale phụ trách --</option>
+            </select>
+
+            <select id="adv-filter-grade" onchange="App.applyQuickAdvancedFilter('grade', this.value)" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-none">
+              <option value="ALL">-- Xếp loại --</option>
+              <option value="GOOD">Tốt (Điểm >= 85)</option>
+              <option value="AVG">Trung bình (70 - 84)</option>
+              <option value="WEAK">Yếu (< 70)</option>
+              <option value="NODATA">Chưa đủ dữ liệu</option>
+            </select>
+
+            <div class="flex items-center gap-2">
+              <input id="adv-filter-search" type="text" oninput="App.applyQuickAdvancedFilter('search', this.value)" placeholder="Tìm tên cửa hàng, mã DVN..." class="flex-1 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-none" />
+              <button onclick="App.resetQuickAdvancedFilter()" class="text-[11px] font-bold text-amber-600 hover:text-amber-700 px-2 shrink-0 cursor-pointer">Đặt lại</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VÙNG HIỂN THỊ MODULE ĐỘNG -->
+      <main id="app-viewport" class="flex-1 overflow-y-auto p-6 space-y-6 bg-[#f8fafc] dark:bg-[#0f172a]"></main>
+    </div>
+  </div>
+
+  <!-- MODAL CHI TIẾT DÙNG CHUNG (Mở rộng max-w-5xl để hiển thị bảng danh sách Shop & bộ lọc) -->
+  <div id="global-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+    <div class="card-3d rounded-3xl max-w-5xl w-full p-6 max-h-[88vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+        <h3 id="modal-title" class="text-lg font-extrabold text-slate-900 dark:text-white"></h3>
+        <button onclick="App.closeModal()" class="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="modal-body" class="space-y-4 text-sm"></div>
+    </div>
+  </div>
+
+  <!-- NHÚNG CÁC MODULE -->
+  <script src="./core/i18n.js"></script>
+  <script src="./core/navigation.js"></script>
+  <script src="./core/store.js"></script>
+  <script src="./core/supabase.js"></script>
+  <script src="./modules/dashboard.module.js"></script>
+  <script src="./modules/tasks.module.js"></script>
+  <script src="./modules/kpi.module.js"></script>
+  <script src="./modules/sellout.module.js"></script>
+  <script src="./modules/shops.module.js"></script>
+  <script src="./modules/operations.module.js"></script>
+  <script src="./modules/admin_shops.module.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

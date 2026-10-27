@@ -1,0 +1,107 @@
+window.I18N = {
+  vi: {
+    appSubtitle: "HỆ THỐNG GIÁM SÁT BÁN LẺ",
+    regionAll: "Toàn quốc",
+    regionNorth: "Miền Bắc",
+    regionCentral: "Miền Trung",
+    regionSouth: "Miền Nam",
+    // 12 Menu
+    menu_dashboard: "1. Tổng quan",
+    menu_tasks: "2. Việc cần làm",
+    menu_kpi: "3. Tiến độ KPI",
+    menu_shops: "4. Quản lý cửa hàng",
+    menu_sellout: "5. Phân tích Sell-out",
+    menu_grading: "6. Phân loại cửa hàng",
+    menu_improvement: "7. Kế hoạch cải thiện",
+    menu_evidence: "8. Hình ảnh & Minh chứng",
+    menu_elearning: "9. E-learning & Case Study",
+    menu_reports: "10. Báo cáo",
+    menu_accounts: "11. Quản lý tài khoản",
+    menu_settings: "12. Cài đặt",
+    // KPI Cards Dashboard
+    kpi_total_shops: "Tổng số cửa hàng",
+    kpi_monthly_so: "Tổng Sell-out tháng",
+    kpi_mom: "Tăng trưởng MoM",
+    kpi_yoy: "Tăng trưởng YoY",
+    kpi_good_shops: "Số shop Tốt",
+    kpi_avg_shops: "Số shop Trung bình",
+    kpi_weak_shops: "Số shop Yếu",
+    kpi_support_shops: "Shop cần hỗ trợ",
+    kpi_sup_progress: "Tiến độ KPI Giám sát",
+    kpi_overdue_tasks: "Công việc quá hạn",
+    // Charts
+    chart_so_12m: "Xu hướng S.O 12 tháng (Đơn vị: Xe)",
+    chart_so_region: "Tỷ trọng S.O theo Khu vực (Bắc - Trung - Nam)",
+    chart_shop_grade: "Phân bố xếp loại cửa hàng",
+    chart_sup_kpi: "Tiến độ KPI từng Giám sát (%)",
+    chart_top_growth: "Top Shop Tăng trưởng S.O",
+    chart_top_decline: "Top Shop Suy giảm S.O",
+    // Chung
+    col_dvn: "Mã DVN",
+    col_shop_name: "Tên cửa hàng",
+    col_region: "Khu vực",
+    col_supervisor: "Người phụ trách",
+    col_grade: "Xếp loại",
+    col_score: "Điểm đánh giá",
+    col_action: "Thao tác",
+    grade_good: "Tốt",
+    grade_avg: "Trung bình",
+    grade_weak: "Yếu",
+    grade_nodata: "Chưa đủ dữ liệu"
+  },
+  zh: {
+    appSubtitle: "雅迪零售督导管理系统",
+    regionAll: "全国",
+    regionNorth: "北部区域",
+    regionCentral: "中部区域",
+    regionSouth: "南部区域",
+    // 12 Menu
+    menu_dashboard: "1. 全局总览",
+    menu_tasks: "2. 待办任务",
+    menu_kpi: "3. KPI 进度",
+    menu_shops: "4. 门店管理",
+    menu_sellout: "5. Sell-out 销量分析",
+    menu_grading: "6. 门店分级",
+    menu_improvement: "7. 门店改善计划",
+    menu_evidence: "8. 影像与凭证",
+    menu_elearning: "9. E-learning 与案例",
+    menu_reports: "10. 报表中心",
+    menu_accounts: "11. 账号权限管理",
+    menu_settings: "12. 系统设置",
+    // KPI Cards Dashboard
+    kpi_total_shops: "门店总数",
+    kpi_monthly_so: "本月总 Sell-out",
+    kpi_mom: "MoM 环比增长",
+    kpi_yoy: "YoY 同比增长",
+    kpi_good_shops: "优秀门店数",
+    kpi_avg_shops: "中等门店数",
+    kpi_weak_shops: "薄弱门店数",
+    kpi_support_shops: "需帮扶门店",
+    kpi_sup_progress: "督导 KPI 达成率",
+    kpi_overdue_tasks: "逾期任务数",
+    // Charts
+    chart_so_12m: "12个月 S.O 销量趋势 (单位: 台)",
+    chart_so_region: "北-中-南区域 S.O 占比",
+    chart_shop_grade: "门店等级分布",
+    chart_sup_kpi: "各督导 KPI 完成进度 (%)",
+    chart_top_growth: "Top S.O 增长门店",
+    chart_top_decline: "Top S.O 下滑门店",
+    // Chung
+    col_dvn: "DVN 编码",
+    col_shop_name: "门店名称",
+    col_region: "所属区域",
+    col_supervisor: "负责督导",
+    col_grade: "门店评级",
+    col_score: "综合评分",
+    col_action: "操作",
+    grade_good: "优秀",
+    grade_avg: "中等",
+    grade_weak: "薄弱",
+    grade_nodata: "数据不足"
+  }
+};
+
+window.t = function(key) {
+  const lang = window.AppState?.lang || 'vi';
+  return (window.I18N[lang] && window.I18N[lang][key]) ? window.I18N[lang][key] : key;
+};

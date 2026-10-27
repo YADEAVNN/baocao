@@ -1,0 +1,169 @@
+:root {
+  --bg-main: #f1f5f9;
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-border: rgba(255, 255, 255, 0.96);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --primary-accent: #F26522;
+}
+
+html.dark {
+  --bg-main: #090d16;
+  --card-bg: rgba(17, 24, 39, 0.88);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans SC', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* Nền lưới ánh sáng 3D Ambient */
+.ambient-bg {
+  background-image: 
+    radial-gradient(at 15% 15%, rgba(242, 101, 34, 0.10) 0px, transparent 45%),
+    radial-gradient(at 85% 20%, rgba(59, 130, 246, 0.10) 0px, transparent 45%),
+    radial-gradient(at 50% 85%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+}
+
+/* Thẻ 3D Glassmorphism Dùng Chung Cho Toàn Bộ 12 Mục */
+.card-3d {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1.5px solid var(--card-border);
+  border-left: 1px solid var(--card-border);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 3.5px solid rgba(148, 163, 184, 0.32);
+  border-radius: 20px;
+  box-shadow: 
+    0 18px 35px -10px rgba(15, 23, 42, 0.07),
+    0 6px 14px -4px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+}
+
+html.dark .card-3d {
+  border-bottom: 3.5px solid rgba(0, 0, 0, 0.65);
+  box-shadow: 
+    0 20px 40px -12px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.card-3d:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 24px 44px -12px rgba(15, 23, 42, 0.12),
+    0 8px 18px -6px rgba(242, 101, 34, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+}
+
+/* Nút bấm Cam 3D Nổi (Tactile Extruded Orange Button) */
+.btn-3d-orange {
+  background: linear-gradient(180deg, #ff7e3d 0%, #F26522 48%, #d94e0f 100%);
+  color: white;
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 
+    0 5px 0 #9a3412,
+    0 10px 20px -4px rgba(242, 101, 34, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  transition: all 0.15s ease;
+}
+
+.btn-3d-orange:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 7px 0 #9a3412,
+    0 14px 26px -4px rgba(242, 101, 34, 0.65);
+}
+
+.btn-3d-orange:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #9a3412;
+}
+
+/* Hốc Input 3D Lõm (Recessed 3D Input Well) */
+.input-3d-well {
+  background: #eef2f6;
+  box-shadow: 
+    inset 0 3px 5px rgba(15, 23, 42, 0.07),
+    0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  transition: all 0.2s ease;
+}
+
+html.dark .input-3d-well {
+  background: #0b1120;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+
+/* Menu 12 mục trên Sidebar 3D */
+.nav-item-3d {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+.nav-item-3d:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
+}
+.nav-item-3d.active {
+  background: linear-gradient(90deg, rgba(242, 101, 34, 0.24) 0%, rgba(242, 101, 34, 0.03) 100%);
+  border-left: 3px solid #F26522;
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #fb923c !important;
+  font-weight: 700;
+}
+
+/* Hiệu ứng Cột Khối Lăng Trụ 3D (Isometric SVG Prism Columns) */
+.bar-3d-group {
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+}
+.bar-3d-group:hover {
+  transform: translateY(-7px);
+  filter: drop-shadow(0 14px 18px rgba(242, 101, 34, 0.38));
+}
+
+/* Thanh ngang 3D Extruded (Dùng cho Tiến độ KPI各Giám sát & Top Shop) */
+.hbar-3d-bar {
+  position: relative;
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 65%, #38bdf8 100%);
+  box-shadow: 
+    0 4px 0 #1d4ed8,
+    0 8px 14px -3px rgba(37, 99, 235, 0.35),
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.45);
+  border-radius: 8px;
+  transition: all 0.4s ease;
+}
+
+/* Nâng cấp Bảng Dữ Liệu 3D (Cho mục 2. Việc cần làm, 4. Quản lý cửa hàng, 6. Phân loại...) */
+table thead tr {
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.9) 0%, rgba(226, 232, 240, 0.6) 100%) !important;
+  border-bottom: 2px solid rgba(148, 163, 184, 0.3) !important;
+}
+html.dark table thead tr {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08) !important;
+}
+table tbody tr {
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+table tbody tr:hover {
+  background-color: rgba(242, 101, 34, 0.04) !important;
+}
+
+/* Logo YADEA phát sáng 3D */
+.yadea-logo-3d {
+  filter: drop-shadow(0 8px 18px rgba(242, 101, 34, 0.45));
+  animation: floatSlow 4.2s ease-in-out infinite;
+}
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}

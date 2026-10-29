@@ -29,7 +29,6 @@ window.App = {
   RegionLabels: {
     'ALL': 'Toàn bộ Shop (Toàn quốc)',
     'NORTH': 'Khu vực Miền Bắc',
-    'CENTRAL': 'Khu vực Miền Trung',
     'SOUTH': 'Khu vực Miền Nam'
   },
 
@@ -38,11 +37,11 @@ window.App = {
       window.SupabaseService.init();
     }
 
-    // Đồng bộ ngay danh sách Shop thực tế từ LocalStorage / Supabase vào AppStore khi khởi động
+    // Đồng bộ ngay danh sách Shop từ LocalStorage / Supabase vào AppStore khi khởi động
     if (window.AdminShopsModule) {
       const initialShops = window.AdminShopsModule.getList();
       window.AdminShopsModule.syncToGlobalAppStore(initialShops);
-      window.AdminShopsModule.fetchFromSupabaseIfNeeded();
+      await window.AdminShopsModule.fetchFromSupabaseIfNeeded(true);
     }
 
     const savedSession = localStorage.getItem('yadea_active_session');
@@ -50,7 +49,9 @@ window.App = {
       try {
         const user = JSON.parse(savedSession);
         this.applyAuthenticatedUser(user);
-        await window.SupabaseService.syncAllData();
+        if (window.SupabaseService) {
+          await window.SupabaseService.syncAllData();
+        }
         this.populateHeaderAdvancedFilters();
         this.renderCurrentModule();
       } catch (e) {
@@ -67,7 +68,8 @@ window.App = {
     AppState.userName = user.fullName;
     AppState.userEmail = user.email;
     AppState.role = user.role;
-    AppState.assignedRegion = user.role === 'ADMIN' ? 'ALL' : user.assignedRegion;
+    const normalizedRegion = user.assignedRegion === 'CENTRAL' ? 'NORTH' : (user.assignedRegion || 'SOUTH');
+    AppState.assignedRegion = user.role === 'ADMIN' ? 'ALL' : normalizedRegion;
     AppState.region = AppState.assignedRegion;
 
     this.applyRoleAndRegionLock();
@@ -170,6 +172,9 @@ window.App = {
     try {
       const user = await window.SupabaseService.signIn(email, password);
       localStorage.setItem('yadea_active_session', JSON.stringify(user));
+      if (window.AdminShopsModule) {
+        await window.AdminShopsModule.fetchFromSupabaseIfNeeded(true);
+      }
       this.applyAuthenticatedUser(user);
     } catch (err) {
       this.showAuthMessage(err.message || 'Đăng nhập thất bại!', true);
@@ -194,7 +199,6 @@ window.App = {
       }
     }
 
-    // Rút gọn tinh tế phần hiển thị góc trái Sidebar
     const shortRole = {
       'ADMIN': 'Admin',
       'REGIONAL_DIRECTOR': 'GĐ Khu vực',
@@ -204,7 +208,6 @@ window.App = {
     const shortRegion = {
       'ALL': 'Toàn quốc',
       'NORTH': 'Miền Bắc',
-      'CENTRAL': 'Miền Trung',
       'SOUTH': 'Miền Nam'
     };
 
@@ -218,13 +221,11 @@ window.App = {
     }
   },
 
-  // Xử lý khi người dùng chọn Tháng hoặc Năm trên thanh công cụ Header
   updatePeriodFilter() {
     const m = document.getElementById('filter-month-num')?.value || '09';
     const y = document.getElementById('filter-year-num')?.value || '2026';
     AppState.month = `${y}-${m}`;
 
-    // Nếu đang ở trang Admin Shops (Tab Nhập S.O), đồng bộ luôn kỳ nhập
     if (window.AdminShopsModule) {
       window.AdminShopsModule.selectedYear = Number(y);
       window.AdminShopsModule.selectedMonth = Number(m);
@@ -242,7 +243,6 @@ window.App = {
     this.renderCurrentModule();
   },
 
-  // Tự động đổ danh sách Tỉnh/thành, Giám sát, Sale thật vào Hàng 2 của Bộ lọc Header
   populateHeaderAdvancedFilters() {
     if (!window.AdminShopsModule) return;
     const allShops = window.AdminShopsModule.getList();
@@ -276,7 +276,6 @@ window.App = {
     }
   },
 
-  // Khi người dùng chọn lọc nâng cao trên Header -> Mở bảng tra cứu Shop tương ứng
   applyQuickAdvancedFilter(type, val) {
     if (!window.DashboardModule) return;
     window.DashboardModule.openGradeDrilldownModal(
@@ -394,7 +393,7 @@ window.App = {
   translateStaticDOM() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      if(window.t) el.innerText = window.t(key);
+      if (window.t) el.innerText = window.t(key);
     });
   },
 
@@ -466,6 +465,23 @@ window.App = {
     if (window.lucide) window.lucide.createIcons();
   },
 
+  renderMissingModuleAlert(moduleName, expectedPath) {
+    return `
+      <div class="card-3d p-8 text-center space-y-3 border-t-4 border-t-rose-500 bg-white dark:bg-slate-900">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="text-base font-extrabold text-slate-900 dark:text-white uppercase">
+          Chưa tìm thấy file của ${moduleName}
+        </h3>
+        <p class="text-xs text-slate-600 max-w-lg mx-auto">
+          Vui lòng kiểm tra lại tên thư mục và tên file trong VS Code đã khớp chính xác với đường dẫn:
+          <code class="px-2 py-1 rounded bg-slate-100 text-rose-600 font-mono font-bold">${expectedPath}</code>
+        </p>
+      </div>
+    `;
+  },
+
   renderCurrentModule() {
     const viewport = document.getElementById('app-viewport');
     const currentNav = window.NavigationConfig.find(n => n.id === AppState.activeModule);
@@ -488,30 +504,74 @@ window.App = {
       </span>
     `;
 
-    switch (AppState.activeModule) {
-      case 'dashboard':
-        viewport.innerHTML = window.DashboardModule.render();
-        break;
-      case 'tasks':
-        viewport.innerHTML = window.TasksModule.render();
-        break;
-      case 'kpi':
-        viewport.innerHTML = window.KpiModule.render();
-        break;
-      case 'sellout':
-        viewport.innerHTML = window.SelloutModule.render();
-        break;
-      case 'shops':
-      case 'grading':
-      case 'improvement':
-        viewport.innerHTML = window.ShopsModule.render();
-        break;
-      case 'admin_shops':
-        viewport.innerHTML = window.AdminShopsModule.render();
-        break;
-      default:
-        viewport.innerHTML = window.OperationsModule.render(AppState.activeModule);
-        break;
+    // Đồng bộ ẩn/hiện thanh Bộ lọc nâng cao trên Header ngay tại trung tâm
+    const hideAdvFilterModules = ['tasks', 'kpi', 'accounts', 'admin_shops'];
+    const shouldHideAdv = hideAdvFilterModules.includes(AppState.activeModule);
+    const toggleBtn = document.getElementById('adv-filter-toggle-btn');
+    const dividerEl = document.getElementById('adv-filter-divider');
+    const advPanel = document.getElementById('advanced-filters');
+
+    if (toggleBtn) toggleBtn.classList.toggle('hidden', shouldHideAdv);
+    if (dividerEl) dividerEl.classList.toggle('hidden', shouldHideAdv);
+    if (shouldHideAdv && advPanel) advPanel.classList.add('hidden');
+
+    try {
+      switch (AppState.activeModule) {
+        case 'dashboard':
+          viewport.innerHTML = window.DashboardModule
+            ? window.DashboardModule.render()
+            : this.renderMissingModuleAlert('DashboardModule', './modules/dashboard/dashboard.main.js');
+          break;
+        case 'tasks':
+          viewport.innerHTML = window.TasksModule
+            ? window.TasksModule.render()
+            : this.renderMissingModuleAlert('TasksModule', './modules/tasks/tasks.main.js');
+          break;
+        case 'kpi':
+          viewport.innerHTML = window.KpiModule
+            ? window.KpiModule.render()
+            : this.renderMissingModuleAlert('KpiModule', './modules/kpi/kpi.main.js');
+          break;
+        case 'sellout':
+          viewport.innerHTML = window.SelloutModule
+            ? window.SelloutModule.render()
+            : this.renderMissingModuleAlert('SelloutModule', './modules/sellout.module.js');
+          break;
+        case 'shops':
+        case 'grading':
+        case 'improvement':
+          viewport.innerHTML = window.ShopsModule
+            ? window.ShopsModule.render()
+            : this.renderMissingModuleAlert('ShopsModule', './modules/shops.module.js');
+          break;
+        case 'evidence':
+          viewport.innerHTML = window.EfficiencyModule
+            ? window.EfficiencyModule.render()
+            : this.renderMissingModuleAlert('EfficiencyModule', './modules/efficiency.module.js');
+          break;
+        case 'accounts':
+          viewport.innerHTML = window.AccountsModule
+            ? window.AccountsModule.render()
+            : this.renderMissingModuleAlert('AccountsModule', './modules/accounts.module.js');
+          break;
+        case 'admin_shops':
+          viewport.innerHTML = window.AdminShopsModule
+            ? window.AdminShopsModule.render()
+            : this.renderMissingModuleAlert('AdminShopsModule', './modules/admin_shops/admin_shops.list.js');
+          break;
+        default:
+          viewport.innerHTML = window.OperationsModule
+            ? window.OperationsModule.render(AppState.activeModule)
+            : '';
+          break;
+      }
+    } catch (err) {
+      console.error('Lỗi khi render module:', err);
+      viewport.innerHTML = `
+        <div class="card-3d p-6 border-t-4 border-t-rose-500 text-xs text-rose-700 bg-rose-50">
+          <strong>Lỗi hiển thị trang (${AppState.activeModule}):</strong> ${err.message}
+        </div>
+      `;
     }
 
     if (window.lucide) window.lucide.createIcons();

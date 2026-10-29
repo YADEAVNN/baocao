@@ -1,12 +1,35 @@
 // modules/sellout.module.js
 window.SelloutModule = {
   groupByMode: 'SUB_REGION', // 'SUB_REGION' (Khu vực) | 'DIRECTOR' (GĐ Khu vực) | 'SUPERVISOR' (Giám sát) | 'SALE' (Sale)
-  shopTypeFilter: 'ALL',     // 'ALL' | 'S' | 'A' | 'B'
-  gradeFilter: 'ALL',        // 'ALL' | 'GOOD' | 'AVG' | 'WEAK' | 'NODATA'
+  supervisorFilter: 'ALL',
+  directorFilter: 'ALL',
+  saleFilter: 'ALL',
+  shopFilter: 'ALL',         // Lọc Shop cụ thể (tự động cập nhật danh sách theo Sale)
+  shopTypeFilter: 'ALL',     // Size shop: 'ALL' | 'S' | 'A' | 'B'
+  gradeFilter: 'ALL',        // Xếp loại: 'ALL' | 'GOOD' | 'AVG' | 'WEAK' | 'NODATA'
   searchQuery: '',
+
+  // Tự động ẩn dòng chữ "Dữ liệu thực tế • Đồng bộ Cloud Supabase" trên thanh công cụ
+  hideCloudSyncBadge() {
+    const badge = document.getElementById('cloud-sync-badge');
+    if (badge) badge.remove();
+  },
 
   setMode(key, val) {
     this[key] = val;
+
+    // Khi đổi Giám sát, Giám đốc hoặc Sale -> Tự động reset bộ lọc cấp dưới để danh sách Shop theo Sale luôn chuẩn xác
+    if (key === 'supervisorFilter') {
+      this.directorFilter = 'ALL';
+      this.saleFilter = 'ALL';
+      this.shopFilter = 'ALL';
+    } else if (key === 'directorFilter') {
+      this.saleFilter = 'ALL';
+      this.shopFilter = 'ALL';
+    } else if (key === 'saleFilter') {
+      this.shopFilter = 'ALL';
+    }
+
     window.App.renderCurrentModule();
     if (key === 'searchQuery') {
       const inp = document.getElementById('sellout-search-input');
@@ -15,6 +38,17 @@ window.SelloutModule = {
         inp.setSelectionRange(inp.value.length, inp.value.length);
       }
     }
+  },
+
+  resetDetailFilters() {
+    this.supervisorFilter = 'ALL';
+    this.directorFilter = 'ALL';
+    this.saleFilter = 'ALL';
+    this.shopFilter = 'ALL';
+    this.shopTypeFilter = 'ALL';
+    this.gradeFilter = 'ALL';
+    this.searchQuery = '';
+    window.App.renderCurrentModule();
   },
 
   // Xuất Báo cáo Phân tích Sell-out chi tiết ra file Excel
@@ -35,9 +69,9 @@ window.SelloutModule = {
         'MIỀN': s.mienLabel,
         'KHU VỰC': s.subRegion,
         'TỈNH/THÀNH': s.province,
-        'MÃ SVN': s.svn,
-        'MÃ DVN': String(s.dvn),
-        'LOẠI HÌNH': s.shopType,
+        'MÃ SVN': String(s.svn || ''),
+        'MÃ DVN': String(s.dvn || ''), // Giữ chuẩn String theo quy tắc
+        'SIZE SHOP / LOẠI HÌNH': s.shopType,
         'TÊN CỬA HÀNG': s.name,
         'GIÁM SÁT': s.supervisor,
         'GĐ KHU VỰC': s.director,
@@ -61,6 +95,11 @@ window.SelloutModule = {
   getFilteredShops(shops) {
     const q = this.searchQuery.trim().toLowerCase();
     return shops.filter(s => {
+      const matchSup = this.supervisorFilter === 'ALL' || s.supervisor === this.supervisorFilter;
+      const matchDir = this.directorFilter === 'ALL' || s.director === this.directorFilter;
+      const matchSale = this.saleFilter === 'ALL' || s.sale === this.saleFilter;
+      const matchShop = this.shopFilter === 'ALL' || String(s.dvn).trim() === String(this.shopFilter).trim();
+
       const typeUpper = String(s.shopType || '').toUpperCase();
       const matchType =
         this.shopTypeFilter === 'ALL' ||
@@ -71,24 +110,51 @@ window.SelloutModule = {
       const matchGrade = this.gradeFilter === 'ALL' || s.eval.grade === this.gradeFilter;
 
       const matchQ = !q ||
-        s.dvn.toLowerCase().includes(q) ||
-        s.name.toLowerCase().includes(q) ||
-        s.subRegion.toLowerCase().includes(q) ||
-        s.province.toLowerCase().includes(q) ||
-        s.supervisor.toLowerCase().includes(q) ||
-        s.director.toLowerCase().includes(q) ||
-        s.sale.toLowerCase().includes(q);
+        String(s.dvn || '').toLowerCase().includes(q) ||
+        String(s.name || '').toLowerCase().includes(q) ||
+        String(s.subRegion || '').toLowerCase().includes(q) ||
+        String(s.province || '').toLowerCase().includes(q) ||
+        String(s.supervisor || '').toLowerCase().includes(q) ||
+        String(s.director || '').toLowerCase().includes(q) ||
+        String(s.sale || '').toLowerCase().includes(q);
 
-      return matchType && matchGrade && matchQ;
+      return matchSup && matchDir && matchSale && matchShop && matchType && matchGrade && matchQ;
     });
   },
 
   render() {
+    this.hideCloudSyncBadge();
     if (!window.DashboardModule) return '';
     const { shops, effectiveYear, effectiveMonth } = window.DashboardModule.getEvaluatedRealShops();
     const filtered = this.getFilteredShops(shops);
 
-    // 1. Phân tích theo 3 Loại hình cửa hàng: S旗舰店, A形象店, B标准店
+    // Tạo danh sách lựa chọn liên hoàn (Cascading Filters): Giám sát -> Giám đốc -> Sale -> Shop (theo Sale)
+    const supervisors = [...new Set(shops.map(s => s.supervisor).filter(Boolean))].sort();
+
+    const shopsBySup = shops.filter(s =>
+      this.supervisorFilter === 'ALL' || s.supervisor === this.supervisorFilter
+    );
+    const directors = [...new Set(shopsBySup.map(s => s.director).filter(Boolean))].sort();
+
+    const shopsByDir = shopsBySup.filter(s =>
+      this.directorFilter === 'ALL' || s.director === this.directorFilter
+    );
+    const sales = [...new Set(shopsByDir.map(s => s.sale).filter(Boolean))].sort();
+
+    const shopsBySale = shopsByDir
+      .filter(s => this.saleFilter === 'ALL' || s.sale === this.saleFilter)
+      .sort((a, b) => String(a.dvn).localeCompare(String(b.dvn)));
+
+    const hasActiveFilters =
+      this.supervisorFilter !== 'ALL' ||
+      this.directorFilter !== 'ALL' ||
+      this.saleFilter !== 'ALL' ||
+      this.shopFilter !== 'ALL' ||
+      this.shopTypeFilter !== 'ALL' ||
+      this.gradeFilter !== 'ALL' ||
+      this.searchQuery.trim() !== '';
+
+    // 1. Phân tích theo 3 Loại hình cửa hàng (Size Shop): S旗舰店, A形象店, B标准店
     const calcTypeStats = (prefix) => {
       const list = shops.filter(s => String(s.shopType || '').toUpperCase().includes(prefix));
       const totalSO = list.reduce((a, b) => a + (b.currentSO || 0), 0);
@@ -143,6 +209,8 @@ window.SelloutModule = {
         yoy: g.lastYearSO > 0 ? Math.round(((g.currentSO - g.lastYearSO) / g.lastYearSO) * 100) : null
       }))
       .sort((a, b) => b.currentSO - a.currentSO);
+
+    const totalFilteredSO = filtered.reduce((acc, s) => acc + (s.currentSO || 0), 0);
 
     return `
       <!-- KHỐI 1: THỐNG KÊ HIỆU SUẤT THEO 3 HẠNG CỬA HÀNG (S旗舰店 / A形象店 / B标准店) -->
@@ -266,48 +334,133 @@ window.SelloutModule = {
         </div>
       </div>
 
-      <!-- KHỐI 3: BẢNG TRA CỨU CHI TIẾT TỪNG CỬA HÀNG -->
+      <!-- KHỐI 3: BẢNG TRA CỨU CHI TIẾT TỪNG CỬA HÀNG (KÈM BỘ LỌC NHANH 6 CẤP) -->
       <div class="card-3d p-5 space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div class="flex flex-wrap items-center gap-2.5">
             <h3 class="font-extrabold text-sm text-slate-900 dark:text-white uppercase">Chi Tiết Sản Lượng Từng Cửa Hàng</h3>
             <span class="px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-600 font-bold text-xs">${filtered.length} Shop</span>
+            <span class="px-2.5 py-0.5 rounded-md bg-orange-50 text-[#F26522] font-extrabold font-mono text-xs">
+              Tổng S.O: ${totalFilteredSO.toLocaleString()} xe
+            </span>
           </div>
 
           <div class="flex flex-wrap items-center gap-2 text-xs">
-            <input
-              id="sellout-search-input"
-              type="text"
-              value="${this.searchQuery}"
-              oninput="SelloutModule.setMode('searchQuery', this.value)"
-              placeholder="Tìm DVN, tên shop, tỉnh, Sale, GĐ..."
-              class="px-3 py-1.5 rounded-xl border border-slate-200 w-60 font-semibold focus:outline-none focus:border-[#F26522]"
-            />
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input
+                id="sellout-search-input"
+                type="text"
+                value="${this.searchQuery}"
+                oninput="SelloutModule.setMode('searchQuery', this.value)"
+                placeholder="Tìm nhanh DVN, tên shop, tỉnh..."
+                class="pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 w-64 font-semibold focus:outline-none focus:border-[#F26522]"
+              />
+            </div>
 
+            ${hasActiveFilters ? `
+              <button
+                type="button"
+                onclick="SelloutModule.resetDetailFilters()"
+                class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold transition cursor-pointer flex items-center gap-1"
+              >
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Đặt lại bộ lọc</span>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- THANH BỘ LỌC LIÊN HOÀN 6 CẤP: GIÁM SÁT - GIÁM ĐỐC - SALE - SHOP (THEO SALE) - SIZE SHOP - XẾP LOẠI -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200/80 text-xs">
+          <!-- 1. Lọc Giám sát -->
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">1. Giám Sát</label>
+            <select
+              onchange="SelloutModule.setMode('supervisorFilter', this.value)"
+              class="w-full p-2 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 font-bold text-orange-600 focus:outline-none focus:border-[#F26522] cursor-pointer"
+            >
+              <option value="ALL">-- Tất cả Giám sát (${supervisors.length}) --</option>
+              ${supervisors.map(sup => `<option value="${sup}" ${this.supervisorFilter === sup ? 'selected' : ''}>${sup}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- 2. Lọc Giám Đốc -->
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">2. Giám Đốc KV</label>
+            <select
+              onchange="SelloutModule.setMode('directorFilter', this.value)"
+              class="w-full p-2 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#F26522] cursor-pointer"
+            >
+              <option value="ALL">-- Tất cả Giám đốc (${directors.length}) --</option>
+              ${directors.map(dir => `<option value="${dir}" ${this.directorFilter === dir ? 'selected' : ''}>${dir}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- 3. Lọc Sale -->
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">3. Nhân Viên Sale</label>
+            <select
+              onchange="SelloutModule.setMode('saleFilter', this.value)"
+              class="w-full p-2 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 font-bold text-blue-600 focus:outline-none focus:border-[#F26522] cursor-pointer"
+            >
+              <option value="ALL">-- Tất cả Sale (${sales.length}) --</option>
+              ${sales.map(sl => {
+                const count = shopsByDir.filter(x => x.sale === sl).length;
+                return `<option value="${sl}" ${this.saleFilter === sl ? 'selected' : ''}>${sl} (${count} shop)</option>`;
+              }).join('')}
+            </select>
+          </div>
+
+          <!-- 4. Lọc Shop (Danh sách tự động thu hẹp theo Sale đã chọn) -->
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">
+              4. Shop ${this.saleFilter !== 'ALL' ? `(Của ${this.saleFilter})` : '(Theo Sale)'}
+            </label>
+            <select
+              onchange="SelloutModule.setMode('shopFilter', this.value)"
+              class="w-full p-2 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#F26522] cursor-pointer"
+            >
+              <option value="ALL">-- Tất cả Shop (${shopsBySale.length}) --</option>
+              ${shopsBySale.map(sh => `
+                <option value="${sh.dvn}" ${String(this.shopFilter) === String(sh.dvn) ? 'selected' : ''}>
+                  ${sh.dvn} - ${sh.name}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+
+          <!-- 5. Lọc Size Shop (Loại hình S / A / B) -->
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">5. Size Shop (Loại hình)</label>
             <select
               onchange="SelloutModule.setMode('shopTypeFilter', this.value)"
-              class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold focus:outline-none"
+              class="w-full p-2 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 font-bold text-purple-700 focus:outline-none focus:border-[#F26522] cursor-pointer"
             >
-              <option value="ALL" ${this.shopTypeFilter === 'ALL' ? 'selected' : ''}>-- Mọi loại hình --</option>
-              <option value="S" ${this.shopTypeFilter === 'S' ? 'selected' : ''}>S旗舰店 (Flagship)</option>
-              <option value="A" ${this.shopTypeFilter === 'A' ? 'selected' : ''}>A形象店 (Hình ảnh)</option>
-              <option value="B" ${this.shopTypeFilter === 'B' ? 'selected' : ''}>B标准店 (Tiêu chuẩn)</option>
+              <option value="ALL" ${this.shopTypeFilter === 'ALL' ? 'selected' : ''}>-- Mọi Size Shop --</option>
+              <option value="S" ${this.shopTypeFilter === 'S' ? 'selected' : ''}>Size S • S旗舰店 (Flagship)</option>
+              <option value="A" ${this.shopTypeFilter === 'A' ? 'selected' : ''}>Size A • A形象店 (Hình ảnh)</option>
+              <option value="B" ${this.shopTypeFilter === 'B' ? 'selected' : ''}>Size B • B标准店 (Tiêu chuẩn)</option>
             </select>
+          </div>
 
+          <!-- 6. Lọc Xếp loại -->
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">6. Xếp Loại S.O</label>
             <select
               onchange="SelloutModule.setMode('gradeFilter', this.value)"
-              class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold focus:outline-none"
+              class="w-full p-2 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 font-bold text-emerald-700 focus:outline-none focus:border-[#F26522] cursor-pointer"
             >
               <option value="ALL" ${this.gradeFilter === 'ALL' ? 'selected' : ''}>-- Mọi xếp loại --</option>
               <option value="GOOD" ${this.gradeFilter === 'GOOD' ? 'selected' : ''}>Tốt (>= 35 xe)</option>
               <option value="AVG" ${this.gradeFilter === 'AVG' ? 'selected' : ''}>Trung bình (15 - 34 xe)</option>
               <option value="WEAK" ${this.gradeFilter === 'WEAK' ? 'selected' : ''}>Yếu (< 15 xe)</option>
-              <option value="NODATA" ${this.gradeFilter === 'NODATA' ? 'selected' : ''}>Thiếu dữ liệu</option>
+              <option value="NODATA" ${this.gradeFilter === 'NODATA' ? 'selected' : ''}>Chưa đủ dữ liệu</option>
             </select>
           </div>
         </div>
 
-        <div class="overflow-x-auto max-h-[50vh]">
+        <div class="overflow-x-auto max-h-[55vh]">
           <table class="w-full text-left border-collapse text-xs">
             <thead class="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-extrabold border-b">
               <tr>
@@ -335,7 +488,7 @@ window.SelloutModule = {
                   </td>
                   <td class="py-2.5 px-3 text-[11px]">
                     <div>GS: <strong>${s.supervisor}</strong></div>
-                    <div class="text-slate-500">GĐ: ${s.director} • Sale: ${s.sale}</div>
+                    <div class="text-slate-500">GĐ: ${s.director} • Sale: <strong class="text-blue-600">${s.sale}</strong></div>
                   </td>
                   <td class="py-2.5 px-3 text-right font-mono text-slate-500">${s.lastYearSO ?? 'NULL'}</td>
                   <td class="py-2.5 px-3 text-right font-mono text-slate-600">${s.prevSO ?? 'NULL'}</td>
@@ -354,6 +507,13 @@ window.SelloutModule = {
                   </td>
                 </tr>
               `).join('')}
+              ${filtered.length === 0 ? `
+                <tr>
+                  <td colspan="10" class="py-10 text-center text-slate-400 font-semibold">
+                    Không tìm thấy cửa hàng nào khớp với điều kiện lọc hiện tại.
+                  </td>
+                </tr>
+              ` : ''}
             </tbody>
           </table>
         </div>
